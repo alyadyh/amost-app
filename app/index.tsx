@@ -1,17 +1,55 @@
+import { Colors } from "@/constants/Colors";
 import { Link } from "expo-router";
-import { Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { ScrollView, Text, View, Image, Button, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CustomButton from "@/components/customs/CustomButton";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
 
 export default function App() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text className="text-3xl font-bold">AMOST!</Text>
-      <Link href="/home" style={{ color: 'blue' }}>Go to Home</Link>
-    </View>
+    <SafeAreaView className="bg-primary h-full">
+      <ScrollView
+        contentContainerStyle={{
+          height: "100%",
+        }}
+      >
+        <View className="w-full flex justify-center items-center h-full px-4 bg-white">
+          <View className="relative mb-10">
+            <Image
+              source={require('@/assets/images/onboarding.png')}
+              className="w-auto h-auto"
+            />
+          </View>
+
+          <View className="relative mt-8">
+            <Text className="text-3xl text-amost-secondary-dark_1 font-extrabold text-center">
+              Kelola Obatmu
+            </Text>
+            <Text className="text-3xl text-amost-secondary-dark_1 font-extrabold text-center mt-2">
+              Bersama{" "}
+              <Text className="text-3xl text-amost-primary font-extrabold text-center mt-2">AMOST</Text>
+            </Text>
+            <Text className="text-base font-medium text-amost-secondary-dark_2 mt-7 text-center">
+              Sering lupa minum obat tepat waktu?{"\n"}
+              AMOST akan membantu Anda mengelola obat dengan lebih baik.
+            </Text>
+          </View>
+          <View className="mt-12">
+            <CustomButton
+              title="Mulai Sehat Sekarang"
+              // handlePress={() => router.push("/sign-in")}
+              containerStyles="min-w-80 mt-7 bg-amost-primary"
+              textStyles="text-white"
+            />
+            <Text className="text-sm text-amost-secondary-dark_1 font-regular text-center mt-2">
+              Sudah punya akun?{" "}
+              <Link href="/" className="text-sm text-amost-primary">Masuk</Link>
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
