@@ -1,11 +1,11 @@
 import { Colors } from "@/constants/Colors";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ScrollView, Text, View, Image, Button, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CustomButton from "@/components/customs/CustomButton";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
+import CustomButton from "@/components/CustomButton";
 
 export default function App() {
   return (
@@ -39,13 +39,13 @@ export default function App() {
           <View className="mt-12">
             <CustomButton
               title="Mulai Sehat Sekarang"
-              // handlePress={() => router.push("/sign-in")}
+              handlePress={() => router.push("/sign-in")}
               containerStyles="min-w-80 mt-7 bg-amost-primary"
               textStyles="text-white"
             />
             <Text className="text-sm text-amost-secondary-dark_1 font-regular text-center mt-2">
               Sudah punya akun?{" "}
-              <Link href="/" className="text-sm text-amost-primary">Masuk</Link>
+              <Link href="/sign-in" className="text-sm text-amost-primary">Masuk</Link>
             </Text>
           </View>
         </View>

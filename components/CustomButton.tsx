@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, TouchableOpacity, ViewStyle, TextStyle, Toucha
 
 interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
-//   handlePress: () => void;
+  handlePress: () => void;
   containerStyles?: string;
   textStyles?: string;
   isLoading?: boolean;
@@ -11,7 +11,7 @@ interface CustomButtonProps extends TouchableOpacityProps {
 
 const CustomButton: React.FC<CustomButtonProps> = ({
   title,
-//   handlePress,
+  handlePress,
   containerStyles = '',
   textStyles = '',
   isLoading = false,
@@ -19,7 +19,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 }) => {
   return (
     <TouchableOpacity
-    //   onPress={handlePress}
+      onPress={handlePress}
       activeOpacity={0.7}
       className={`rounded-full min-h-[55px] flex-row justify-center items-center ${containerStyles} ${
         isLoading ? "opacity-50" : ""
