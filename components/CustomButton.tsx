@@ -1,3 +1,4 @@
+import { Octicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, ViewStyle, TextStyle, TouchableOpacityProps } from 'react-native';
 
@@ -7,6 +8,8 @@ interface CustomButtonProps extends TouchableOpacityProps {
   containerStyles?: string;
   textStyles?: string;
   isLoading?: boolean;
+  leftIcon?: any;
+  iconColor?: any;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -15,6 +18,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   containerStyles = '',
   textStyles = '',
   isLoading = false,
+  leftIcon,
+  iconColor,
   ...props
 }) => {
   return (
@@ -27,6 +32,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       disabled={isLoading}
       {...props}
     >
+      {leftIcon && <Octicons name={leftIcon} size={16} style={{ marginRight: 8, color: `${iconColor}` }} />}
       <Text className={`text-primary font-semibold text-lg ${textStyles}`}>
         {title}
       </Text>
