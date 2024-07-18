@@ -62,7 +62,7 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="skip"
+                icon="heart"
                 color={color}
                 name="Obatku"
                 focused={focused}
@@ -77,9 +77,9 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="quote"
+                icon="log"
                 color={color}
-                name="Logs"
+                name="Log"
                 focused={focused}
               />
             ),
