@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Link, router } from "expo-router";
+import React, { useState } from "react";
+import { Link, router, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView } from "react-native";
 import FormField from "@/components/FormField";
 import CustomButton from "@/components/CustomButton";
 import Octicons from '@expo/vector-icons/Octicons';
+import { Icon, Input } from '@rneui/themed'
 
 const SignIn = () => {
   const [isSubmitting, setSubmitting] = useState(false);
@@ -37,16 +38,18 @@ const SignIn = () => {
             <FormField
               title="Email"
               value={form.email}
-              placeholder="Masukkan email Anda"
+              placeholder="email@address.com"
+              leftIcon="mail"
               handleChangeText={(e) => setForm({ ...form, email: e })}
               otherStyles="mt-14"
               keyboardType="email-address"
-             />
+              />
 
             <FormField
               title="Password"
               value={form.password}
-              placeholder="Masukkan password Anda"
+              placeholder="******"
+              leftIcon="key"
               handleChangeText={(e) => setForm({ ...form, password: e })}
               otherStyles="mt-7"
              />
@@ -56,10 +59,9 @@ const SignIn = () => {
             <CustomButton
               title="Masuk"
               // handlePress={submit}
-              handlePress={() => router.push("/sign-up")}
+              handlePress={() => router.push("/home")}
               containerStyles="min-w-80 mt-7 bg-amost-primary"
               textStyles="text-white"
-              isLoading={isSubmitting}
               />
 
             <View className="flex justify-center pt-5 flex-row gap-2">

@@ -40,7 +40,7 @@ export default function App() {
             <CustomButton
               title="Mulai Sehat Sekarang"
               handlePress={() => router.push("/sign-in")}
-              containerStyles="min-w-80 mt-7 bg-amost-primary"
+              containerStyles="min-w-80 h-14 mt-7 bg-amost-primary"
               textStyles="text-white"
             />
             <Text className="text-sm text-amost-secondary-dark_1 font-regular text-center mt-2">

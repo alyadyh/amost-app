@@ -8,9 +8,10 @@ import CustomButton from "@/components/CustomButton";
 const SignUp = () => {
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
+    name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    // confirmPassword: ""
   });
 
   return (
@@ -31,31 +32,41 @@ const SignUp = () => {
 
               <View className="flex mt-0">
                 <FormField
+                  title="Nama"
+                  value={form.email}
+                  placeholder="John Doe"
+                  leftIcon="person"
+                  handleChangeText={(e) => setForm({ ...form, name: e })}
+                  otherStyles="mt-7"
+                />
+
+                <FormField
                   title="Email"
                   value={form.email}
-                  placeholder="Masukkan email Anda"
+                  placeholder="email@address.com"
+                  leftIcon="mail"
                   handleChangeText={(e) => setForm({ ...form, email: e })}
-                  otherStyles="mt-14"
+                  otherStyles="mt-7"
                   keyboardType="email-address"
                 />
 
                 <FormField
                   title="Password"
                   value={form.password}
-                  placeholder="Masukkan password Anda"
+                  placeholder="******"
+                  leftIcon="key"
                   handleChangeText={(e) => setForm({ ...form, password: e })}
                   otherStyles="mt-7"
-                  secureTextEntry
                 />
 
-                <FormField
+                {/* <FormField
                   title="Konfirmasi Password"
                   value={form.confirmPassword}
                   placeholder="Masukkan password Anda"
                   handleChangeText={(e) => setForm({ ...form, confirmPassword: e })}
                   otherStyles="mt-7"
                   secureTextEntry
-                />
+                /> */}
               </View>
 
               <View className="mt-12">
@@ -64,7 +75,6 @@ const SignUp = () => {
                   handlePress={() => router.push("/sign-up")}
                   containerStyles="min-w-80 mt-7 bg-amost-primary"
                   textStyles="text-white"
-                  isLoading={isSubmitting}
                 />
 
                 <View className="flex justify-center pt-5 flex-row gap-2">

@@ -11,6 +11,7 @@ module.exports = {
       transparent: 'transparent',
       black: '#000',
       white: '#fff',
+      red: '#ff0000',
       initial: 'initial',
       inherit: 'inherit',
 
@@ -24,6 +25,7 @@ module.exports = {
           blue_2: '#0076BE',
           dark_1: '#454545',
           dark_2: '#6E6E6E',
+          gray_1: '#E7E7E7',
         }
       },
     },
