@@ -27,8 +27,8 @@ const Home = () => {
   ]);
 
   return (
-    <SafeAreaView className="h-full">
-        <View className="px-6 py-16 bg-amost-secondary-gray_1">
+    <SafeAreaView className="h-full bg-white">
+        <View className="px-6 py-16">
           <View>
             <Text className="text-3xl text-black font-black mb-8">
               Hari ini
@@ -48,13 +48,13 @@ const Home = () => {
             {meds.map(med => (
               <View key={med.id} className='p-2'>
                 <View className='flex-row items-center mb-1.5'>
-                  <Text className='max-w-10'>{med.time}</Text>
+                  <Text className='max-w-10 font-medium'>{med.time}</Text>
                   <View className="flex-1 border-dashed border-t border-black ml-4"/>
                 </View>
-                <View className='flex-row justify-between ml-12 bg-amost-secondary-gray_2 p-4 rounded-md items-center'>
+                <View className='flex-row justify-between ml-12 bg-amost-secondary-light_1 p-4 rounded-md items-center border border-amost-primary'>
                   <View>
                     <Text className='text-xl font-bold text-black'>{med.name}</Text>
-                    <Text className='text-sm font-semibold text-amost-secondary-dark_2'>{med.dose}</Text>
+                    <Text className='text-sm font-semibold text-amost-primary'>{med.dose}</Text>
                   </View>
                   <View>
                     <Octicons name="kebab-horizontal" size={20} />
