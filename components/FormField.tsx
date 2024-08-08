@@ -28,7 +28,7 @@ const FormField: React.FC<FormFieldProps> = ({
     <View className={`space-y-2 ${otherStyles}`}>
       <Text className="text-base text-amost-secondary-dark_1 font-bold">{title}</Text>
 
-      <View className="w-full h-16 px-4 bg-black-100 rounded-2xl border-2 border-amost-secondary-dark_1 focus:border-secondary flex flex-row items-center">
+      <View className="w-full h-16 px-4 rounded-2xl border-2 border-amost-secondary-dark_1 focus:border-secondary flex flex-row items-center">
         {leftIcon && <Octicons name={leftIcon} size={20} style={{ marginRight: 14, color: "#6E6E6E" }} />}
 
         <TextInput
