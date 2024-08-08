@@ -1,6 +1,7 @@
 import { View, Text, SafeAreaView } from 'react-native'
 import React from 'react'
 import { Octicons, MaterialIcons } from '@expo/vector-icons'
+import { Link } from 'expo-router'
 
 const Logs = () => {
   return (
@@ -22,11 +23,15 @@ const Logs = () => {
                 <MaterialIcons name="percent" size={24} color="white" />
               </View>
             </View>
+            <Link href="/log-med" className='flex justify-center items-center bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-lg'>
+              <View className='flex flex-row justify-center items-center space-x-3'>
+                <Text className='text-base text-amost-primary'>Lihat semua log</Text>
+                <Octicons name="chevron-right" size={20} color="#00A378" />
+              </View>
+            </Link>
 
-            <View className='flex-row justify-center items-center bg-amost-secondary-light_1 border border-amost-primary space-x-3 p-6 rounded-b-lg'>
-              <Text className='text-base text-amost-primary'>Lihat semua log</Text>
-              <Octicons name="chevron-right" size={20} color="#00A378" />
-            </View>
+            {/* <View className='flex-row justify-center items-center bg-amost-secondary-light_1 border border-amost-primary space-x-3 p-6 rounded-b-lg'>
+            </View> */}
           </View>
 
           <View className='mt-6 p-6 flex-row justify-between items-center border border-amost-secondary-dark_2 rounded-lg'>

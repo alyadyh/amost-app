@@ -6,6 +6,7 @@ const MedLayout = () => {
     <>
       <Stack screenOptions={{animation: "none"}}>
         <Stack.Screen name="add-med" options={{ headerShown: false }} />
+        <Stack.Screen name="log-med" options={{ headerShown: false }} />
       </Stack>
     </>
   );
