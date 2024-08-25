@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ScrollView, Text, View, Image, Button, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
+// import ParallaxScrollView from "@/components/ParallaxScrollView";
 import CustomButton from "@/components/CustomButton";
 
 export default function App() {

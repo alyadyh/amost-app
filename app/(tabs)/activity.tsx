@@ -3,12 +3,12 @@ import React from 'react'
 import { Octicons, MaterialIcons } from '@expo/vector-icons'
 import { Link } from 'expo-router'
 
-const Logs = () => {
+const Activities = () => {
   return (
     <SafeAreaView className="h-full bg-white">
       <View className="px-6 py-16">
         <Text className="text-3xl text-black font-black mb-8">
-          Log
+          Aktivitas
         </Text>
 
           <View className="mt-0 space-x-0">
@@ -23,7 +23,7 @@ const Logs = () => {
                 <MaterialIcons name="percent" size={24} color="white" />
               </View>
             </View>
-            <Link href="/log-med" className='flex justify-center items-center bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-lg'>
+            <Link href="/logMed" className='flex justify-center items-center bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-lg'>
               <View className='flex flex-row justify-center items-center space-x-3'>
                 <Text className='text-base text-amost-primary'>Lihat semua log</Text>
                 <Octicons name="chevron-right" size={20} color="#00A378" />
@@ -53,4 +53,4 @@ const Logs = () => {
   )
 }
 
-export default Logs
+export default Activities

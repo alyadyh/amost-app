@@ -52,9 +52,9 @@ const LogCard: React.FC<{ log: Log }> = ({ log }) => (
     <View className="flex flex-row items-center">
       <View className="mr-4">
         <Feather
-          name={log.taken ? 'check-square' : 'square'}
-          size={24}
-          color={log.taken ? 'green' : 'gray'}
+          name={log.taken ? 'check-square' : 'x-square'}
+          size={28}
+          color={log.taken ? 'green' : 'red'}
         />
       </View>
 
@@ -86,11 +86,17 @@ const LogMed: React.FC = () => {
     <SafeAreaView className="h-full bg-white">
       <View className="px-6 py-10">
         <View className="flex-row items-center space-x-8">
-          <Link href="/logs">
-            <Octicons name="chevron-left" size={35} style={{ color: `#454545` }} />
-          </Link>
+          <TouchableOpacity 
+            activeOpacity={0.7}
+          >
+            <Link href="/activity">
+              <View className="bg-amost-secondary-gray_1 px-4 py-1 items-center justify-center rounded-full">
+                <Octicons name="chevron-left" size={35} style={{ color: `#454545` }} />
+              </View>
+            </Link>
+          </TouchableOpacity>
           <Text className="text-3xl text-black font-black">
-            Riwayat Log
+            Log
           </Text>
         </View>
 

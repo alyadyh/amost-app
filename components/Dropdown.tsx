@@ -34,8 +34,8 @@ const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, left
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+    <View className="space-y-2">
+      <Text className="text-base text-amost-secondary-dark_1 font-medium">{title}</Text>
       <View style={styles.dropdownContainer}>
         <Dropdown
           style={styles.dropdown}
@@ -67,15 +67,6 @@ const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, left
 export default DropdownComponent;
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: 8,
-  },
-  title: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
   dropdownContainer: {
     alignItems: 'center',
   },
@@ -112,9 +103,11 @@ const styles = StyleSheet.create({
   placeholderStyle: {
     color: '#454545',
     fontSize: 16,
+    paddingHorizontal: 4,
   },
   selectedTextStyle: {
     fontSize: 16,
+    paddingHorizontal: 4,
   },
   iconStyle: {
     width: 20,

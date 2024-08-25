@@ -2,19 +2,26 @@ import { View, Text, Image } from 'react-native'
 import React from 'react'
 import { Tabs } from 'expo-router'
 
-import Octicons from '@expo/vector-icons/Octicons';
+import { Ionicons, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface TabIconProps {
   icon: any;
   color: string;
   name: string;
   focused: boolean;
+  type: number;
 }
 
-const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused }) => {
+const TabIcon: React.FC<TabIconProps> = ({ icon, color, name, focused, type }) => {
+  const IconComponent = type === 1 
+    ? Octicons 
+    : type === 2 
+    ? MaterialCommunityIcons 
+    : Ionicons;
+
   return (
     <View className='flex items-center justify-center gap-2'>
-      <Octicons 
+      <IconComponent 
         name={icon}
         color={color}
         size={24}
@@ -51,10 +58,11 @@ const TabsLayout = () => {
                 color={color}
                 name="Beranda"
                 focused={focused}
-              />
-            ),
-          }}
-        />
+                type={1}
+                />
+              ),
+            }}
+            />
         <Tabs.Screen
           name="medication"
           options={{
@@ -62,29 +70,31 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="heart"
-                color={color}
-                name="Obatku"
-                focused={focused}
+              icon="pill"
+              color={color}
+              name="Obatku"
+              focused={focused}
+              type={2}
               />
             ),
           }}
-        />
+          />
         <Tabs.Screen
-          name="logs"
+          name="activity"
           options={{
-            title: "Logs",
+            title: "Activity",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="log"
-                color={color}
-                name="Log"
-                focused={focused}
+              icon="analytics-outline"
+              color={color}
+              name="Aktivitas"
+              focused={focused}
+              type={3}
               />
             ),
           }}
-        />
+          />
         <Tabs.Screen
           name="profile"
           options={{
@@ -92,10 +102,11 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="person"
-                color={color}
-                name="Profil"
-                focused={focused}
+              icon="person"
+              color={color}
+              name="Profil"
+              focused={focused}
+              type={1}
               />
             ),
           }}

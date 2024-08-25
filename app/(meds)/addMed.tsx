@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, router, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Button, GestureResponderEvent } from "react-native";
+import { View, Text, ScrollView, Button, GestureResponderEvent, TouchableOpacity } from "react-native";
 import FormField from "@/components/FormField";
 import CustomButton from "@/components/CustomButton";
 import Octicons from '@expo/vector-icons/Octicons';
@@ -38,9 +38,16 @@ const AddMed = () => {
     <SafeAreaView className="h-full bg-white">
       <View className="px-6 py-10">
         <View className="flex-row items-center space-x-8">
-          <Link href="/medication">
-            <Octicons name="chevron-left" size={35} style={{ color: `#454545` }} />
-          </Link>
+          <TouchableOpacity 
+            activeOpacity={0.7}
+          >
+            <Link href="/medication">
+              <View className="bg-amost-secondary-gray_1 px-4 py-1 items-center justify-center rounded-full">
+                <Octicons name="chevron-left" size={35} style={{ color: `#454545` }} />
+              </View>
+            </Link>
+          </TouchableOpacity>
+
           <Text className="text-3xl text-black font-black">
             Tambah Obat
           </Text>
@@ -52,7 +59,6 @@ const AddMed = () => {
               title="Nama Obat"
               value={form.name}
               placeholder="Paracetamol"
-              // leftIcon="mail"
               handleChangeText={(e) => setForm({ ...form, name: e })}
               otherStyles="mt-8"
               />

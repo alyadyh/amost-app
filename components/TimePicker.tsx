@@ -58,9 +58,10 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title }) => {
 
   return (
     <View className="space-y-2">
-      <Text className="text-base text-amost-secondary-dark_1 font-bold">{title}</Text>
+      <Text className="text-base text-amost-secondary-dark_1 font-medium">{title}</Text>
       <TouchableOpacity
         onPress={showTimepicker}
+        activeOpacity={1}   //will not change its opacity when pressed
         className={`w-full h-16 px-4 rounded-2xl border-2 border-amost-secondary-dark_1 flex flex-row items-center`}
       >
         <TextInput
