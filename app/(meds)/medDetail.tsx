@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Switch, ScrollView, SafeAreaView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Switch, ScrollView, SafeAreaView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { Link,useLocalSearchParams } from 'expo-router';
 import { Feather, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';
@@ -17,7 +17,7 @@ const images = {
 };
 
 const MedDetail = () => {
-
+  const [visibleModal, setVisibleModal] = useState<string | null>(null);
   const { med: medString } = useLocalSearchParams();
   const med = medString ? JSON.parse(medString as string) : null;
 
@@ -26,6 +26,10 @@ const MedDetail = () => {
   }
 
   const medImage = images[med.medForm as MedForm] || images['cairan'];
+
+  const toggleModal = (modalName: string | null) => {
+    setVisibleModal(modalName);
+  };
 
   return (
     <SafeAreaView className="h-full bg-amost-primary">
@@ -133,30 +137,46 @@ const MedDetail = () => {
           {/* Detail Obat Section */}
           <View className="mb-6">
             <Text className="text-white text-lg font-semibold mb-2">Detail Obat</Text>
-            <View className="bg-white rounded-lg p-4 mb-2">
-              <View className="flex-row justify-between">
-                <Text className="text-black font-semibold">Foto</Text>
-                <Octicons name="chevron-right" size={20} />
+
+            {/* Foto Section */}
+            <TouchableOpacity onPress={() => toggleModal('foto')}>
+              <View className="bg-white rounded-lg p-4 mb-2">
+                <View className="flex-row justify-between">
+                  <Text className="text-black font-semibold">Foto</Text>
+                  <Octicons name="chevron-right" size={20} />
+                </View>
               </View>
-            </View>
-            <View className="bg-white rounded-lg p-4 mb-2">
-              <View className="flex-row justify-between">
-                <Text className="text-black font-semibold">Instruksi</Text>
-                <Octicons name="chevron-right" size={20} />
+            </TouchableOpacity>
+
+            {/* Instruksi Section */}
+            <TouchableOpacity onPress={() => toggleModal('instruksi')}>
+              <View className="bg-white rounded-lg p-4 mb-2">
+                <View className="flex-row justify-between">
+                  <Text className="text-black font-semibold">Instruksi</Text>
+                  <Octicons name="chevron-right" size={20} />
+                </View>
               </View>
-            </View>
-            <View className="bg-white rounded-lg p-4 mb-2">
-              <View className="flex-row justify-between">
-                <Text className="text-black font-semibold">Dokter yang Meresepkan</Text>
-                <Octicons name="chevron-right" size={20} />
+            </TouchableOpacity>
+
+            {/* Dokter yang Meresepkan Section */}
+            <TouchableOpacity onPress={() => toggleModal('dokter')}>
+              <View className="bg-white rounded-lg p-4 mb-2">
+                <View className="flex-row justify-between">
+                  <Text className="text-black font-semibold">Dokter yang Meresepkan</Text>
+                  <Octicons name="chevron-right" size={20} />
+                </View>
               </View>
-            </View>
-            <View className="bg-white rounded-lg p-4">
-              <View className="flex-row justify-between">
-                <Text className="text-black font-semibold">Apotek Pembelian Obat</Text>
-                <Octicons name="chevron-right" size={20} />
+            </TouchableOpacity>
+
+            {/* Apotek Pembelian Obat Section */}
+            <TouchableOpacity onPress={() => toggleModal('apotek')}>
+              <View className="bg-white rounded-lg p-4">
+                <View className="flex-row justify-between">
+                  <Text className="text-black font-semibold">Apotek Pembelian Obat</Text>
+                  <Octicons name="chevron-right" size={20} />
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Delete Button */}
@@ -164,6 +184,56 @@ const MedDetail = () => {
             <Text className="text-white font-bold">Hapus</Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Modal Component */}
+        <Modal
+          visible={visibleModal !== null}
+          transparent={true}
+          animationType="none"
+          onRequestClose={() => toggleModal(null)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => toggleModal(null)}
+            className="flex-1 justify-center items-center bg-black/50"
+          >
+            <TouchableWithoutFeedback>
+              <View className="bg-white p-4 rounded-xl w-80 relative">
+                {/* <TouchableOpacity onPress={() => toggleModal(null)} className="absolute top-2 right-4">
+                  <Octicons name="x" size={24} style={{ color: "black" }} />
+                </TouchableOpacity> */}
+                
+                {/* Render Modal Content Based on visibleModal */}
+                {visibleModal === 'foto' && (
+                  <>
+                    <Text className="text-black font-bold my-4 text-center">Foto</Text>
+                    {med.medPhotos && med.medPhotos.map((photo: any, index: number) => (
+                      <Image key={index} source={{ uri: photo }} style={{ width: 100, height: 100, marginBottom: 10 }} />
+                    ))}
+                  </>
+                )}
+                {visibleModal === 'instruksi' && (
+                  <>
+                    <Text className="text-black font-bold my-4 text-center">Instruksi Obat</Text>
+                    <Text className="text-black text-center text-base mb-4">{med.instructions}</Text>
+                  </>
+                )}
+                {visibleModal === 'dokter' && (
+                  <>
+                    <Text className="text-black font-bold my-4 text-center">Dokter yang Meresepkan Obat</Text>
+                    <Text className="text-black text-center text-base mb-4">{med.prescribingDoctor}</Text>
+                  </>
+                )}
+                {visibleModal === 'apotek' && (
+                  <>
+                    <Text className="text-black font-bold my-4 text-center">Apotek Tempat Membeli Obat</Text>
+                    <Text className="text-black text-center text-base mb-4">{med.dispensingPharmacy}</Text>
+                  </>
+                )}
+              </View>
+            </TouchableWithoutFeedback>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </SafeAreaView>
   );
