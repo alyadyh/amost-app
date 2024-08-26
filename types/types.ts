@@ -5,7 +5,7 @@ export interface Medicine {
   dosage: string;
   frequencyTimesPerDay: number;
   frequencyIntervalDays: number;
-  reminderTimes: string[];
+  reminderTimes: string[];  // Format: "HH:mm"
   duration: string;
   stockQuantity: number;
   medPhotos?: string | null;
