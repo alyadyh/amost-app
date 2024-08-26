@@ -1,6 +1,8 @@
 import { View, Text, SafeAreaView, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import { Octicons } from '@expo/vector-icons'
+import { Medicine } from '@/types/types';
+import { dummyMeds } from '@/data/dummy';
 
 const Home = () => {
   const [days, setDays] = useState([
@@ -13,18 +15,7 @@ const Home = () => {
     { id: 7, name: 'Min', date: '13' },
   ]);
 
-  const [meds, setMeds] = useState([
-    { id: '1', time: '10.00', name: 'Amoxicilin', dose: '1 Tablet' },
-    { id: '2', time: '11.00', name: 'Paracetamol', dose: '2 Tablet' },
-    { id: '3', time: '12.00', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '4', time: '12.30', name: 'Ibuprofen', dose: '2 Sendok teh' },
-    { id: '5', time: '14.00', name: 'Ibuprofen', dose: '1 Sendok makan' },
-    { id: '6', time: '16.00', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '7', time: '16.10', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '8', time: '18.00', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '9', time: '21.00', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '10', time: '21.00', name: 'Ibuprofen', dose: '1 Tablet' },
-  ]);
+  const [meds, setMeds] = useState<Medicine[]>(dummyMeds);
 
   return (
     <SafeAreaView className="h-full bg-white">
@@ -46,13 +37,13 @@ const Home = () => {
             {meds.map(med => (
               <View key={med.id} className='p-2'>
                 <View className='flex-row items-center mb-1.5'>
-                  <Text className='max-w-10 font-medium'>{med.time}</Text>
+                  <Text className='max-w-10 font-medium'>{med.reminderTimes[0]}</Text>
                   <View className="flex-1 border-dashed border-t border-black ml-4"/>
                 </View>
                 <View className='flex-row justify-between ml-12 bg-amost-secondary-light_1 p-4 rounded-lg items-center border border-amost-primary'>
                   <View>
-                    <Text className='text-xl font-bold text-black'>{med.name}</Text>
-                    <Text className='text-sm font-semibold text-amost-primary'>{med.dose}</Text>
+                    <Text className='text-xl font-bold text-black'>{med.medName}</Text>
+                    <Text className='text-sm font-semibold text-amost-primary'>{med.dosage}</Text>
                   </View>
                   <View>
                     <Octicons name="kebab-horizontal" size={20} />

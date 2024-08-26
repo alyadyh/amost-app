@@ -4,38 +4,11 @@ import CustomButton from '@/components/CustomButton';
 import { useNavigation } from '@react-navigation/native';
 import { Octicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
-import { MedicationStackNavigationProp } from '@/components/navigation/types';
-
-interface Medication {
-  id: string;
-  range: string;
-  name: string;
-  dose: string;
-}
+import { Medicine } from '@/types/types';
+import { dummyMeds } from '@/data/dummy';
 
 const Medication = () => {
-  const navigation = useNavigation<MedicationStackNavigationProp>();
-  const [meds, setMeds] = useState<Medication[]>([
-    { id: '1', range: '1 kali, tiap hari', name: 'Amoxicilin', dose: '1 Tablet' },
-    { id: '2', range: '1 kali, tiap hari', name: 'Paracetamol', dose: '2 Tablet' },
-    { id: '3', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '4', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '2 Sendok teh' },
-    { id: '5', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Sendok makan' },
-    { id: '6', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '7', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '8', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '9', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '10', range: '1 kali, tiap hari', name: 'Ibuprofen', dose: '1 Tablet' },
-    { id: '11', range: '1 kali, tiap hari', name: 'Mixagrip', dose: '1 Tablet' },
-    { id: '12', range: '1 kali, tiap hari', name: 'Ultraflu', dose: '1 Tablet' },
-  ]);
-
-  // const handleMedPress = (med: Medication) => {
-  //   if (med.name === 'Amoxicilin') {
-  //     navigation.navigate('MedicationDetail', { med });
-  //   }
-  // };
-  
+  const [meds, setMeds] = useState<Medicine[]>(dummyMeds);
 
   return (
     <SafeAreaView className="h-full bg-white">
@@ -82,11 +55,18 @@ const Medication = () => {
               <TouchableOpacity>
                 <View className='flex-row justify-between p-4 rounded-lg items-center border border-amost-secondary-dark_2'>
                   <View>
-                    <Text className='text-xl font-bold text-black'>{med.name}</Text>
-                    <View className='flex-row space-x-2'>
-                      <Text className='text-sm font-semibold text-amost-secondary-dark_1'>{med.dose}</Text>
+                    <Text className='text-xl font-bold text-black mb-1'>{med.medName}</Text>
+                    <View className='flex-row space-x-1'>
+                      <Text className='text-sm font-semibold text-amost-secondary-dark_1'>{med.dosage}</Text>
                       <View className="flex-1 border-0.5 border-l border-amost-secondary-dark_1"/>
-                      <Text className='text-sm font-semibold text-amost-secondary-dark_1'>{med.range}</Text>
+                      <Text className='text-sm font-semibold text-amost-secondary-dark_1'>{med.frequencyTimesPerDay}x</Text>
+                      <Text className='text-sm font-semibold text-amost-secondary-dark_1'>
+                        {med.frequencyIntervalDays === 1
+                          ? "sehari"
+                          : med.frequencyIntervalDays === 7
+                          ? "seminggu"
+                          : `tiap ${med.frequencyIntervalDays} hari`}
+                      </Text>
                     </View>
                   </View>
                   <View>
