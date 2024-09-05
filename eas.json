@@ -10,7 +10,12 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "node": "20.13.1",
+      "android": {
+        "resourceClass": "medium"
+      }
+    }
   },
   "submit": {
     "production": {}
