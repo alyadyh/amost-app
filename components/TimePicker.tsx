@@ -7,13 +7,16 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  StyleSheet
 } from 'react-native';
+import PickerSelect from 'react-native-picker-select'; // Import PickerSelect
 
 interface TimePickerProps {
   title: string;
+  onConfirm?: (time: string) => void;
 }
 
-const TimePickerComponent: React.FC<TimePickerProps> = ({ title }) => {
+const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) => {
   const [time, setTime] = useState({ hour: 0, minute: 0 });
   const [show, setShow] = useState(false);
   const [formattedTime, setFormattedTime] = useState('');
@@ -25,35 +28,10 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title }) => {
       .toString()
       .padStart(2, '0')}`;
     setFormattedTime(formatted);
+    if (onConfirm) {
+      onConfirm(formatted);
+    }
     setShow(false);
-  };
-
-  const incrementHour = () => {
-    setTime((prevState) => ({
-      ...prevState,
-      hour: (prevState.hour + 1) % 24,
-    }));
-  };
-
-  const decrementHour = () => {
-    setTime((prevState) => ({
-      ...prevState,
-      hour: (prevState.hour - 1 + 24) % 24,
-    }));
-  };
-
-  const incrementMinute = () => {
-    setTime((prevState) => ({
-      ...prevState,
-      minute: (prevState.minute + 5) % 60,
-    }));
-  };
-
-  const decrementMinute = () => {
-    setTime((prevState) => ({
-      ...prevState,
-      minute: (prevState.minute - 5 + 60) % 60,
-    }));
   };
 
   return (
@@ -61,12 +39,12 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title }) => {
       <Text className="text-base text-amost-secondary-dark_1 font-medium">{title}</Text>
       <TouchableOpacity
         onPress={showTimepicker}
-        activeOpacity={1}   //will not change its opacity when pressed
-        className={`w-full h-16 px-4 rounded-2xl border-2 border-amost-secondary-dark_1 flex flex-row items-center`}
+        activeOpacity={0.7}
+        className="w-full h-16 px-4 rounded-2xl border-2 border-amost-secondary-dark_2 flex-row items-center"
       >
         <TextInput
           className="flex-1 text-amost-secondary-dark_1 font-semibold text-base"
-          placeholder="Select Time"
+          placeholder="00:00"
           value={formattedTime}
           editable={false}
           pointerEvents="none"
@@ -75,52 +53,95 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title }) => {
       </TouchableOpacity>
       <Modal
         transparent={true}
-        animationType="none"
+        animationType="slide"
         visible={show}
         onRequestClose={() => setShow(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShow(false)}>
-          <View className="flex-1 justify-center items-center">
-            <TouchableWithoutFeedback>
-              <View className="w-[300px] bg-white rounded-3xl p-5 items-center shadow-lg shadow-black">
-                <Text className="text-lg font-bold mb-5">Select Time</Text>
-                <View className="flex-row items-center">
-                  <View className="items-center mx-2.5">
-                    <TouchableOpacity onPress={incrementHour} className="p-1">
-                      <Text className="text-lg text-amost-primary">▲</Text>
-                    </TouchableOpacity>
-                    <Text className="text-xl my-2.5">
-                      {time.hour.toString().padStart(2, '0')}
-                    </Text>
-                    <TouchableOpacity onPress={decrementHour} className="p-1">
-                      <Text className="text-lg text-amost-primary">▼</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <Text className="text-xl">:</Text>
-                  <View className="items-center mx-2.5">
-                    <TouchableOpacity onPress={incrementMinute} className="p-1">
-                      <Text className="text-lg text-amost-primary">▲</Text>
-                    </TouchableOpacity>
-                    <Text className="text-xl my-2.5">
-                      {time.minute.toString().padStart(2, '0')}
-                    </Text>
-                    <TouchableOpacity onPress={decrementMinute} className="p-1">
-                      <Text className="text-lg text-amost-primary">▼</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View className="mt-5">
-                  <TouchableOpacity onPress={handleConfirm} className="px-4 py-2 bg-amost-primary rounded-full">
-                    <Text className="text-white font-bold">Confirm</Text>
-                  </TouchableOpacity>
-                </View>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShow(false)}
+          className="flex-1 justify-center items-center bg-black/50"
+        >
+          <TouchableWithoutFeedback onPress={() => setShow(false)}>
+            <View style={styles.modalContent}>
+              <View className="flex-row items-center">
+                {/* Hour Picker */}
+                <PickerSelect
+                  value={time.hour}
+                  onValueChange={(value) =>
+                    setTime(prevState => ({ ...prevState, hour: value }))
+                  }
+                  items={Array.from({ length: 24 }, (_, i) => ({
+                    label: i.toString().padStart(2, '0'),
+                    value: i,
+                  }))}
+                  useNativeAndroidPickerStyle={false}
+                  style={pickerSelectStyles}
+                />
+
+                <Text className="text-xl mx-2.5">:</Text>
+
+                {/* Minute Picker */}
+                <PickerSelect
+                  value={time.minute}
+                  onValueChange={(value) =>
+                    setTime(prevState => ({ ...prevState, minute: value }))
+                  }
+                  items={Array.from({ length: 60 }, (_, i) => ({
+                    label: i.toString().padStart(2, '0'),
+                    value: i,
+                  }))}
+                  useNativeAndroidPickerStyle={false}
+                  style={pickerSelectStyles}
+                />
               </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+              <View className="">
+                <TouchableOpacity onPress={handleConfirm} className="px-4 py-2 bg-amost-primary rounded-full">
+                  <Text className="text-white font-bold">Konfirmasi</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
 };
 
 export default TimePickerComponent;
+
+const styles = StyleSheet.create({
+  modalContent: {
+    width: 300,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#6E6E6E',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30, // to ensure the text is never behind the icon
+    width: 80, // fixed width to make it consistent
+  },
+  inputAndroid: {
+    fontSize: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#6E6E6E',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30,
+    width: 80, // fixed width to make it consistent
+  },
+});
