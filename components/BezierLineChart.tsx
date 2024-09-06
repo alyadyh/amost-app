@@ -1,13 +1,21 @@
 import React from 'react';
 import { LineChart } from "react-native-chart-kit";
-import { Dimensions, Text, View } from "react-native";
+import { useWindowDimensions, Text, View } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 
 const BezierLineChart = () => {
+  const { width } = useWindowDimensions()
+
   return (
-    <View>
-      <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
-        Bezier Line Chart
-      </Text>
+    <View className='mt-6'>
+      <LinearGradient
+        colors={['#ff8a00', '#ffa726']}
+        start={[0, 0]}
+        end={[1, 1]}
+        style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10, paddingTop: 16, paddingLeft: 16, paddingBottom: 32, paddingRight: 16 }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: '600', color: 'white' }}>Grafik Kepatuhan Anda</Text>
+      </LinearGradient>
       <LineChart
         data={{
           labels: ["January", "February", "March", "April", "May", "June"],
@@ -22,18 +30,18 @@ const BezierLineChart = () => {
                 Math.random() * 100
               ]
             }
-          ]
+          ] 
         }}
-        width={Dimensions.get("window").width - 32} // Adjusted width to fit within padding
+        width={width - 48}
         height={220}
-        yAxisLabel="$"
-        yAxisSuffix="k"
-        yAxisInterval={1} // optional, defaults to 1
+        // yAxisLabel="$"
+        yAxisSuffix="%"
+        yAxisInterval={1}
         chartConfig={{
           backgroundColor: "#e26a00",
           backgroundGradientFrom: "#fb8c00",
           backgroundGradientTo: "#ffa726",
-          decimalPlaces: 2, // optional, defaults to 2dp
+          decimalPlaces: 0, // optional, defaults to 2dp
           color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
           labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
           style: {
@@ -47,8 +55,8 @@ const BezierLineChart = () => {
         }}
         bezier
         style={{
-          marginVertical: 8,
-          borderRadius: 16
+          borderRadius: 10,
+          marginTop: -10
         }}
       />
     </View>

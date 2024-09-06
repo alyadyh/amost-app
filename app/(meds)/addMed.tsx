@@ -224,7 +224,7 @@ const AddMed = () => {
             <CustomButton
               title="Opsional"
               handlePress={toggleDetailVisibility}
-              containerStyles="max-w-32 bg-amost-secondary-orange_1"
+              containerStyles="max-w-32 bg-amost-secondary-orange_3"
               textStyles="text-white text-base font-medium ml-1"
               leftIcon={!isDetailVisible ? "chevron-down" : "chevron-up"}
               iconColor="#ffff"

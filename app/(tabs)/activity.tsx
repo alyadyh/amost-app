@@ -12,7 +12,8 @@ const Activities = () => {
           Aktivitas
         </Text>
 
-          <View className="mt-0 space-x-0">
+        <View className='space-y-6'>
+          <View>
             <View className='p-6 bg-amost-primary rounded-t-lg'>
               <Text className="text-md font-medium text-white mb-4">
                 Angka kepatuhan hari ini
@@ -34,21 +35,22 @@ const Activities = () => {
 
           <BezierLineChart />
 
-          <View className='mt-6 p-6 flex-row justify-between items-center border border-amost-secondary-dark_2 rounded-lg'>
+          <View className='p-6 flex-row justify-between items-center border border-amost-secondary-dark_2 rounded-lg'>
             <View className='flex-row items-center space-x-6'>
               <View>
                 <Octicons name="download" size={28} color="#6E6E6E" />
               </View>
               <View>
-                <Text className='font-bold text-lg'>Kirim Laporan Obat</Text>
-                <Text className='text-xs text'>Berbagi catatan obatmu dengan dokter</Text>
+                <Text className='font-bold text-lg text-amost-secondary-dark_1'>Kirim Laporan Obat</Text>
+                <Text className='text-xs text-amost-secondary-dark_1'>Bagikan riwayat obatmu kepada dokter</Text>
               </View>
             </View>
             <View>
-              <Octicons name="chevron-right" size={28} color="#000" />
+              <Octicons name="chevron-right" size={28} color="#6E6E6E" />
             </View>
           </View>
         </View>
+      </View>
     </SafeAreaView>
   )
 }
