@@ -1,5 +1,5 @@
 import Octicons from '@expo/vector-icons/Octicons';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,9 +13,10 @@ import { Dropdown } from 'react-native-element-dropdown';
 interface TimePickerProps {
   title: string;
   onConfirm?: (time: string) => void;
+  value?: string;
 }
 
-const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) => {
+const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm, value }) => {
   const [time, setTime] = useState<{
     hour: { label: string; value: number }, 
     minute: { label: string; value: number } 
@@ -24,9 +25,16 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) =>
     minute: { label: '00', value: 0 },
   });
   const [show, setShow] = useState(false);
-  const [formattedTime, setFormattedTime] = useState('');
+  const [formattedTime, setFormattedTime] = useState(value || '');
 
   const showTimepicker = () => setShow(true);
+
+  useEffect(() => {
+    console.log('TimePicker re-rendered with value:', value);
+    if (value !== formattedTime) {
+      setFormattedTime(value || '');
+    }
+  }, [value, formattedTime]);  
 
   const handleConfirm = () => {
     const formatted = `${time.hour.label}:${time.minute.label}`;

@@ -2,7 +2,7 @@ import { Octicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, TextInputProps } from "react-native";
 
-interface FormFieldProps extends TextInputProps {
+interface FormFieldProps extends Omit<TextInputProps, 'value'> { 
   title: string;
   value: string | number;
   placeholder: string;
@@ -33,7 +33,7 @@ const FormField: React.FC<FormFieldProps> = ({
 
         <TextInput
           className="flex-1 text-amost-secondary-dark_1 font-semibold text-base"
-          value={value}
+          value={value ? String(value) : ''}
           placeholder={placeholder}
           placeholderTextColor="text-amost-secondary-dark_2"
           onChangeText={handleChangeText}

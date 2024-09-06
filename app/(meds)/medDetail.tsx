@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Switch, ScrollView, SafeAreaView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { Link,useLocalSearchParams } from 'expo-router';
+import { Href, Link,router,useLocalSearchParams } from 'expo-router';
 import { Feather, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';
 
 type MedForm = 'cairan' | 'kapsul' | 'tablet' | 'suntikan' | 'bubuk' | 'patch' | 'gel';
@@ -45,14 +45,13 @@ const MedDetail = () => {
             </Link>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             activeOpacity={0.7}
-            >
-            <Link href="/medication">
-              <View className=" px-4 py-1 items-center justify-center rounded-full">
-                <Feather name="edit-2" size={24} style={{ color: `#ffff` }} />
-              </View>
-            </Link>
+            onPress={() => router.push({ pathname: '/editMed', params: { med: JSON.stringify(med) } })}
+          >
+            <View className="px-4 py-1 items-center justify-center rounded-full">
+              <Feather name="edit-2" size={24} style={{ color: `#ffff` }} />
+            </View>
           </TouchableOpacity>
         </View>
         <ScrollView>

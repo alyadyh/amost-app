@@ -13,14 +13,22 @@ interface DropdownComponentProps {
   data: Item[];
   leftIcon?: any; 
   onChange?: (value: Item) => void;
+  value?: any;
 }
 
-const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, leftIcon, onChange }) => {
-  const [value, setValue] = useState<any>(null);
+const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, leftIcon, onChange, value }) => {
+  const [selectedValue, setSelectedValue] = useState<any>(value || null);
   const [isFocus, setIsFocus] = useState(false);
   
+  useEffect(() => {
+    console.log('DropdownComponent re-rendered with value:', value);
+    if (selectedValue !== value) {
+      setSelectedValue(value);
+    }
+  }, [value]);
+
   const handleChange = (item: Item) => {
-    setValue(item.value);
+    setSelectedValue(item.value);
     if (onChange) {
       onChange(item);
     }
@@ -48,7 +56,7 @@ const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, left
       <Dropdown
         style={[
           styles.dropdown,
-          { borderColor: isFocus ? '#00A378' : '#6E6E6E' }
+          { borderColor: isFocus ||selectedValue ? '#00A378' : '#6E6E6E' }
         ]}
         placeholderStyle={styles.placeholderStyle}
         selectedTextStyle={styles.selectedTextStyle}
@@ -63,7 +71,7 @@ const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, left
         placeholder="Pilih yang sesuai"
         searchPlaceholder="Cari..."
         dropdownPosition="auto"
-        value={value}
+        value={selectedValue}
         onFocus={() => setIsFocus(true)}
         onBlur={() => setIsFocus(false)}
         onChange={handleChange}
