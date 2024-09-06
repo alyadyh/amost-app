@@ -2,6 +2,7 @@ import { View, Text, SafeAreaView } from 'react-native'
 import React from 'react'
 import { Octicons, MaterialIcons } from '@expo/vector-icons'
 import { Link } from 'expo-router'
+import BezierLineChart from '@/components/BezierLineChart';
 
 const Activities = () => {
   return (
@@ -29,10 +30,9 @@ const Activities = () => {
                 <Octicons name="chevron-right" size={20} color="#00A378" />
               </View>
             </Link>
-
-            {/* <View className='flex-row justify-center items-center bg-amost-secondary-light_1 border border-amost-primary space-x-3 p-6 rounded-b-lg'>
-            </View> */}
           </View>
+
+          <BezierLineChart />
 
           <View className='mt-6 p-6 flex-row justify-between items-center border border-amost-secondary-dark_2 rounded-lg'>
             <View className='flex-row items-center space-x-6'>
