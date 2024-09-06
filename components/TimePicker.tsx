@@ -7,32 +7,49 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  StyleSheet
+  StyleSheet,
 } from 'react-native';
-import PickerSelect from 'react-native-picker-select'; // Import PickerSelect
-
+import { Dropdown } from 'react-native-element-dropdown';
 interface TimePickerProps {
   title: string;
   onConfirm?: (time: string) => void;
 }
 
 const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) => {
-  const [time, setTime] = useState({ hour: 0, minute: 0 });
+  const [time, setTime] = useState<{
+    hour: { label: string; value: number }, 
+    minute: { label: string; value: number } 
+  }>({
+    hour: { label: '00', value: 0 },
+    minute: { label: '00', value: 0 },
+  });
   const [show, setShow] = useState(false);
   const [formattedTime, setFormattedTime] = useState('');
 
   const showTimepicker = () => setShow(true);
 
   const handleConfirm = () => {
-    const formatted = `${time.hour.toString().padStart(2, '0')}:${time.minute
-      .toString()
-      .padStart(2, '0')}`;
+    const formatted = `${time.hour.label}:${time.minute.label}`;
     setFormattedTime(formatted);
     if (onConfirm) {
       onConfirm(formatted);
     }
     setShow(false);
   };
+
+  const hourData = Array.from({ length: 24 }, (_, i) => ({
+    label: i.toString().padStart(2, '0'),
+    value: i,
+  }));
+
+  // Minute data in multiples of 5
+  const minuteData = Array.from({ length: 12 }, (_, i) => {
+    const minuteValue = i * 5;
+    return {
+      label: minuteValue.toString().padStart(2, '0'),
+      value: minuteValue,
+    };
+  });
 
   return (
     <View className="space-y-2">
@@ -49,11 +66,12 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) =>
           editable={false}
           pointerEvents="none"
         />
-        <Octicons name='clock' size={20} style={{ color: "#6E6E6E" }} />
+        <Octicons name="clock" size={20} style={{ color: '#6E6E6E' }} />
       </TouchableOpacity>
+
       <Modal
         transparent={true}
-        animationType="slide"
+        animationType="none"
         visible={show}
         onRequestClose={() => setShow(false)}
       >
@@ -63,40 +81,45 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) =>
           className="flex-1 justify-center items-center bg-black/50"
         >
           <TouchableWithoutFeedback onPress={() => setShow(false)}>
-            <View style={styles.modalContent}>
+            <View className="w-72 bg-white rounded-2xl p-4 px-6 items-center">
               <View className="flex-row items-center">
-                {/* Hour Picker */}
-                <PickerSelect
-                  value={time.hour}
-                  onValueChange={(value) =>
-                    setTime(prevState => ({ ...prevState, hour: value }))
-                  }
-                  items={Array.from({ length: 24 }, (_, i) => ({
-                    label: i.toString().padStart(2, '0'),
-                    value: i,
-                  }))}
-                  useNativeAndroidPickerStyle={false}
-                  style={pickerSelectStyles}
+                {/* Hour Dropdown */}
+                <Dropdown
+                  style={pickerSelectStyles.dropdown}
+                  containerStyle={pickerSelectStyles.dropdownContainer}
+                  itemTextStyle={pickerSelectStyles.textItem}
+                  selectedTextStyle={pickerSelectStyles.textItem}
+                  renderRightIcon={() => null}
+                  data={hourData}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="00"
+                  value={time.hour} // Pass the full object (hour)
+                  onChange={(item) => setTime((prev) => ({ ...prev, hour: item }))}
                 />
 
                 <Text className="text-xl mx-2.5">:</Text>
 
-                {/* Minute Picker */}
-                <PickerSelect
+                {/* Minute Dropdown */}
+                <Dropdown
+                  style={pickerSelectStyles.dropdown}
+                  containerStyle={pickerSelectStyles.dropdownContainer}
+                  itemTextStyle={pickerSelectStyles.textItem}
+                  selectedTextStyle={pickerSelectStyles.textItem}
+                  renderRightIcon={() => null}
+                  data={minuteData}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="00"
                   value={time.minute}
-                  onValueChange={(value) =>
-                    setTime(prevState => ({ ...prevState, minute: value }))
-                  }
-                  items={Array.from({ length: 60 }, (_, i) => ({
-                    label: i.toString().padStart(2, '0'),
-                    value: i,
-                  }))}
-                  useNativeAndroidPickerStyle={false}
-                  style={pickerSelectStyles}
+                  onChange={(item) => setTime((prev) => ({ ...prev, minute: item }))}
                 />
               </View>
-              <View className="">
-                <TouchableOpacity onPress={handleConfirm} className="px-4 py-2 bg-amost-primary rounded-full">
+              <View className="mt-4">
+                <TouchableOpacity
+                  onPress={handleConfirm}
+                  className="px-4 py-2 bg-amost-primary rounded-full"
+                >
                   <Text className="text-white font-bold">Konfirmasi</Text>
                 </TouchableOpacity>
               </View>
@@ -110,38 +133,27 @@ const TimePickerComponent: React.FC<TimePickerProps> = ({ title, onConfirm }) =>
 
 export default TimePickerComponent;
 
-const styles = StyleSheet.create({
-  modalContent: {
-    width: 300,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-  },
-});
-
 const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 18,
+  dropdown: {
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: '#6E6E6E',
-    borderRadius: 4,
-    color: 'black',
-    paddingRight: 30, // to ensure the text is never behind the icon
-    width: 80, // fixed width to make it consistent
+    borderRadius: 14,
+    width: 80,
   },
-  inputAndroid: {
-    fontSize: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#6E6E6E',
-    borderRadius: 4,
-    color: 'black',
-    paddingRight: 30,
-    width: 80, // fixed width to make it consistent
+  dropdownContainer: {
+    maxHeight: 150,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    borderWidth: 2,
+    borderTopWidth: 0,
+    marginTop: 20,
+  },
+  textItem: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6E6E6E',
+    textAlign: 'center',
   },
 });

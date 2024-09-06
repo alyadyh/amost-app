@@ -1,19 +1,28 @@
 import React, { useState } from 'react';
-import { View, Image, Button, Text } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { Octicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
-const ImagePickerComponent = ({ onImageSelect }: { onImageSelect: (uri: string) => void }) => {
-  const [image, setImage] = useState<string | null>(null);
+interface ImagePickerComponentProps {
+  title: string;
+  value: string;
+  onImageSelect: (uri: string) => void;
+}
+
+const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
+  title,
+  value,
+  onImageSelect,
+}) => {
+  const [imageUri, setImageUri] = useState<string>(value);
 
   const pickImage = async () => {
-    // Ask for permission to access media library
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       alert('Sorry, we need camera roll permissions to make this work!');
       return;
     }
 
-    // Open image picker
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -21,27 +30,33 @@ const ImagePickerComponent = ({ onImageSelect }: { onImageSelect: (uri: string) 
       quality: 1,
     });
 
-    // Check if the user canceled the picker or if an image was selected
     if (!result.canceled) {
-        // Use `assets` array to get the image URI
-        const selectedImageUri = result.assets[0].uri;
-        setImage(selectedImageUri);
-  
-        // If the onImageSelect prop is provided, call it with the selected image URI
-        if (onImageSelect) {
-          onImageSelect(selectedImageUri);
-        }
-      }
-    };
+      const selectedImageUri = result.assets[0].uri;
+      setImageUri(selectedImageUri);
+      onImageSelect(selectedImageUri); // Use the correct prop name
+    }
+  };
 
   return (
-    <View style={{ alignItems: 'center', marginVertical: 10 }}>
-      <Button title="Upload Image" onPress={pickImage} />
+    <View className="space-y-2">
+      <Text className="text-base text-amost-secondary-dark_1 font-medium">{title}</Text>
 
-      {image && (
+      <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
+        <View className="w-full h-16 px-4 rounded-2xl border-2 border-amost-secondary-dark_2 flex flex-row items-center">
+          <Octicons name="image" size={20} style={{ marginRight: 14, color: "#6E6E6E" }} />
+
+          <TextInput
+            className={`flex-1 text-base font-semibold ${imageUri ? 'text-amost-secondary-dark_1' : 'text-amost-secondary-dark_2'}`}
+            value={imageUri ? imageUri : "Masukkan Foto Obat"} // Placeholder when no image is selected
+            placeholderTextColor="text-amost-secondary-dark_2"
+            editable={false}
+          />
+        </View>
+      </TouchableOpacity>
+
+      {imageUri && (
         <View style={{ marginTop: 10, alignItems: 'center' }}>
-          <Text>Selected Image:</Text>
-          <Image source={{ uri: image }} style={{ width: 200, height: 200, marginTop: 10 }} />
+          <Image source={{ uri: imageUri }} style={{ width: 200, height: 200 }} />
         </View>
       )}
     </View>

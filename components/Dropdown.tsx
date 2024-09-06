@@ -17,6 +17,7 @@ interface DropdownComponentProps {
 
 const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, leftIcon, onChange }) => {
   const [value, setValue] = useState<any>(null);
+  const [isFocus, setIsFocus] = useState(false);
   
   const handleChange = (item: Item) => {
     setValue(item.value);
@@ -45,11 +46,15 @@ const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, left
     <View className="space-y-2">
       <Text className="text-base text-amost-secondary-dark_1 font-medium">{title}</Text>
       <Dropdown
-        style={styles.dropdown}
+        style={[
+          styles.dropdown,
+          { borderColor: isFocus ? '#00A378' : '#6E6E6E' }
+        ]}
         placeholderStyle={styles.placeholderStyle}
         selectedTextStyle={styles.selectedTextStyle}
         inputSearchStyle={styles.inputSearchStyle}
         iconStyle={styles.iconStyle}
+        containerStyle={styles.containerStyle}
         data={data}
         search
         maxHeight={300}
@@ -57,7 +62,10 @@ const DropdownComponent: React.FC<DropdownComponentProps> = ({ title, data, left
         valueField="value"
         placeholder="Pilih yang sesuai"
         searchPlaceholder="Cari..."
+        dropdownPosition="auto"
         value={value}
+        onFocus={() => setIsFocus(true)}
+        onBlur={() => setIsFocus(false)}
         onChange={handleChange}
         renderLeftIcon={() =>
           leftIcon ? <Octicons style={styles.icon} color="black" name={leftIcon} size={20} /> : null
@@ -77,7 +85,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#6E6E6E',
     padding: 12,
   },
   icon: {
@@ -113,5 +120,12 @@ const styles = StyleSheet.create({
   },
   inputSearchStyle: {
     height: 40,
+  },  
+  containerStyle: {
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    borderWidth: 2,
+    borderTopWidth: 0,
+    borderColor: '#00A378',
   },
 });

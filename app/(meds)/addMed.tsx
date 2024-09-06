@@ -50,7 +50,7 @@ const AddMed = () => {
     frequencyIntervalDays: 1,
     reminderTimes: [""],
     duration: "",
-    stockQuantity: "",
+    stockQuantity: 0,
     instructions: "",
     prescribingDoctor: "",
     dispensingPharmacy: "",
@@ -68,17 +68,17 @@ const AddMed = () => {
   ];
 
   const dosageOptions = [
-    { label: '500 mg', value: '500 mg' },
-    { label: '1000 mg', value: '1000 mg' },
+    { label: '1 sendok makan', value: '1 sendok makan' },
+    { label: '1 sendok teh', value: '1 sendok teh' },
     // Add more options as needed
   ];
   
   const frequencyOptions = [
-    { label: '1x sehari', value: { label: '1x sehari', timesPerDay: 1, intervalDays: 1 } },
-    { label: '3x sehari', value: { label: '3x sehari', timesPerDay: 3, intervalDays: 1 } },
-    { label: '1x per 3 hari', value: { label: '1x per 3 hari', timesPerDay: 1, intervalDays: 3 } },
+    { label: '1x sehari', value: '1x sehari', timesPerDay: 1, intervalDays: 1 },
+    { label: '3x sehari', value: '3x sehari', timesPerDay: 3, intervalDays: 1 },
+    { label: '1x per 3 hari', value: '1x per 3 hari', timesPerDay: 1, intervalDays: 3 },
     // Add more options as needed
-  ];   
+  ];
   
   const durationOptions = [
     { label: '1 minggu', value: '7' },
@@ -93,17 +93,13 @@ const AddMed = () => {
   };
 
   const handleFrequencyChange = (selectedOption: any) => {
-    handleFormChange("frequency", selectedOption.value.label || "");
-    handleFormChange("frequencyTimesPerDay", selectedOption.value.timesPerDay ?? 1);
-    handleFormChange("frequencyIntervalDays", selectedOption.value.intervalDays ?? 1);
+    handleFormChange("frequency", selectedOption.value);
+    handleFormChange("frequencyTimesPerDay", selectedOption.timesPerDay ?? 1);
+    handleFormChange("frequencyIntervalDays", selectedOption.intervalDays ?? 1);
   };
 
   const toggleDetailVisibility = () => {
     setDetailVisible(prev => !prev);
-  };
-
-  const handleImageSelect = (uri: string) => {
-    handleFormChange('imageUri', uri); // Save the selected image URI in form state
   };
 
   return (
@@ -158,25 +154,33 @@ const AddMed = () => {
               />
           </View>
 
+          <View>
+            <DropdownComponent
+              title="Durasi"
+              data={durationOptions}
+              onChange={(value) => handleFormChange("duration", value)}
+            />
+          </View>
+
+          <View>
+            <FormField
+              title="Kuantitas Stok"
+              value={form.stockQuantity}
+              placeholder="12"
+              handleChangeText={(e) => handleFormChange("stockQuantity", e)}
+            />
+          </View>
+
+          <View>
+            <TimePickerComponent
+              title="Waktu Pengingat"
+              onConfirm={(time) => handleFormChange("reminderTimes", [time])}
+             />
+          </View>
+
           {/* Additional fields for duration, instructions, etc. */}
           {isDetailVisible && (
             <View className="space-y-4">
-              <View>
-                <DropdownComponent
-                  title="Durasi"
-                  data={durationOptions}
-                  onChange={(value) => handleFormChange("duration", value)}
-                />
-              </View>
-
-              <View>
-                <FormField
-                  title="Kuantitas Stok"
-                  value={form.stockQuantity}
-                  placeholder="12"
-                  handleChangeText={(e) => handleFormChange("stockQuantity", e)}
-                />
-              </View>
 
               <View>
                 <FormField
@@ -206,15 +210,11 @@ const AddMed = () => {
               </View>
 
               <View>
-                <TimePickerComponent
-                  title="Waktu Pengingat"
-                  onConfirm={(time) => handleFormChange("reminderTimes", [time])}
+                <ImagePickerComponent
+                  title="Foto Obat"
+                  value={form.imageUri}
+                  onImageSelect={(uri) => handleFormChange("imageUri", uri)} // Corrected prop name
                 />
-              </View>
-
-              <View>
-                <ImagePickerComponent onImageSelect={handleImageSelect} />
-                {form.imageUri ? <Text>Image Selected: {form.imageUri}</Text> : null}
               </View>
             </View>
           )}
@@ -222,16 +222,16 @@ const AddMed = () => {
           {/* Button to show or hide additional fields */}
           <View>
             <CustomButton
-              title={isDetailVisible ? "Tanpa Detail" : "Detail Opsional"}
+              title="Opsional"
               handlePress={toggleDetailVisibility}
-              containerStyles="w-full border border-amost-secondary-dark_2"
-              textStyles="text-amost-secondary-dark_2 text-base font-medium ml-1"
-              leftIcon={!isDetailVisible ? "chevron-down" : undefined}
-              iconColor="#6E6E6E"
+              containerStyles="max-w-32 bg-amost-secondary-orange_1"
+              textStyles="text-white text-base font-medium ml-1"
+              leftIcon={!isDetailVisible ? "chevron-down" : "chevron-up"}
+              iconColor="#ffff"
             />
           </View>
 
-          <View className="mt-6">
+          <View className="mt-14">
             <CustomButton
               title="Tambahkan Obat"
               handlePress={() => router.push("/medication")}
