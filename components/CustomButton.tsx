@@ -1,8 +1,10 @@
-import { Octicons } from '@expo/vector-icons';
+import { HStack } from '@/components/ui/hstack';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { Spinner } from '@/components/ui/spinner';
 import React from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, ViewStyle, TextStyle, TouchableOpacityProps } from 'react-native';
 
-interface CustomButtonProps extends TouchableOpacityProps {
+interface CustomButtonProps {
   title: string;
   handlePress: () => void;
   containerStyles?: string;
@@ -23,29 +25,19 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   ...props
 }) => {
   return (
-    <TouchableOpacity
-      onPress={handlePress}
-      activeOpacity={0.7}
-      className={`rounded-full min-h-12 flex-row justify-center items-center ${containerStyles} ${
-        isLoading ? "opacity-50" : ""
-      }`}
-      disabled={isLoading}
-      {...props}
-    >
-      {leftIcon && <Octicons name={leftIcon} size={16} style={{ marginRight: 8, color: `${iconColor}` }} />}
-      <Text className={`text-primary font-semibold text-lg ${textStyles}`}>
-        {title}
-      </Text>
-
-      {isLoading && (
-        <ActivityIndicator
-          animating={isLoading}
-          color="#fff"
-          size="small"
-          className="ml-2"
-        />
-      )}
-    </TouchableOpacity>
+    <Button onPress={handlePress} isDisabled={isLoading} className={`rounded-full min-h-12 ${containerStyles}`}>
+      <HStack className='items-center'>
+        {leftIcon && (
+          <Text className={`mr-2 ${iconColor}`}>
+            {leftIcon}
+          </Text>
+        )}
+        <Text className={`text-primary font-semibold text-lg ${textStyles}`}>
+          {title}
+        </Text>
+        {isLoading && <Spinner size="small" color="white" />}
+      </HStack>
+    </Button>
   );
 };
 
