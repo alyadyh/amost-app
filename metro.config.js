@@ -16,12 +16,12 @@ config.transformer = {
     },
   }),
 };
-//
+
 config.resolver = {
   ...config.resolver,
   assetExts: config.resolver.assetExts.filter((ext) => ext !== 'svg'),
   sourceExts: [...config.resolver.sourceExts, 'svg', 'd.ts'],
 };
 
-module.exports = config;
+// module.exports = config;
 module.exports = withNativeWind(config, { input: "./global.css" })
