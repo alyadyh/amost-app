@@ -3,9 +3,9 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "node --max-old-space-size=8192 expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "DARK_MODE=media expo run:android",
+    "android": "DARK_MODE=media node --max-old-space-size=8192 EXPO_BABEL_KEEP_MODULES=1 expo run:android",
     "ios": "DARK_MODE=media expo run:ios",
     "web": "DARK_MODE=media expo start --web",
     "test": "jest --watchAll",
