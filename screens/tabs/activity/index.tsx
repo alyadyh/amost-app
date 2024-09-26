@@ -7,15 +7,39 @@ import { LinearGradient } from '@/components/ui/linear-gradient'
 import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
-import { ChevronRight, Percent, Share2 } from 'lucide-react-native'
+import { ChevronRight, Percent } from 'lucide-react-native'
 import SummaryChart from './component/SummaryChart'
 import { ScrollView } from '@/components/ui/scroll-view'
-import { USERS, dummyLogs  } from '@/data/dummy'
+import { dummyLogs  } from '@/data/dummy'
 import ShareReport from './component/ShareExport'
+import { supabase } from '@/lib/supabase'
 
 export const Activities = () => {
-  const userName = USERS[0].name
+  const [userName, setUserName] = useState<string>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: session } = await supabase.auth.getSession()
+      const userId = session?.session?.user?.id
+
+      if (userId) {
+        const { data: profileData, error } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", userId)
+          .single()
+
+        if (!error && profileData) {
+          setUserName(profileData.full_name || 'No Name')
+        } else {
+          console.error("Error fetching profile:", error)
+        }
+      }
+    }
+
+    fetchProfile()
+  }, [])
 
   // Function to get today's date in 'YYYY-MM-DD' format using local time
   const getTodayDate = () => {

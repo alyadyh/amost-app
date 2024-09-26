@@ -30,15 +30,17 @@ import {
   Icon,
 } from "@/components/ui/icon"
 import { Button, ButtonText } from "@/components/ui/button"
-import { Keyboard } from "react-native"
+import { Alert, Keyboard } from "react-native"
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Pressable } from "@/components/ui/pressable"
 import useRouter from "@unitools/router"
 import { AuthLayout } from "../layout"
+import { supabase } from "@/lib/supabase"
 
 const signUpSchema = z.object({
+  fullname: z.string().min(1, "Nama lengkap belum diisi"),
   email: z.string().min(1, "Email belum diisi").email(),
   password: z
     .string()
@@ -60,7 +62,7 @@ const signUpSchema = z.object({
       new RegExp(".*[`~<>?,./!@#$%^&*()\\-_+=\"'|{}\\[\\]:\\\\].*"),
       "Satu karakter simbol"
     ),
-  rememberme: z.boolean().optional(),
+  privacyagreement: z.boolean().optional(),
 })
 type SignUpSchemaType = z.infer<typeof signUpSchema>
 
@@ -75,32 +77,76 @@ const SignUpWithLeftBackground = () => {
   })
   const toast = useToast()
 
-  const onSubmit = (data: SignUpSchemaType) => {
-    if (data.password === data.confirmpassword) {
-      toast.show({
-        placement: "bottom right",
-        render: ({ id }) => {
-          return (
-            <Toast nativeID={id} variant="solid" action="success">
-              <ToastTitle>Success</ToastTitle>
-            </Toast>
-          )
-        },
-      })
-      reset()
-    } else {
+  const onSubmit = async (data: SignUpSchemaType) => {
+    if (data.password !== data.confirmpassword) {
       toast.show({
         placement: "top right",
-        render: ({ id }) => {
-          return (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle>Password tidak cocok</ToastTitle>
-            </Toast>
-          )
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="error">
+            <ToastTitle>Password tidak cocok</ToastTitle>
+          </Toast>
+        ),
+      })
+      return
+    }
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullname
+          },
         },
       })
+
+      if (error) {
+        Alert.alert("Sign up failed", error.message)
+        return
+      }
+
+      toast.show({
+        placement: "top right",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="success">
+            <ToastTitle>Silakan periksa email Anda untuk verifikasi.</ToastTitle>
+          </Toast>
+        ),
+      })
+
+      reset()
+      router.push("/signIn")
+    } catch (err) {
+      console.error("Error during sign-up:", err)
     }
   }
+  // const onSubmit = (data: SignUpSchemaType) => {
+  //   if (data.password === data.confirmpassword) {
+  //     toast.show({
+  //       placement: "bottom right",
+  //       render: ({ id }) => {
+  //         return (
+  //           <Toast nativeID={id} variant="solid" action="success">
+  //             <ToastTitle>Success</ToastTitle>
+  //           </Toast>
+  //         )
+  //       },
+  //     })
+  //     reset()
+  //   } else {
+  //     toast.show({
+  //       placement: "top right",
+  //       render: ({ id }) => {
+  //         return (
+  //           <Toast nativeID={id} variant="solid" action="error">
+  //             <ToastTitle>Password tidak cocok</ToastTitle>
+  //           </Toast>
+  //         )
+  //       },
+  //     })
+  //   }
+  // }
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -122,7 +168,7 @@ const SignUpWithLeftBackground = () => {
 
   return (
     <VStack className="w-full h-full py-6 justify-between" space="md">
-      <VStack className="md:items-center" space="md">
+      <VStack className="md:items-center" space="sm">
         <Pressable
           onPress={() => {
             router.back()
@@ -135,12 +181,45 @@ const SignUpWithLeftBackground = () => {
           />
         </Pressable>
         <VStack space="sm">
-          <Heading className="md:text-center text-amost-primary mt-12" size="2xl">
+          <Heading className="md:text-center text-amost-primary mt-10" size="2xl">
             Mulai buat akunmu sekarang!
           </Heading>
           <Text className="font-normal text-amost-secondary-dark_2" size="sm">Daftar untuk mulai mengelola obatmu</Text>
         </VStack>
-        <VStack space="xl" className="w-full mt-4">
+        <VStack space="md" className="w-full mt-4">
+          {/* Full Name Section */}
+          <FormControl isInvalid={!!errors.fullname}>
+            <FormControlLabel>
+              <FormControlLabelText className="font-medium text-amost-secondary-dark_1">
+                Nama
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Controller
+              name="fullname"
+              defaultValue=""
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input>
+                  <InputField
+                    className="text-sm"
+                    placeholder="John Doe"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    onSubmitEditing={handleKeyPress}
+                    returnKeyType="done"
+                  />
+                </Input>
+              )}
+            />
+            <FormControlError>
+              <FormControlErrorIcon as={AlertCircleIcon} />
+              <FormControlErrorText size="sm">
+                {errors?.fullname?.message}
+              </FormControlErrorText>
+            </FormControlError>
+          </FormControl>
+
           {/* Email Section */}
           <FormControl isInvalid={!!errors.email}>
             <FormControlLabel>
@@ -281,15 +360,15 @@ const SignUpWithLeftBackground = () => {
           </FormControl>
 
           <Controller
-            name="rememberme"
+            name="privacyagreement"
             defaultValue={false}
             control={control}
             render={({ field: { onChange, value } }) => (
               <Checkbox
-                value="Remember me"
+                value="Privacy Agreement"
                 isChecked={value}
                 onChange={onChange}
-                aria-label="Remember me"
+                aria-label="Privacy Agreement"
               >
                 <CheckboxIndicator>
                   <CheckboxIcon as={CheckIcon} />

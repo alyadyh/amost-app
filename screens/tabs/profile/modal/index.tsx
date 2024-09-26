@@ -13,10 +13,13 @@ import { Keyboard } from "react-native"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import * as ImagePicker from "expo-image-picker"
+import { supabase } from "@/lib/supabase"
+import { Pressable } from "@/components/ui/pressable"
 
 // Define Zod schema for form validation
 const userSchema = z.object({
-  name: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters")
+  name: z.string().min(1, "Nama harus diisi").max(50, "Nama harus kurang dari 50 karakter")
 })
 
 type userSchemaDetails = z.infer<typeof userSchema>
@@ -25,15 +28,26 @@ export const ModalComponent = ({
   showModal,
   setShowModal,
   name,
-  onUpdateName,
+  avatar,
+  onUpdateProfile,
 }: {
   showModal: boolean
   setShowModal: any
   name: string
-  onUpdateName: (newName: string) => void
+  avatar: string
+  onUpdateProfile: (newName: string, newAvatar: string) => void
 }) => {
   const ref = useRef(null)
-  const { control, formState: { errors }, handleSubmit, reset } = useForm<userSchemaDetails>({
+  const [avatarUrl, setAvatarUrl] = useState<string>(avatar) // For preview
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null) // To store selected image URI for upload later
+  const [uploading, setUploading] = useState(false)
+
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    reset,
+  } = useForm<userSchemaDetails>({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: name,
@@ -41,17 +55,72 @@ export const ModalComponent = ({
   })
 
   useEffect(() => {
+    // Set avatar from the initial value (profile) if available
+    if (avatar) {
+      setAvatarUrl(`https://snyctjesxxylnzvygnrn.supabase.co/storage/v1/object/public/avatars/${avatar}`)
+    }
     reset({ name })
-  }, [name, reset])
+  }, [avatar, name, reset])
 
   const handleKeyPress = () => {
     Keyboard.dismiss()
   }
 
-  const onSubmit = (_data: userSchemaDetails) => {
-    onUpdateName(_data.name)
-    setShowModal(false)
-    reset()
+  const selectAvatar = async () => {
+    try {
+      // Open the image picker to select from the gallery
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true, // Enable editing (cropping)
+        aspect: [1, 1], // Set the crop frame to a 1:1 aspect ratio
+        quality: 1,
+      })
+
+      if (!result.canceled && result.assets.length > 0) {
+        const uri = result.assets[0].uri
+        setAvatarUrl(uri) // Immediately show the selected image
+        setSelectedImageUri(uri) // Store URI for upload after clicking "Simpan"
+      }
+    } catch (error) {
+      console.error("Error selecting avatar:", error)
+    }
+  }
+
+  const onSubmit = async (_data: userSchemaDetails) => {
+    try {
+      setUploading(true)
+
+      let uploadedAvatarUrl = avatarUrl
+
+      // Only upload the image if a new image was selected
+      if (selectedImageUri) {
+        const response = await fetch(selectedImageUri)
+        const arrayBuffer = await response.arrayBuffer()
+        const fileExt = selectedImageUri.split(".").pop()
+        const fileName = `${Date.now()}.${fileExt}`
+
+        const { data, error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, arrayBuffer, {
+            contentType: `image/${fileExt}`,
+          })
+
+        if (uploadError) {
+          throw uploadError
+        }
+
+        uploadedAvatarUrl = data.path // Save the path for later use
+      }
+
+      // Update profile with new name and avatar
+      onUpdateProfile(_data.name, uploadedAvatarUrl)
+      setShowModal(false)
+      reset()
+    } catch (error) {
+      console.error("Error uploading avatar or updating profile:", error)
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -77,6 +146,16 @@ export const ModalComponent = ({
             <AvatarFallbackText className="text-white">
               {name}
             </AvatarFallbackText>
+            <AvatarImage
+              source={{
+                uri: avatarUrl || ""
+              }}
+            />
+            <AvatarBadge size="2xl" className="items-center justify-center bg-amost-secondary-dark_1">
+              <Pressable onPress={selectAvatar}>
+                <Icon as={Pencil} size="xs" className="stroke-white" />
+              </Pressable>
+            </AvatarBadge>
           </Avatar>
         </Center>
 

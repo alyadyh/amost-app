@@ -56,7 +56,9 @@
         },
         "eas": {
           "projectId": "83c23e03-bdf2-455a-95aa-e8f372833822"
-        }
+        },
+      "SUPABASE_URL": "https://snyctjesxxylnzvygnrn.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueWN0amVzeHh5bG56dnlnbnJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcyNDYyMDksImV4cCI6MjA0MjgyMjIwOX0.L38eKK0OtK_qMIdePJHYkJMJ5LcQ9X8HHgJ2mfBsfIw"
       },
       "runtimeVersion": {
         "policy": "appVersion"

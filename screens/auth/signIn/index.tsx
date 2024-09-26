@@ -23,7 +23,7 @@ import {
   Icon,
 } from "@/components/ui/icon"
 import { Button, ButtonText } from "@/components/ui/button"
-import { Keyboard } from "react-native"
+import { Alert, Keyboard } from "react-native"
 import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -31,12 +31,11 @@ import { Pressable } from "@/components/ui/pressable"
 import useRouter from "@unitools/router"
 import { AuthLayout } from "../layout"
 import { Box } from "@/components/ui/box"
-import { USERS } from "@/data/dummy"
+import { supabase } from "@/lib/supabase"
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email belum diisi").email(),
   password: z.string().min(1, "Password belum diisi"),
-  // rememberme: z.boolean().optional(),
 })
 
 type LoginSchemaType = z.infer<typeof loginSchema>
@@ -56,30 +55,43 @@ const LoginScreen = () => {
     passwordValid: true,
   })
 
-  const onSubmit = (data: LoginSchemaType) => {
-    const user = USERS.find((element) => element.email === data.email)
-    if (user) {
-      if (user.password !== data.password)
-        setValidated({ emailValid: true, passwordValid: false })
-      else {
-        setValidated({ emailValid: true, passwordValid: true })
-        // toast.show({
-        //   placement: "bottom right",
-        //   render: ({ id }) => {
-        //     return (
-        //       <Toast nativeID={id} variant="solid" action="success">
-        //         <ToastTitle className="text-white">Logged in successfully!</ToastTitle>
-        //       </Toast>
-        //     )
-        //   },
-        // })
-        router.push("/home")
-        reset()
+  const onSubmit = async (data: LoginSchemaType) => {
+    try {
+      // Call Supabase's sign-in method
+      const { error, data: authData } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+
+      if (error) {
+        if (error.message === "Invalid login credentials") {
+          setValidated({ emailValid: true, passwordValid: false })
+        } else if (error.message === "User not found") {
+          setValidated({ emailValid: false, passwordValid: true })
+        } else {
+          Alert.alert("Login Failed", error.message)
+        }
+        return
       }
-    } else {
-      setValidated({ emailValid: false, passwordValid: true })
+
+      // If login is successful, show success toast and reset the form
+      setValidated({ emailValid: true, passwordValid: true })
+      toast.show({
+        placement: "bottom right",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="success">
+            <ToastTitle className="text-white">Logged in successfully!</ToastTitle>
+          </Toast>
+        ),
+      })
+
+      reset()
+      router.push("/home")
+    } catch (err) {
+      console.error("Error during login:", err)
     }
   }
+
   const [showPassword, setShowPassword] = useState(false)
 
   const handleState = () => {
