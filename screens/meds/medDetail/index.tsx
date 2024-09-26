@@ -30,7 +30,7 @@ export const MedDetail = () => {
   const handleClose = () => setShowAlertDialog(false)
 
   return (
-    <SafeAreaView className="h-full bg-amost-primary">
+    <SafeAreaView className="w-full h-full bg-amost-primary">
       <VStack space="lg" className="p-6 flex-1">
         <HStack className="justify-between">
           <Pressable onPress={() => router.back()}>

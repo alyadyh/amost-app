@@ -7,7 +7,6 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
 import "../global.css"
 import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { StatusBar, Platform } from "react-native"
 import { supabase } from "@/lib/supabase"
 import { Session } from "@supabase/supabase-js"
 
@@ -82,11 +81,6 @@ function RootLayoutNav({ session }: { session: Session | null }) {
   return (
     <GluestackUIProvider mode={'light'}>
       <SafeAreaView style={{ flex: 1, paddingTop: insets.top }}>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
         <Stack screenOptions={{ headerShown: false, animation: "none" }}>
           <Stack.Screen name="index" />
           {session ? (

@@ -78,7 +78,7 @@ const ProfileScreen = () => {
 
   return (
     <>
-      <ScrollView className="flex-1">
+      <VStack className="flex-1">
         <Heading size="2xl" className="text-amost-secondary-dark_1 font-black mb-8">Profil</Heading>
         <VStack className="h-full w-full pb-8" space="2xl">
           <Box className="md:mt-14 mt-6 w-full md:px-10 md:pt-6 pb-4">
@@ -166,7 +166,7 @@ const ProfileScreen = () => {
             <LogOutCard />
           </VStack>
         </VStack>
-      </ScrollView>
+      </VStack>
 
       {/* Modal for editing profile */}
       <ModalComponent 
