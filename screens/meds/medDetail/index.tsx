@@ -64,7 +64,7 @@ export const MedDetail = () => {
                 <Text bold className="text-amost-secondary-dark_2">Durasi</Text>
                 <HStack space='sm' className='items-center'>
                   <Icon as={CalendarRange} size='xl' className='stroke-amost-primary' />
-                  <Text className="font-semibold text-black">{med.duration}</Text>
+                  <Text className="font-semibold text-black">{med.duration} hari</Text>
                 </HStack>
               </VStack>
             </HStack>

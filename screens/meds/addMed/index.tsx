@@ -30,6 +30,7 @@ const AddMedSchema = z.object({
   frequencyIntervalDays: z.number().min(1),
   reminderTimes: z.array(z.date().refine((date) => !isNaN(date.getTime()), { message: "Pengingat belum dipilih" })),
   stockQuantity: z.number().positive("Stok Obat harus lebih dari 0").min(1, "Stok Obat belum diisi"),
+  duration: z.number().positive("Durasi harus lebih dari 0").min(1, "Durasi belum diisi"),
   instructions: z.string().optional(),
   prescribingDoctor: z.string().optional(),
   dispensingPharmacy: z.string().optional(),
@@ -125,7 +126,7 @@ const AddMedScreen = () => {
         </Heading>
       </HStack>
       <ScrollView>
-        <VStack space="lg">
+        <VStack space="md">
           <FormField name="medName" label="Nama Obat" control={control} error={errors.medName?.message} placeholder="Masukkan nama obat" />
           <SelectField name="medForm" label="Bentuk Obat" control={control} options={medFormOptions} error={errors.medForm?.message} />
           <SelectField name="dosage" label="Dosis" control={control} options={applicableDosageOptions} setValue={setValue} error={errors.dosage?.message} />
@@ -157,6 +158,10 @@ const AddMedScreen = () => {
           <VStack space="sm">
             <FormField name="stockQuantity" label="Kuantitas Stok" control={control} error={errors.stockQuantity?.message} placeholder="0" isNumeric={true} />
             <Text size="xs" className="text-amost-secondary-dark_2">(Jika cair atau bubuk, tulis jumlah dalam mL atau gram.)</Text>
+          </VStack>
+          <VStack space="sm">
+            <FormField name="duration" label="Durasi Konsumsi Obat" control={control} error={errors.duration?.message} placeholder="0" isNumeric={true} />
+            <Text size="xs" className="text-amost-secondary-dark_2">(Tulis durasi dalam hitungan hari)</Text>
           </VStack>
           
           {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
@@ -194,7 +199,7 @@ const ToggleDetailsButton = ({ isDetailVisible, setDetailVisible }: any) => (
 
 const SubmitButton = ({ onSubmit }: any) => (
   <Button
-    className="bg-amost-primary rounded-full w-full mt-28"
+    className="bg-amost-primary rounded-full w-full mt-8"
     size="xl"
     onPress={() => {
       console.log("Submit button clicked")
