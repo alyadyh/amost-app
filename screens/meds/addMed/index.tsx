@@ -18,6 +18,7 @@ import { TimePickerField } from "./components/TimePickerField"
 import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import MedLayout from "../layout"
 
 const AddMedSchema = z.object({
   medName: z.string().min(1, "Nama Obat belum diisi"),
@@ -37,7 +38,7 @@ const AddMedSchema = z.object({
 
 type AddMedSchemaType = z.infer<typeof AddMedSchema>
 
-export const AddMed = () => {
+const AddMedScreen = () => {
   const {
     control,
     handleSubmit,
@@ -110,63 +111,61 @@ export const AddMed = () => {
   }
 
   return (
-    <SafeAreaView className="w-full h-full bg-white">
-      <VStack space="3xl" className="px-6 py-16">
-        <HStack space="md" className="items-center">
-          <Pressable
-            onPress={() => {
-              router.back()
-            }}
-          >
-            <Icon as={ArrowLeftIcon} className="text-amost-secondary-dark_1" size="2xl" />
-          </Pressable>
-          <Heading size="2xl" className="text-amost-secondary-dark_1 font-black">
-            Tambahkan Obat
-          </Heading>
-        </HStack>
-        <ScrollView>
-          <VStack space="lg">
-            <FormField name="medName" label="Nama Obat" control={control} error={errors.medName?.message} placeholder="Masukkan nama obat" />
-            <SelectField name="medForm" label="Bentuk Obat" control={control} options={medFormOptions} error={errors.medForm?.message} />
-            <SelectField name="dosage" label="Dosis" control={control} options={applicableDosageOptions} setValue={setValue} error={errors.dosage?.message} />
-            <SelectField name="frequency" label="Frekuensi" control={control} options={frequencyOptions} setValue={setValue} error={errors.frequency?.message} />
-            {/* Dynamically render TimePickerFields based on timesPerDay */}
-            {timesPerDay > 0 && (
-              <VStack space="md">
-                  {Array.from({ length: timesPerDay }, (_, index) => (
-                  <Controller
-                      key={index}
-                      control={control}
-                      name={`reminderTimes.${index}`}
-                      render={({ field: { onChange, value } }) => (
-                      <TimePickerField
-                          label={`Waktu Pengingat ${index + 1}`}
-                          value={value || new Date()}
-                          onChange={(time: Date) => {
-                          onChange(time)
-                          handleTimeChange(index, time)
-                          }}
-                          error={errors.reminderTimes?.[index]?.message}
-                      />
-                      )}
-                  />
-                  ))}
-              </VStack>
-            )}
-
-            <VStack space="sm">
-              <FormField name="stockQuantity" label="Kuantitas Stok" control={control} error={errors.stockQuantity?.message} placeholder="0" isNumeric={true} />
-              <Text size="xs" className="text-amost-secondary-dark_2">(Jika cair atau bubuk, tulis jumlah dalam mL atau gram.)</Text>
+    <VStack space="3xl" className="flex-1">
+      <HStack space="md" className="items-center">
+        <Pressable
+          onPress={() => {
+            router.back()
+          }}
+         >
+          <Icon as={ArrowLeftIcon} className="text-amost-secondary-dark_1" size="2xl" />
+        </Pressable>
+        <Heading size="2xl" className="text-amost-secondary-dark_1 font-black">
+          Tambahkan Obat
+        </Heading>
+      </HStack>
+      <ScrollView>
+        <VStack space="lg">
+          <FormField name="medName" label="Nama Obat" control={control} error={errors.medName?.message} placeholder="Masukkan nama obat" />
+          <SelectField name="medForm" label="Bentuk Obat" control={control} options={medFormOptions} error={errors.medForm?.message} />
+          <SelectField name="dosage" label="Dosis" control={control} options={applicableDosageOptions} setValue={setValue} error={errors.dosage?.message} />
+          <SelectField name="frequency" label="Frekuensi" control={control} options={frequencyOptions} setValue={setValue} error={errors.frequency?.message} />
+          {/* Dynamically render TimePickerFields based on timesPerDay */}
+          {timesPerDay > 0 && (
+            <VStack space="md">
+                {Array.from({ length: timesPerDay }, (_, index) => (
+                <Controller
+                    key={index}
+                    control={control}
+                    name={`reminderTimes.${index}`}
+                    render={({ field: { onChange, value } }) => (
+                    <TimePickerField
+                        label={`Waktu Pengingat ${index + 1}`}
+                        value={value || new Date()}
+                        onChange={(time: Date) => {
+                        onChange(time)
+                        handleTimeChange(index, time)
+                        }}
+                        error={errors.reminderTimes?.[index]?.message}
+                    />
+                    )}
+                />
+                ))}
             </VStack>
-            
-            {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
+          )}
 
-            <ToggleDetailsButton isDetailVisible={isDetailVisible} setDetailVisible={setDetailVisible} />
+          <VStack space="sm">
+            <FormField name="stockQuantity" label="Kuantitas Stok" control={control} error={errors.stockQuantity?.message} placeholder="0" isNumeric={true} />
+            <Text size="xs" className="text-amost-secondary-dark_2">(Jika cair atau bubuk, tulis jumlah dalam mL atau gram.)</Text>
           </VStack>
-          <SubmitButton onSubmit={handleSubmit(onSubmit, onError)} />
-        </ScrollView>
-      </VStack>
-    </SafeAreaView>
+          
+          {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
+
+          <ToggleDetailsButton isDetailVisible={isDetailVisible} setDetailVisible={setDetailVisible} />
+        </VStack>
+        <SubmitButton onSubmit={handleSubmit(onSubmit, onError)} />
+      </ScrollView>
+    </VStack>
   )
 }
 
@@ -195,7 +194,7 @@ const ToggleDetailsButton = ({ isDetailVisible, setDetailVisible }: any) => (
 
 const SubmitButton = ({ onSubmit }: any) => (
   <Button
-    className="bg-amost-primary rounded-full w-full mt-28 mb-8"
+    className="bg-amost-primary rounded-full w-full mt-28"
     size="xl"
     onPress={() => {
       console.log("Submit button clicked")
@@ -205,3 +204,11 @@ const SubmitButton = ({ onSubmit }: any) => (
     <ButtonText className="font-medium text-white">Tambah</ButtonText>
   </Button>
 )
+
+export const AddMed = () => {
+  return (
+    <MedLayout>
+      <AddMedScreen />
+    </MedLayout>
+  )
+}

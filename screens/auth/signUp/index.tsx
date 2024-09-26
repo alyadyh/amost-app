@@ -167,7 +167,7 @@ const SignUpWithLeftBackground = () => {
   const router = useRouter()
 
   return (
-    <VStack className="w-full h-full py-6 justify-between" space="md">
+    <VStack className="w-full h-full justify-between" space="md">
       <VStack className="md:items-center" space="sm">
         <Pressable
           onPress={() => {

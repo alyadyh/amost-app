@@ -31,7 +31,7 @@ export const MedDetail = () => {
 
   return (
     <SafeAreaView className="h-full bg-amost-primary">
-      <VStack space="lg" className="px-6 py-16">
+      <VStack space="lg" className="p-6 flex-1">
         <HStack className="justify-between">
           <Pressable onPress={() => router.back()}>
             <Icon as={ArrowLeftIcon} className="stroke-white" size="2xl" />

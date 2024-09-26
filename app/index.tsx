@@ -9,8 +9,8 @@ import { HStack } from "@/components/ui/hstack"
 
 const Index = () => {
   return (
-    <SafeAreaView className="bg-white md:flex flex-col items-center justify-center px-4 md:w-full h-full">
-      <VStack space="lg" className="items-center">
+    <SafeAreaView className="bg-white items-center justify-center w-full h-full">
+      <VStack space="xl" className="items-center">
         {/* Image Section */}
         <Image
           source={require("../assets/images/onboarding.png")}
@@ -20,7 +20,7 @@ const Index = () => {
         />
 
         {/* Text Section */}
-        <VStack space="xs" className="items-center mt-6">
+        <VStack space="xs" className="items-center">
           <Text className="text-3xl font-extrabold text-amost-secondary-dark_1">
             Kelola Obatmu
           </Text>
@@ -37,18 +37,17 @@ const Index = () => {
             AMOST akan ingatkan!
           </Text>
         </VStack>
+        {/* Button Section */}
+        <Button
+          className="bg-amost-primary rounded-full mt-8"
+          size="xl"
+          onPress={() => {
+            router.push("/signIn")
+          }}
+        >
+          <ButtonText className="text-white">Mulai Sehat Sekarang</ButtonText>
+        </Button>
       </VStack>
-
-      {/* Button Section */}
-      <Button
-        className="bg-amost-primary rounded-full mt-12"
-        size="xl"
-        onPress={() => {
-          router.push("/signIn")
-        }}
-      >
-        <ButtonText className="text-white">Mulai Sehat Sekarang</ButtonText>
-      </Button>
     </SafeAreaView>
   )
 }

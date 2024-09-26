@@ -15,6 +15,7 @@ import { dummyMeds, dummyLogs } from '@/data/dummy'
 import { LogModal } from "./modal"
 import { format, isToday, isYesterday, parseISO } from 'date-fns'
 import { id } from 'date-fns/locale'
+import MedLayout from "../layout"
 
 type Section = {
   date: string
@@ -84,7 +85,7 @@ const LogCard: React.FC<{ log: Log, onEdit: () => void }> = ({ log, onEdit }) =>
   )
 }
 
-export const LogMed = () => {
+const LogMedScreen = () => {
   const [showModal, setShowModal] = useState(false)
   const [selectedMed, setSelectedMed] = useState<Medicine | null>(null)
   const groupedLogs = groupLogsByDate(dummyLogs)
@@ -105,8 +106,8 @@ export const LogMed = () => {
   }
 
   return (
-    <SafeAreaView className="h-full bg-white">
-      <VStack space="3xl" className="px-6 py-16">
+    <>
+      <VStack space="3xl">
         <HStack className="items-center justify-between">
           <HStack space="md" className="items-center">
             <Pressable onPress={() => router.back()}>
@@ -138,6 +139,14 @@ export const LogMed = () => {
           onLog={handleLog}
         />
       )}
-    </SafeAreaView>
+    </>
+  )
+}
+
+export const LogMed = () => {
+  return (
+    <MedLayout>
+      <LogMedScreen />
+    </MedLayout>
   )
 }

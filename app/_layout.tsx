@@ -1,17 +1,13 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome"
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native"
 import { useFonts } from "expo-font"
 import { Stack, useRouter } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
 import { useEffect, useState } from "react"
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
-import { useColorScheme } from "@/components/useColorScheme"
 import "../global.css"
 import { SafeAreaView } from "@/components/ui/safe-area-view"
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { StatusBar, Platform } from "react-native"
 import { supabase } from "@/lib/supabase"
 import { Session } from "@supabase/supabase-js"
 
@@ -21,7 +17,7 @@ export {
 } from "expo-router"
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
+  // Ensure that reloading on /modal keeps a back button present.
   initialRouteName: "(tabs)",
 }
 
@@ -81,25 +77,28 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav({ session }: { session: Session | null }) {
-  const colorScheme = 'light'
+  const insets = useSafeAreaInsets()
 
   return (
-    <GluestackUIProvider mode={colorScheme}>
-      <ThemeProvider value={DefaultTheme}>
-        <SafeAreaView style={{ flex: 1 }}>
-          <Stack screenOptions={{ headerShown: false, animation: "none" }}>
-            <Stack.Screen name="index" />
-            {session ? (
-              <>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(meds)" />
-              </>
-            ) : (
-              <Stack.Screen name="(auth)" />
-            )}
-          </Stack>
-        </SafeAreaView>
-      </ThemeProvider>
+    <GluestackUIProvider mode={'light'}>
+      <SafeAreaView style={{ flex: 1, paddingTop: insets.top }}>
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <Stack screenOptions={{ headerShown: false, animation: "none" }}>
+          <Stack.Screen name="index" />
+          {session ? (
+            <>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(meds)" />
+            </>
+          ) : (
+            <Stack.Screen name="(auth)" />
+          )}
+        </Stack>
+      </SafeAreaView>
     </GluestackUIProvider>
   )
 }

@@ -17,6 +17,7 @@ import { router } from "expo-router"
 import { Switch } from "@/components/ui/switch"
 import { supabase } from "@/lib/supabase"
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
+import TabLayout from "../layout"
 
 interface AccountCardType {
     iconName: LucideIcon | typeof Icon
@@ -24,7 +25,7 @@ interface AccountCardType {
     rightIcon: LucideIcon | typeof Icon
 }
 
-export const Profile = () => {
+const ProfileScreen = () => {
   const [showModal, setShowModal] = useState(false)
   const [user, setUser] = useState({ name: "", email: "", avatar: "" })
   const [isNotificationEnabled, setNotificationEnabled] = useState(false)
@@ -76,8 +77,8 @@ export const Profile = () => {
   }
 
   return (
-    <SafeAreaView className="h-full bg-white">
-      <ScrollView className="px-6 py-16">
+    <>
+      <ScrollView className="flex-1">
         <Heading size="2xl" className="text-amost-secondary-dark_1 font-black mb-8">Profil</Heading>
         <VStack className="h-full w-full pb-8" space="2xl">
           <Box className="md:mt-14 mt-6 w-full md:px-10 md:pt-6 pb-4">
@@ -175,7 +176,7 @@ export const Profile = () => {
         avatar={user.avatar}
         onUpdateProfile={handleUpdateProfile}
       />
-    </SafeAreaView>
+    </>
   )
 }
 
@@ -245,5 +246,14 @@ const LogOutCard = () => {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  )
+}
+
+
+export const Profile = () => {
+  return (
+    <TabLayout>
+      <ProfileScreen />
+    </TabLayout>
   )
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Medicine, MedForm, medFormActive, Log, medFormInactive } from '@/constants/types'
 import { dummyMeds } from '@/data/dummy'
 import { SafeAreaView } from '@/components/ui/safe-area-view'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScrollView } from '@/components/ui/scroll-view'
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
@@ -19,8 +20,9 @@ import { Box } from '@/components/ui/box'
 import { Fab, FabIcon, FabLabel } from '@/components/ui/fab'
 import { router } from 'expo-router'
 import { LayoutRectangle } from 'react-native'
+import TabLayout from '../layout'
 
-export const Home = () => {
+const HomeScreen = () => {
   // Define the grouped meds type
   type GroupedMedsType = { [key: string]: Medicine[] }
 
@@ -176,8 +178,8 @@ export const Home = () => {
   }, [activeMedLayout])
 
   return (
-    <SafeAreaView className="h-full bg-white">
-      <VStack space="xl" className="px-6 py-16">
+    <>
+      <VStack space="xl" className='flex-1'>
         <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Hari ini</Heading>
 
         <HStack className='justify-between'>
@@ -204,8 +206,8 @@ export const Home = () => {
           ))}
         </HStack> 
  
-        <ScrollView ref={scrollViewRef} contentContainerStyle={{ paddingBottom: 80 }}>
-          <VStack space='sm'>
+        <ScrollView ref={scrollViewRef}>
+          <VStack space='sm' className='mb-4'>
             {Object.keys(groupedMeds).length === 0 ? (
               // Display this message when no meds are scheduled for the day
               <View className='h-full items-center'>
@@ -291,6 +293,15 @@ export const Home = () => {
         <FabIcon as={AddIcon} />
         <FabLabel>Tambah Obat</FabLabel>
       </Fab>
-    </SafeAreaView>
+    </>
+  )
+}
+
+
+export const Home = () => {
+  return (
+    <TabLayout>
+      <HomeScreen />
+    </TabLayout>
   )
 }

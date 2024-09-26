@@ -13,7 +13,7 @@ export const AuthLayout = (props: AuthLayoutProps) => {
         className="w-full h-full"
         contentContainerStyle={{ flexGrow: 1 }}
       >
-        <VStack className="md:items-center md:justify-center flex-1 w-full  p-9 md:gap-10 gap-16 md:m-auto md:w-1/2 h-full">
+        <VStack className="md:items-center md:justify-center flex-1 w-full p-8 md:gap-10 gap-16 md:m-auto md:w-1/2 h-full">
           {props.children}
         </VStack>
       </ScrollView>

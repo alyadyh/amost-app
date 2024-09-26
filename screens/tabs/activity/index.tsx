@@ -13,8 +13,9 @@ import { ScrollView } from '@/components/ui/scroll-view'
 import { dummyLogs  } from '@/data/dummy'
 import ShareReport from './component/ShareExport'
 import { supabase } from '@/lib/supabase'
+import TabLayout from '../layout'
 
-export const Activities = () => {
+const ActivityScreen = () => {
   const [userName, setUserName] = useState<string>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
 
@@ -64,45 +65,51 @@ export const Activities = () => {
   }, [])
 
   return (
-    <SafeAreaView className="h-full bg-white">
-      <VStack space="xl" className="px-6 py-16">
-        <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Aktivitas</Heading>
+    <VStack space="xl" className='flex-1'>
+      <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Aktivitas</Heading>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          <VStack space='2xl'>
-            <VStack>
-              <LinearGradient 
-                className="w-full px-6 py-8 flex-row justify-between items-center rounded-t-xl"
-                colors={["#00A378", "#34B986"]}
-                start={[0, 1]}
-                end={[1, 0]}
-              >
-                <VStack space='lg'>
-                  <Text className="font-medium text-white">
-                    Angka kepatuhan hari ini
+      <ScrollView>
+        <VStack space='2xl' className='mb-4'>
+          <VStack>
+            <LinearGradient 
+              className="w-full px-6 py-8 flex-row justify-between items-center rounded-t-xl"
+              colors={["#00A378", "#34B986"]}
+              start={[0, 1]}
+              end={[1, 0]}
+             >
+              <VStack space='lg'>
+                <Text className="font-medium text-white">
+                  Angka kepatuhan hari ini
+                </Text>
+                <HStack space='sm' className='items-center'>
+                  <Text size='5xl' className="text-white font-bold ml-2">
+                    {adherenceRate}
                   </Text>
-                  <HStack space='sm' className='items-center'>
-                    <Text size='5xl' className="text-white font-bold ml-2">
-                      {adherenceRate}
-                    </Text>
-                    <Icon as={Percent} size='2xl' className='stroke-white' />
-                  </HStack>
-                </VStack>
-              </LinearGradient>
-              <Link href="/logMed" className='bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-xl'>
-                <HStack space='xs' className='justify-center items-center'>
-                  <Text className='text-amost-primary'>Lihat semua log</Text>
-                  <Icon as={ChevronRight} className='stroke-amost-primary'/>
+                  <Icon as={Percent} size='2xl' className='stroke-white' />
                 </HStack>
-              </Link>
-            </VStack>
-
-            <SummaryChart />
-
-            <ShareReport userName={userName} />
+              </VStack>
+            </LinearGradient>
+            <Link href="/logMed" className='bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-xl'>
+              <HStack space='xs' className='justify-center items-center'>
+                <Text className='text-amost-primary'>Lihat semua log</Text>
+                <Icon as={ChevronRight} className='stroke-amost-primary'/>
+              </HStack>
+            </Link>
           </VStack>
-        </ScrollView>
-      </VStack>
-    </SafeAreaView>
+
+          <SummaryChart />
+
+          <ShareReport userName={userName} />
+        </VStack>
+      </ScrollView>
+     </VStack>
+  )
+}
+
+export const Activities = () => {
+  return (
+    <TabLayout>
+      <ActivityScreen />
+    </TabLayout>
   )
 }
