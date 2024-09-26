@@ -9,7 +9,7 @@ import TabletSvg from "@/components/svg/TabletSvg"
 export interface Medicine {
   id: string
   medName: string
-  medForm: 'cairan' | 'kapsul' | 'tablet' | 'suntikan' | 'bubuk' | 'patch' | 'gel'
+  medForm: string
   dosage: string
   doseQuantity: number
   frequency: string
