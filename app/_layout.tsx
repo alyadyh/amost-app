@@ -9,6 +9,7 @@ import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from "@/lib/supabase"
 import { Session } from "@supabase/supabase-js"
+import * as Linking from 'expo-linking'
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -30,6 +31,7 @@ export default function RootLayout() {
   })
 
   const [session, setSession] = useState<Session | null>(null)
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState(false)
   const router = useRouter()
 
   // Supabase session management
@@ -57,6 +59,25 @@ export default function RootLayout() {
     }
   }, [])
 
+  // Deep linking to handle email confirmation
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      const data = Linking.parse(event.url)
+      if (data.path === 'confirm-email') {
+        // If the email confirmation link is clicked, set the confirmation state
+        setIsEmailConfirmed(true)
+        // Redirect to the sign-in page
+        router.replace("/signIn")
+      }
+    }
+
+    const subscription = Linking.addEventListener('url', handleDeepLink)
+
+    return () => {
+      subscription.remove()
+    }
+  }, [])
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error
@@ -72,10 +93,10 @@ export default function RootLayout() {
     return null
   }
 
-  return <RootLayoutNav session={session} />
+  return <RootLayoutNav session={session} isEmailConfirmed={isEmailConfirmed} />
 }
 
-function RootLayoutNav({ session }: { session: Session | null }) {
+function RootLayoutNav({ session, isEmailConfirmed  }: { session: Session | null, isEmailConfirmed: boolean }) {
   const insets = useSafeAreaInsets()
 
   return (
@@ -91,6 +112,9 @@ function RootLayoutNav({ session }: { session: Session | null }) {
           ) : (
             <Stack.Screen name="(auth)" />
           )}
+
+          {/* Pass isEmailConfirmed to the SignIn screen */}
+          <Stack.Screen name="signIn" initialParams={{ isEmailConfirmed }} />
         </Stack>
       </SafeAreaView>
     </GluestackUIProvider>

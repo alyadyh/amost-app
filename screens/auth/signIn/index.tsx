@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
 import { HStack } from "@/components/ui/hstack"
 import { VStack } from "@/components/ui/vstack"
@@ -40,7 +40,7 @@ const loginSchema = z.object({
 
 type LoginSchemaType = z.infer<typeof loginSchema>
 
-const LoginScreen = () => {
+const LoginScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
   const {
     control,
     handleSubmit,
@@ -63,30 +63,18 @@ const LoginScreen = () => {
         password: data.password,
       })
 
-      if (error) {
+      if (!error) {
+        router.push("/home")
+      } else {
+        // Error occurred: Set validation based on the error message
         if (error.message === "Invalid login credentials") {
           setValidated({ emailValid: true, passwordValid: false })
         } else if (error.message === "User not found") {
           setValidated({ emailValid: false, passwordValid: true })
-        } else {
-          Alert.alert("Login Failed", error.message)
+        } else if (error.message.includes("Invalid email or password")) {
+          setValidated({ emailValid: false, passwordValid: false })
         }
-        return
       }
-
-      // If login is successful, show success toast and reset the form
-      setValidated({ emailValid: true, passwordValid: true })
-      toast.show({
-        placement: "bottom right",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle className="text-white">Logged in successfully!</ToastTitle>
-          </Toast>
-        ),
-      })
-
-      reset()
-      router.push("/home")
     } catch (err) {
       console.error("Error during login:", err)
     }
@@ -105,6 +93,20 @@ const LoginScreen = () => {
     handleSubmit(onSubmit)()
   }
   const router = useRouter()
+
+  // Show toast if email is confirmed
+  useEffect(() => {
+    if (isEmailConfirmed) {
+      toast.show({
+        placement: "bottom right",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="success">
+            <ToastTitle className="text-white">Email berhasil dikonfirmasi!</ToastTitle>
+          </Toast>
+        ),
+      });
+    }
+  }, [isEmailConfirmed])
 
   return (
     <VStack className="w-full h-full justify-between" space="md">
@@ -132,7 +134,7 @@ const LoginScreen = () => {
         <VStack space="xl" className="w-full mt-12">
           {/* Email */}
           <FormControl
-            isInvalid={!!errors?.email || !validated.emailValid}
+            isInvalid={!!errors.email || !validated.emailValid}
             className="w-full"
             >
             <FormControlLabel>
@@ -170,7 +172,7 @@ const LoginScreen = () => {
               <FormControlErrorIcon as={AlertCircleIcon} />
               <FormControlErrorText size="sm">
                 {errors?.email?.message ||
-                  (!validated.emailValid && "Email ID tidak ditemukan")}
+                  (!validated.emailValid && "Email tidak ditemukan")}
               </FormControlErrorText>
             </FormControlError>
           </FormControl>
@@ -219,7 +221,7 @@ const LoginScreen = () => {
               <FormControlErrorIcon as={AlertCircleIcon} />
               <FormControlErrorText size="sm">
                 {errors?.password?.message ||
-                  (!validated.passwordValid && "Password invalid")}
+                  (!validated.passwordValid && "Password tidak valid")}
               </FormControlErrorText>
             </FormControlError>
           </FormControl>
@@ -257,10 +259,10 @@ const LoginScreen = () => {
   )
 }
 
-export const SignIn = () => {
+export const SignIn = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
   return (
     <AuthLayout>
-      <LoginScreen />
+      <LoginScreen isEmailConfirmed={isEmailConfirmed} />
     </AuthLayout>
   )
 }

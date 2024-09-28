@@ -40,29 +40,31 @@ import { AuthLayout } from "../layout"
 import { supabase } from "@/lib/supabase"
 
 const signUpSchema = z.object({
-  fullname: z.string().min(1, "Nama lengkap belum diisi"),
+  fullname: z.string().min(1, "Nama belum diisi"),
   email: z.string().min(1, "Email belum diisi").email(),
   password: z
     .string()
     .min(6, "Minimal harus terdiri dari 6 karakter")
-    .regex(new RegExp(".*[A-Z].*"), "Satu huruf besar")
-    .regex(new RegExp(".*[a-z].*"), "Satu huruf kecil")
-    .regex(new RegExp(".*\\d.*"), "Satu angka")
+    .regex(new RegExp(".*[A-Z].*"), "Minimal harus terdiri dari satu huruf besar")
+    .regex(new RegExp(".*[a-z].*"), "Minimal harus terdiri dari satu huruf kecil")
+    .regex(new RegExp(".*\\d.*"), "Minimal harus terdiri dari satu angka")
     .regex(
       new RegExp(".*[`~<>?,./!@#$%^&*()\\-_+=\"'|{}\\[\\]:\\\\].*"),
-      "Satu karakter simbol"
+      "Minimal harus terdiri dari satu karakter simbol"
     ),
   confirmpassword: z
     .string()
     .min(6, "Minimal harus terdiri dari 6 karakter")
-    .regex(new RegExp(".*[A-Z].*"), "Satu huruf besar")
-    .regex(new RegExp(".*[a-z].*"), "Satu huruf kecil")
-    .regex(new RegExp(".*\\d.*"), "Satu angka")
+    .regex(new RegExp(".*[A-Z].*"), "Minimal harus terdiri dari satu huruf besar")
+    .regex(new RegExp(".*[a-z].*"), "Minimal harus terdiri dari satu huruf kecil")
+    .regex(new RegExp(".*\\d.*"), "Minimal harus terdiri dari satu angka")
     .regex(
       new RegExp(".*[`~<>?,./!@#$%^&*()\\-_+=\"'|{}\\[\\]:\\\\].*"),
-      "Satu karakter simbol"
+      "Minimal harus terdiri dari satu karakter simbol"
     ),
-  privacyagreement: z.boolean().optional(),
+  privacyagreement: z.boolean().refine((val) => val === true, {
+    message: "Anda harus menyetujui Kebijakan Privasi dan Syarat Ketentuan",
+  }),
 })
 type SignUpSchemaType = z.infer<typeof signUpSchema>
 
@@ -80,7 +82,7 @@ const SignUpWithLeftBackground = () => {
   const onSubmit = async (data: SignUpSchemaType) => {
     if (data.password !== data.confirmpassword) {
       toast.show({
-        placement: "top right",
+        placement: "top left",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="error">
             <ToastTitle>Password tidak cocok</ToastTitle>
@@ -98,6 +100,7 @@ const SignUpWithLeftBackground = () => {
           data: {
             full_name: data.fullname
           },
+          emailRedirectTo: 'amost://confirm-email', // Deep link to the sign-in screen
         },
       })
 
@@ -107,7 +110,7 @@ const SignUpWithLeftBackground = () => {
       }
 
       toast.show({
-        placement: "top right",
+        placement: "top left",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle>Silakan periksa email Anda untuk verifikasi.</ToastTitle>
@@ -121,32 +124,7 @@ const SignUpWithLeftBackground = () => {
       console.error("Error during sign-up:", err)
     }
   }
-  // const onSubmit = (data: SignUpSchemaType) => {
-  //   if (data.password === data.confirmpassword) {
-  //     toast.show({
-  //       placement: "bottom right",
-  //       render: ({ id }) => {
-  //         return (
-  //           <Toast nativeID={id} variant="solid" action="success">
-  //             <ToastTitle>Success</ToastTitle>
-  //           </Toast>
-  //         )
-  //       },
-  //     })
-  //     reset()
-  //   } else {
-  //     toast.show({
-  //       placement: "top right",
-  //       render: ({ id }) => {
-  //         return (
-  //           <Toast nativeID={id} variant="solid" action="error">
-  //             <ToastTitle>Password tidak cocok</ToastTitle>
-  //           </Toast>
-  //         )
-  //       },
-  //     })
-  //   }
-  // }
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -168,7 +146,7 @@ const SignUpWithLeftBackground = () => {
 
   return (
     <VStack className="w-full h-full justify-between" space="md">
-      <VStack className="md:items-center" space="sm">
+      <VStack className="md:items-center mb-8" space="sm">
         <Pressable
           onPress={() => {
             router.back()
@@ -180,8 +158,8 @@ const SignUpWithLeftBackground = () => {
             size="2xl"
           />
         </Pressable>
-        <VStack space="sm">
-          <Heading className="md:text-center text-amost-primary mt-10" size="2xl">
+        <VStack space="sm" className="mt-6">
+          <Heading className="md:text-center text-amost-primary" size="2xl">
             Mulai buat akunmu sekarang!
           </Heading>
           <Text className="font-normal text-amost-secondary-dark_2" size="sm">Daftar untuk mulai mengelola obatmu</Text>
@@ -364,19 +342,27 @@ const SignUpWithLeftBackground = () => {
             defaultValue={false}
             control={control}
             render={({ field: { onChange, value } }) => (
-              <Checkbox
-                value="Privacy Agreement"
-                isChecked={value}
-                onChange={onChange}
-                aria-label="Privacy Agreement"
-              >
-                <CheckboxIndicator>
-                  <CheckboxIcon as={CheckIcon} />
-                </CheckboxIndicator>
-                <CheckboxLabel className="font- text-xs text-amost-secondary-dark_2">
-                  Dengan ini saya menyetujui Kebijakan Privasi serta Syarat dan Ketentuan yang berlaku.
-                </CheckboxLabel>
-              </Checkbox>
+              <FormControl isInvalid={!!errors.privacyagreement}>
+                <Checkbox
+                  value="Privacy Agreement"
+                  isChecked={value}
+                  onChange={onChange}
+                  aria-label="Privacy Agreement"
+                >
+                  <CheckboxIndicator>
+                    <CheckboxIcon as={CheckIcon} />
+                  </CheckboxIndicator>
+                  <CheckboxLabel className="text-xs text-amost-secondary-dark_2">
+                    Saya menyetujui Kebijakan Privasi serta Syarat dan Ketentuan yang berlaku.
+                  </CheckboxLabel>
+                </Checkbox>
+                <FormControlError>
+                  <FormControlErrorIcon as={AlertCircleIcon} />
+                  <FormControlErrorText size="sm">
+                    {errors?.privacyagreement?.message}
+                  </FormControlErrorText>
+                </FormControlError>
+              </FormControl>
             )}
           />
         </VStack>
