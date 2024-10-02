@@ -51,7 +51,7 @@ const ActivityScreen = () => {
   // Calculate the adherence percentage for today
   useEffect(() => {
     const today = getTodayDate()
-    const logsForToday = dummyLogs.filter(log => log.date === today)
+    const logsForToday = dummyLogs.filter(log => log.log_date === today)
 
     const totalMedications = logsForToday.length
     const takenMedications = logsForToday.filter(log => log.taken === true).length
@@ -66,7 +66,7 @@ const ActivityScreen = () => {
 
   return (
     <VStack space="xl" className='flex-1'>
-      <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Aktivitas</Heading>
+      <Heading size='2xl' className="font-black text-amost-secondary-dark_1">Aktivitas</Heading>
 
       <ScrollView>
         <VStack space='2xl' className='mb-4'>
@@ -82,8 +82,8 @@ const ActivityScreen = () => {
                   Angka kepatuhan hari ini
                 </Text>
                 <HStack space='sm' className='items-center'>
-                  <Text size='5xl' className="text-white font-bold ml-2">
-                    {adherenceRate}
+                  <Text size='5xl' className="font-bold text-white ml-2">
+                    {adherenceRate || '0'}
                   </Text>
                   <Icon as={Percent} size='2xl' className='stroke-white' />
                 </HStack>

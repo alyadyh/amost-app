@@ -8,20 +8,20 @@ import TabletSvg from "@/components/svg/TabletSvg"
 
 export interface Medicine {
   id: string
-  medName: string
-  medForm: string
+  med_name: string
+  med_form: string
   dosage: string
-  doseQuantity: number
+  dose_quantity: number
   frequency: string
-  frequencyTimesPerDay: number
-  frequencyIntervalDays: number
-  reminderTimes: string[]  // Format: "HH:mm"
+  frequency_times_per_day: number
+  frequency_interval_days: number
+  reminder_times: string[]  // Format: "HH:mm"
   duration: number
-  stockQuantity: number
-  medPhotos?: string | null
+  stock_quantity: number
+  med_photos?: string | null
   instructions?: string
-  prescribingDoctor?: string
-  dispensingPharmacy?: string
+  prescribing_doctor?: string
+  dispensing_pharmacy?: string
 }
 
 export type MedForm = 'cairan' | 'kapsul' | 'tablet' | 'suntikan' | 'bubuk' | 'patch' | 'gel'
@@ -59,7 +59,7 @@ export const medFormInactive: Record<MedForm, any> = {
 
 export type Log = {
   id: string
-  date: string // Store date in 'YYYY-MM-DD' format
-  time: string | null // Store time in 'HH:mm' format
+  log_date: string // Store date in 'YYYY-MM-DD' format
+  log_time: string | null // Store time in 'HH:mm' format
   taken: boolean | null
 }

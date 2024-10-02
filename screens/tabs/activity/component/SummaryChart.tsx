@@ -30,7 +30,7 @@ const getCurrentWeekDates = (): { dayName: string, date: string }[] => {
 
 // Function to calculate adherence percentage for a given day
 const calculateAdherenceForDay = (logs: typeof dummyLogs, date: string): number => {
-  const logsForDay = logs.filter(log => log.date === date)
+  const logsForDay = logs.filter(log => log.log_date === date)
   const totalLogs = logsForDay.length
   const takenLogs = logsForDay.filter(log => log.taken === true).length
 
@@ -39,13 +39,13 @@ const calculateAdherenceForDay = (logs: typeof dummyLogs, date: string): number 
 
 export default function MedicationAdherenceChart() {
   const [adherenceData, setAdherenceData] = useState<barDataItem[]>([
-    { value: 0.01, label: 'Sen' },
-    { value: 0.01, label: 'Sel' },
-    { value: 0.01, label: 'Rab' },
-    { value: 0.01, label: 'Kam' },
-    { value: 0.01, label: 'Jum' },
-    { value: 0.01, label: 'Sab' },
-    { value: 0.01, label: 'Min' },
+    { value: 0, label: 'Sen' },
+    { value: 0, label: 'Sel' },
+    { value: 0, label: 'Rab' },
+    { value: 0, label: 'Kam' },
+    { value: 0, label: 'Jum' },
+    { value: 0, label: 'Sab' },
+    { value: 0, label: 'Min' },
   ])
 
   useEffect(() => {
@@ -70,6 +70,12 @@ export default function MedicationAdherenceChart() {
     }
   }, [])
 
+  const minBarValue = 0.001; // To prevent passing 0 or invalid values to the chart
+  const adherenceDataMaps = adherenceData.map(item => ({
+    ...item,
+    value: item.value > 0 ? item.value : minBarValue,
+  }));
+
   return (
     <VStack space='lg'>
       <LinearGradient 
@@ -83,7 +89,7 @@ export default function MedicationAdherenceChart() {
             Grafik Kepatuhan Anda
           </Text>
           <BarChart
-            data={adherenceData}
+            data={adherenceDataMaps}
             barWidth={15}
             height={200}
             width={230}

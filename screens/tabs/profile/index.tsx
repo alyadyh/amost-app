@@ -19,12 +19,6 @@ import { supabase } from "@/lib/supabase"
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
 import TabLayout from "../layout"
 
-interface AccountCardType {
-    iconName: LucideIcon | typeof Icon
-    subText: string
-    rightIcon: LucideIcon | typeof Icon
-}
-
 const ProfileScreen = () => {
   const [showModal, setShowModal] = useState(false)
   const [user, setUser] = useState({ name: "", email: "", avatar: "" })

@@ -37,9 +37,9 @@ export default function RootLayout() {
   // Supabase session management
   useEffect(() => {
     // Check session on load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (!session) {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      if (!data.session) {
         // Redirect to sign-in if no session
         router.replace("/signIn")
       }

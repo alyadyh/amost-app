@@ -19,22 +19,23 @@ import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/opt
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import MedLayout from "../layout"
+import { supabase } from "@/lib/supabase"
 
 const AddMedSchema = z.object({
-  medName: z.string().min(1, "Nama Obat belum diisi"),
-  medForm: z.string().min(1, "Bentuk Obat belum diisi"),
+  med_name: z.string().min(1, "Nama Obat belum diisi"),
+  med_form: z.string().min(1, "Bentuk Obat belum diisi"),
   dosage: z.string().min(1, "Dosis belum diisi"),
-  doseQuantity: z.number().positive(),
+  dose_quantity: z.number().positive(),
   frequency: z.string().min(1, "Frekuensi belum diisi"),
-  frequencyTimesPerDay: z.number().min(1),
-  frequencyIntervalDays: z.number().min(1),
-  reminderTimes: z.array(z.date().refine((date) => !isNaN(date.getTime()), { message: "Pengingat belum dipilih" })),
-  stockQuantity: z.number().positive("Stok Obat harus lebih dari 0").min(1, "Stok Obat belum diisi"),
+  frequency_times_per_day: z.number().min(1),
+  frequency_interval_days: z.number().min(1),
+  reminder_times: z.array(z.date().refine((date) => !isNaN(date.getTime()), { message: "Pengingat belum dipilih" })),
+  stock_quantity: z.number().positive("Stok Obat harus lebih dari 0").min(1, "Stok Obat belum diisi"),
   duration: z.number().positive("Durasi harus lebih dari 0").min(1, "Durasi belum diisi"),
   instructions: z.string().optional(),
-  prescribingDoctor: z.string().optional(),
-  dispensingPharmacy: z.string().optional(),
-  imageUri: z.string().optional(),
+  prescribing_doctor: z.string().optional(),
+  dispensing_pharmacy: z.string().optional(),
+  med_photos: z.string().optional(),
 })
 
 type AddMedSchemaType = z.infer<typeof AddMedSchema>
@@ -51,7 +52,7 @@ const AddMedScreen = () => {
   } = useForm<AddMedSchemaType>({
     resolver: zodResolver(AddMedSchema),
     defaultValues: {
-      reminderTimes: [],
+      reminder_times: [],
     },
   })
 
@@ -63,7 +64,7 @@ const AddMedScreen = () => {
   const selectedFrequency = watch("frequency")
   
   // Watch the medForm field
-  const selectedMedForm = watch("medForm") as keyof typeof dosageOptions
+  const selectedMedForm = watch("med_form") as keyof typeof dosageOptions
   const applicableDosageOptions = selectedMedForm ? dosageOptions[selectedMedForm] : []
 
   // Update timesPerDay based on selected frequency
@@ -71,10 +72,10 @@ const AddMedScreen = () => {
     if (selectedFrequency) {
       const selectedOption = frequencyOptions.find(option => option.value === selectedFrequency)
       if (selectedOption) {
-        setTimesPerDay(selectedOption.timesPerDay)
-        setValue("reminderTimes", Array(selectedOption.timesPerDay).fill(new Date()))
-        setValue("frequencyTimesPerDay", selectedOption.timesPerDay)
-        setValue("frequencyIntervalDays", selectedOption.intervalDays)
+        setTimesPerDay(selectedOption.times_per_day)
+        setValue("reminder_times", Array(selectedOption.times_per_day).fill(new Date()))
+        setValue("frequency_times_per_day", selectedOption.times_per_day)
+        setValue("frequency_interval_days", selectedOption.interval_days)
       }
     }
   }, [selectedFrequency, setValue])
@@ -82,29 +83,91 @@ const AddMedScreen = () => {
   // Handle time change for each TimePicker
   const handleTimeChange = (index: number, time: Date) => {
     // const currentTimes = [...watch("reminderTimes")]
-    const currentTimes = getValues("reminderTimes")
+    const currentTimes = getValues("reminder_times")
     currentTimes[index] = time
-    setValue("reminderTimes", currentTimes)
+    setValue("reminder_times", currentTimes)
   }
 
-  const onSubmit = (data: AddMedSchemaType) => {
-    const formattedData = {
-        ...data,
-        reminderTimes: data.reminderTimes.map((time) => time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })),
+  const onSubmit = async (data: AddMedSchemaType) => {
+    let uploadedImagePath = null
+    const selectedImageUri = getValues("med_photos")
+    console.log("Selected Image URI before upload:", selectedImageUri)
+
+    // Upload the image
+    if (selectedImageUri) {
+      try {
+        const response = await fetch(selectedImageUri)
+        const arrayBuffer = await response.arrayBuffer()
+        const fileExt = selectedImageUri.split(".").pop()
+        const fileName = `${Date.now()}.${fileExt}`
+
+        const { data: storageData, error: uploadError } = await supabase.storage
+          .from("med_photos")
+          .upload(fileName, arrayBuffer, {
+            contentType: `image/${fileExt}`,
+          })
+
+        if (uploadError) {
+          throw uploadError
+        }
+
+        uploadedImagePath = storageData.path
+        console.log("Supabase Storage Response:", storageData);
+      } catch (error) {
+        console.error("Error uploading image:", error)
+      }
     }
 
-    console.log("Submitted Data:", formattedData)  // Log for debugging
+    const formattedData = {
+      ...data,
+      reminder_times: data.reminder_times.map((time) => time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })),
+      med_photos: uploadedImagePath || null,
+    }
 
-    toast.show({
-        placement: "bottom right",
+    console.log("Submitted Data:", formattedData)
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError || !session) {
+        throw new Error("User is not logged in")
+      }
+
+      console.log("User id:", session.user.id)
+
+      // Insert the medicine data into Supabase
+      const { error } = await supabase.from("medicines").insert({
+        user_id: session.user.id,
+        ...formattedData
+      })
+
+      if (error) {
+        throw error
+      }
+
+      toast.show({
+        placement: "top left",
         render: ({ id }: { id: string }) => (
-        <Toast nativeID={id} variant="solid" action="success">
+          <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle className="text-white">Obat berhasil ditambahkan!</ToastTitle>
-        </Toast>
+          </Toast>
         ),
-    })
-    router.push("/medication")
-    reset()
+      })
+      router.push("/medication")
+      reset()
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Error inserting medicine:", error.message)
+        toast.show({
+          placement: "top left",
+          render: ({ id }: { id: string }) => (
+            <Toast nativeID={id} variant="solid" action="error">
+              <ToastTitle className="text-white">Gagal menambahkan obat!</ToastTitle>
+            </Toast>
+          ),
+        })
+      }
+    }
   }
 
   const onError = (errors: any) => {
@@ -127,8 +190,8 @@ const AddMedScreen = () => {
       </HStack>
       <ScrollView>
         <VStack space="md">
-          <FormField name="medName" label="Nama Obat" control={control} error={errors.medName?.message} placeholder="Masukkan nama obat" />
-          <SelectField name="medForm" label="Bentuk Obat" control={control} options={medFormOptions} error={errors.medForm?.message} />
+          <FormField name="med_name" label="Nama Obat" control={control} error={errors.med_name?.message} placeholder="Masukkan nama obat" />
+          <SelectField name="med_form" label="Bentuk Obat" control={control} options={medFormOptions} error={errors.med_form?.message} />
           <SelectField name="dosage" label="Dosis" control={control} options={applicableDosageOptions} setValue={setValue} error={errors.dosage?.message} />
           <SelectField name="frequency" label="Frekuensi" control={control} options={frequencyOptions} setValue={setValue} error={errors.frequency?.message} />
           {/* Dynamically render TimePickerFields based on timesPerDay */}
@@ -138,7 +201,7 @@ const AddMedScreen = () => {
                 <Controller
                     key={index}
                     control={control}
-                    name={`reminderTimes.${index}`}
+                    name={`reminder_times.${index}`}
                     render={({ field: { onChange, value } }) => (
                     <TimePickerField
                         label={`Waktu Pengingat ${index + 1}`}
@@ -147,7 +210,7 @@ const AddMedScreen = () => {
                         onChange(time)
                         handleTimeChange(index, time)
                         }}
-                        error={errors.reminderTimes?.[index]?.message}
+                        error={errors.reminder_times?.[index]?.message}
                     />
                     )}
                 />
@@ -156,7 +219,7 @@ const AddMedScreen = () => {
           )}
 
           <VStack space="sm">
-            <FormField name="stockQuantity" label="Kuantitas Stok" control={control} error={errors.stockQuantity?.message} placeholder="0" isNumeric={true} />
+            <FormField name="stock_quantity" label="Kuantitas Stok" control={control} error={errors.stock_quantity?.message} placeholder="0" isNumeric={true} />
             <Text size="xs" className="text-amost-secondary-dark_2">(Jika cair atau bubuk, tulis jumlah dalam mL atau gram.)</Text>
           </VStack>
           <VStack space="sm">
@@ -174,12 +237,12 @@ const AddMedScreen = () => {
   )
 }
 
-const DetailFields = ({ control, setValue }: any) => (
+const DetailFields = ({ control, setValue, setSelectedImageUri }: any) => (
   <VStack space="md">
     <TextareaField name="instructions" label="Instruksi" control={control} error={null}  placeholder="Masukkan instruksi obat" />
-    <FormField name="prescribingDoctor" label="Dokter Yang Meresepkan" control={control} placeholder="Dr. John Doe" />
-    <FormField name="dispensingPharmacy" label="Nama Apotek" control={control} placeholder="Apotek ABC" />
-    <FormField name="imageUri" label="Foto Obat" control={control} setValue={setValue} placeholder="Masukkan Foto Obat" isImagePicker={true}  />
+    <FormField name="prescribing_doctor" label="Dokter Yang Meresepkan" control={control} placeholder="Dr. John Doe" />
+    <FormField name="dispensing_pharmacy" label="Nama Apotek" control={control} placeholder="Apotek ABC" />
+    <FormField name="med_photos" label="Foto Obat" control={control} setValue={setValue} placeholder="Masukkan Foto Obat" isImagePicker={true}  />
   </VStack>
 )
 
@@ -199,7 +262,7 @@ const ToggleDetailsButton = ({ isDetailVisible, setDetailVisible }: any) => (
 
 const SubmitButton = ({ onSubmit }: any) => (
   <Button
-    className="bg-amost-primary rounded-full w-full mt-8"
+    className="bg-amost-primary rounded-full w-full mt-12"
     size="xl"
     onPress={() => {
       console.log("Submit button clicked")

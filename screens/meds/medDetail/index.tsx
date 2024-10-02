@@ -14,6 +14,8 @@ import { ModalComponent } from "./modal"
 import { MedForm, medFormActive } from '@/constants/types'
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
 import { Heading } from '@/components/ui/heading'
+import { supabase } from '@/lib/supabase'
+import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
 
 export const MedDetail = () => {
   const [showModal, setShowModal] = useState<string | null>(null)
@@ -22,12 +24,49 @@ export const MedDetail = () => {
 
   if (!med) return <Text>Error: No medication details available.</Text>
 
-  const medImage = medFormActive[med.medForm as MedForm]
+  const medImage = medFormActive[med.med_form as MedForm]
 
   const toggleModal = (modalName: string | null) => setShowModal(modalName)
 
   const [showAlertDialog, setShowAlertDialog] = React.useState(false)
   const handleClose = () => setShowAlertDialog(false)
+
+  const toast = useToast()
+
+  // Function to delete the medicine in Supabase
+  const deleteMedicine = async () => {
+    try {
+      const { error } = await supabase
+        .from('medicines')
+        .delete()
+        .eq('id', med.id)
+
+      if (error) {
+        console.error('Error deleting medicine:', error.message)
+        toast.show({
+          placement: "bottom right",
+          render: ({ id }) => (
+            <Toast nativeID={id} variant="solid" action="error">
+              <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
+            </Toast>
+          ),
+        })
+      } else {
+        handleClose()
+        toast.show({
+          placement: "bottom right",
+          render: ({ id }) => (
+            <Toast nativeID={id} variant="solid" action="success">
+              <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>
+            </Toast>
+          ),
+        })
+        router.push("/medication")
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err)
+    }
+  }
 
   return (
     <SafeAreaView className="w-full h-full bg-amost-primary">
@@ -44,11 +83,11 @@ export const MedDetail = () => {
         <ScrollView>
           <VStack space='2xl'>
             {/* PNG Image */}
-            <Image source={medImage} size='lg' alt={`${med.medName} image`} className='self-center' />
+            <Image source={medImage} size='lg' alt={`${med.med_name} image`} className='self-center' />
             
             {/* Medication Title */}
             <Text size='3xl' bold className="text-white text-center">
-                {med.medName}
+                {med.med_name}
             </Text>
 
             {/* Frequency and Duration */}
@@ -73,10 +112,10 @@ export const MedDetail = () => {
             <VStack space='sm'>
               <Text size='lg' className="text-white font-semibold">Jadwal</Text>
               <VStack>
-                {med.reminderTimes.map((time: any, index: any) => (
+                {med.reminder_times.map((time: any, index: any) => (
                   <HStack
                     key={index}
-                    className={`bg-white rounded-lg p-4 justify-between items-center ${index === med.reminderTimes.length - 1 && index > 0 ? 'mb-0' : 'mb-2'}`}
+                    className={`bg-white rounded-lg p-4 justify-between items-center ${index === med.reminder_times.length - 1 && index > 0 ? 'mb-0' : 'mb-2'}`}
                   >
                     <Text bold className="text-amost-secondary-dark_2">
                       {`Asupan ke-${index + 1}`}
@@ -100,7 +139,7 @@ export const MedDetail = () => {
               </HStack>
               <HStack className="bg-white rounded-lg p-4 justify-between">
                 <Text bold className="text-amost-secondary-dark_2">Jumlah stok obat</Text>
-                <Text bold className="text-black">{med.stockQuantity}</Text>
+                <Text bold className="text-black">{med.stock_quantity}</Text>
               </HStack>
             </VStack>
 
@@ -161,7 +200,7 @@ export const MedDetail = () => {
                     >
                       <ButtonText>Batalkan</ButtonText>
                     </Button>
-                    <Button size="sm" action="negative" onPress={handleClose}>
+                    <Button size="sm" action="negative" onPress={deleteMedicine}>
                       <ButtonText>Hapus</ButtonText>
                     </Button>
                   </AlertDialogFooter>

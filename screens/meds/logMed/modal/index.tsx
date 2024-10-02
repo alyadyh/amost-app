@@ -21,13 +21,13 @@ interface LogModalProps {
 export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, onLog }) => {
   const handleLog = (taken: boolean) => {
     const now = new Date()
-    const date = now.toISOString().split('T')[0] // Get date in 'YYYY-MM-DD' format
-    const time = now.toTimeString().split(' ')[0].slice(0, 5) // Get time in 'HH:mm' format
+    const log_date = now.toISOString().split('T')[0] // Get date in 'YYYY-MM-DD' format
+    const log_time = now.toTimeString().split(' ')[0].slice(0, 5) // Get time in 'HH:mm' format
 
     const log: Log = {
       id: medicine.id,
-      date, // Store date separately
-      time, // Store time separately
+      log_date, // Store date separately
+      log_time, // Store time separately
       taken,
     }
 
@@ -48,7 +48,7 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
       <ModalContent className="bg-white rounded-xl p-6 items-center">
         <ModalHeader>
           <Text size='md' bold className='text-amost-secondary-dark_1 text-center mb-2'>
-            {getMedicineText(medicine.medForm, medicine.medName)}
+            {getMedicineText(medicine.med_form, medicine.med_name)}
           </Text>
         </ModalHeader>
 

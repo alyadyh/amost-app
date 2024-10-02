@@ -21,6 +21,7 @@ import { Fab, FabIcon, FabLabel } from '@/components/ui/fab'
 import { router } from 'expo-router'
 import { LayoutRectangle } from 'react-native'
 import TabLayout from '../layout'
+import { supabase } from '@/lib/supabase'
 
 const HomeScreen = () => {
   // Define the grouped meds type
@@ -36,7 +37,7 @@ const HomeScreen = () => {
     { id: 7, name: 'Min', date: '' },
   ])
 
-  const [meds, setMeds] = useState<Medicine[]>(dummyMeds)
+  const [meds, setMeds] = useState<Medicine[]>([])
   const [currentDay, setCurrentDay] = useState<number>(new Date().getDay()) // 0 = Sunday, 1 = Monday, etc.
   const [currentTime, setCurrentTime] = useState<string>(getCurrentTime())
   const [showModal, setShowModal] = useState(false)
@@ -83,9 +84,9 @@ const HomeScreen = () => {
     return meds
       .filter((med: Medicine) => {
         // Check if today is the day to take this medicine
-        return (dayId - 1) % med.frequencyIntervalDays === 0
+        return (dayId - 1) % med.frequency_interval_days === 0
       })
-      .sort((a: Medicine, b: Medicine) => a.reminderTimes[0].localeCompare(b.reminderTimes[0])) // Sort by reminderTimes
+      .sort((a: Medicine, b: Medicine) => a.reminder_times[0].localeCompare(b.reminder_times[0])) // Sort by reminderTimes
   }
 
   // Function to group meds by reminderTimes and sort them
@@ -93,7 +94,7 @@ const HomeScreen = () => {
     const groupedMeds: GroupedMedsType = {}
 
     meds.forEach((med: Medicine) => {
-      med.reminderTimes.forEach((time: string) => {
+      med.reminder_times.forEach((time: string) => {
         if (!groupedMeds[time]) {
           groupedMeds[time] = []
         }
@@ -144,8 +145,35 @@ const HomeScreen = () => {
     setCurrentDay(dayId) // Set the clicked day as the current day
   }
 
+  // Fetch user-specific medicines from Supabase
+  const fetchMedicines = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+
+      if (sessionData.session && sessionData.session.user) {
+        const userId = sessionData.session.user.id // Now TypeScript will know user exists
+
+        const { data, error } = await supabase
+          .from('medicines')
+          .select('*')
+          .eq('user_id', userId)
+
+        if (error) {
+          console.error('Error fetching medicines:', error.message)
+        } else {
+          setMeds(data || [])
+        }
+      } else {
+        console.log('No user session found')
+      }
+    } catch (err) {
+      console.error('Error during fetch:', err)
+    }
+  }
+
   useEffect(() => {
     getWeekDates() // Calculate and set week dates on component load
+    fetchMedicines()
 
     // Update current time every minute
     const timer = setInterval(() => {
@@ -206,12 +234,12 @@ const HomeScreen = () => {
           ))}
         </HStack> 
  
-        <ScrollView ref={scrollViewRef}>
-          <VStack space='sm' className='mb-4'>
-            {Object.keys(groupedMeds).length === 0 ? (
+        <ScrollView ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }}>
+          <VStack space='sm' className='flex-1 mb-4'>
+            {meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
               // Display this message when no meds are scheduled for the day
-              <View className='h-full items-center'>
-                <Text className="text-center text-amost-secondary-dark_2">Tidak ada jadwal minum obat</Text>
+              <View className='items-center justify-center h-full'>
+                <Text className="text-amost-secondary-dark_2">Belum ada jadwal minum obat</Text>
               </View>
             ) : (
               Object.keys(groupedMeds).map((time) => (
@@ -226,8 +254,8 @@ const HomeScreen = () => {
                   {groupedMeds[time].map((med) => {
                     const active = isActive(time, currentTime)
                     const medImage = active 
-                      ? medFormActive[med.medForm as MedForm] 
-                      : medFormInactive[med.medForm as MedForm]
+                      ? medFormActive[med.med_form as MedForm] 
+                      : medFormInactive[med.med_form as MedForm]
                     const gradientColors = active
                       ? ['#00A378', '#34B986']
                       : ['#EFEFEF', '#f7f7f7']
@@ -235,7 +263,7 @@ const HomeScreen = () => {
                     const strokeClass = active ? 'stroke-white' : 'stroke-amost-secondary-dark_2'
 
                     // Truncate medName if it exceeds 10 characters
-                    const truncatedMedName = med.medName.length > 11 ? `${med.medName.slice(0, 11)}..` : med.medName
+                    const truncatedMedName = med.med_name.length > 11 ? `${med.med_name.slice(0, 11)}..` : med.med_name
 
                     return (
                       <Pressable
@@ -253,7 +281,7 @@ const HomeScreen = () => {
                               <Image
                                 source={medImage} 
                                 size='sm' 
-                                alt={`${med.medName} image`}
+                                alt={`${med.med_name} image`}
                               />
                               <VStack>
                                 <Text size='xl' bold className={`${textClass}`}>{truncatedMedName}</Text>
@@ -283,7 +311,7 @@ const HomeScreen = () => {
       </VStack>
       
       <Fab 
-        size="md" 
+        size="lg" 
         placement="bottom right" 
         className="bg-amost-secondary-green_1"
         onPress={() => {
@@ -291,7 +319,7 @@ const HomeScreen = () => {
         }}
       >
         <FabIcon as={AddIcon} />
-        <FabLabel>Tambah Obat</FabLabel>
+        {/* <FabLabel>Tambah Obat</FabLabel> */}
       </Fab>
     </>
   )

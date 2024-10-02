@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from '@/components/ui/safe-area-view'
 import { ScrollView } from '@/components/ui/scroll-view'
 import { Medicine } from '@/constants/types'
@@ -15,15 +15,48 @@ import { HStack } from '@/components/ui/hstack'
 import { Divider } from '@/components/ui/divider'
 import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input'
 import TabLayout from '../layout'
+import { supabase } from '@/lib/supabase'
+import { View } from '@/components/ui/view'
 
 const MedScreen = () => {
-  const [meds, setMeds] = useState<Medicine[]>(dummyMeds)
+  const [meds, setMeds] = useState<Medicine[]>([])
   const [searchTerm, setSearchTerm] = useState<string>('')
 
+  // Fetch user-specific medicines from Supabase
+  const fetchMedicines = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+
+      if (sessionData.session && sessionData.session.user) {
+        const userId = sessionData.session.user.id
+
+        const { data, error } = await supabase
+          .from('medicines')
+          .select('*')
+          .eq('user_id', userId)
+
+        if (error) {
+          console.error('Error fetching medicines:', error.message)
+        } else {
+          console.log('Fetched Medicines:', data)
+          setMeds(data || [])
+        }
+      } else {
+        console.log('No user session found')
+      }
+    } catch (err) {
+      console.error('Error during fetch:', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchMedicines()
+  }, [])
+
   // Filter the meds based on the search term
-  const filteredMeds = meds.filter(med =>
-    med.medName.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredMeds = searchTerm 
+  ? meds.filter(med => med.med_name && med.med_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  : meds
 
   return (
     <VStack space="3xl" className='flex-1'>
@@ -52,7 +85,7 @@ const MedScreen = () => {
             onPress={() => {
               router.push("/addMed")
             }}
-            >
+          >
             <HStack className='items-center'>
               <ButtonIcon as={AddIcon} className='stroke-amost-primary' />
               <ButtonText size='sm' className='font-normal text-amost-primary'> Tambah</ButtonText>
@@ -78,9 +111,9 @@ const MedScreen = () => {
         </Input>
 
         {filteredMeds.length === 0 ? (
-          <VStack className="items-center justify-center h-80">
+          <View className="items-center justify-center h-80">
             <Text className="text-amost-secondary-dark_2">Belum ada obat yang terdaftar</Text>
-          </VStack>
+          </View>
          ) : (
           <ScrollView>
             <VStack space='md'>
@@ -95,25 +128,16 @@ const MedScreen = () => {
                     >
                       <HStack className='justify-between p-4 items-center'>
                         <VStack>
-                          <Text size='xl' bold className='font-medium text-white mb-1'>{med.medName}</Text>
+                          <Text size='xl' bold className='font-medium text-white mb-1'>{med.med_name}</Text>
                           <HStack>
                             <Text size='sm' className='font-semibold text-white'>{med.dosage}</Text>
                             <Divider
                               orientation="vertical"
                               className='border-white mx-2.5'
                             />
-                            <HStack>
-                              <Text size='sm' className='font-semibold text-white'>
-                                {med.frequencyTimesPerDay}x
-                              </Text>
-                              <Text size='sm' className='font-semibold text-white'>
-                                {med.frequencyIntervalDays === 1
-                                  ? " sehari"
-                                  : med.frequencyIntervalDays === 7
-                                  ? " seminggu"
-                                  : ` tiap ${med.frequencyIntervalDays} hari`}
-                              </Text>
-                            </HStack>
+                            <Text size='sm' className='font-semibold text-white'>
+                              {med.frequency}
+                            </Text>
                           </HStack>
                         </VStack>
                         <Icon as={ChevronRightIcon} className='stroke-white' />

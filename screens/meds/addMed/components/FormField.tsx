@@ -8,7 +8,16 @@ import { AlertCircleIcon } from "@/components/ui/icon"
 import { Image } from "react-native"
 import { pickImage } from "./ImagePicker"
 
-export const FormField = ({ name, label, control, error, placeholder, isImagePicker = false, setValue, isNumeric }: any) => (
+export const FormField = ({ 
+  name, 
+  label, 
+  control, 
+  error, 
+  placeholder, 
+  isImagePicker = false, 
+  setValue, 
+  isNumeric 
+}: any) => (
   <FormControl isInvalid={!!error}>
     <FormControlLabel>
       <FormControlLabelText className="font-medium text-amost-secondary-dark_1">{label}</FormControlLabelText>
@@ -24,6 +33,8 @@ export const FormField = ({ name, label, control, error, placeholder, isImagePic
                 const selectedImageUri = await pickImage()
                 if (selectedImageUri) {
                   setValue(name, selectedImageUri)
+                } else {
+                  console.log("No image selected")
                 }
               }
             }}

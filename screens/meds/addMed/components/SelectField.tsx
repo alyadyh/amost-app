@@ -45,16 +45,16 @@ export const SelectField = ({ name, label, control, options, error, setValue }: 
               if (selectedOption && setValue) {
                 // If the `name` is `dosage`, update `doseQuantity`
                 if (name === "dosage") {
-                  setValue("doseQuantity", selectedOption.doseQuantity)
-                  console.log(`Dose Quantity: ${selectedOption.doseQuantity}`)
+                  setValue("dose_quantity", selectedOption.dose_quantity)
+                  console.log(`Dose Quantity: ${selectedOption.dose_quantity}`)
                 }
 
                 // If the `name` is `frequency`, update `frequencyTimesPerDay` and `frequencyIntervalDays`
                 if (name === "frequency") {
-                  setValue("frequencyTimesPerDay", selectedOption.timesPerDay)
-                  setValue("frequencyIntervalDays", selectedOption.intervalDays)
+                  setValue("frequency_times_per_day", selectedOption.times_per_day)
+                  setValue("frequency_interval_days", selectedOption.interval_days)
                   console.log(
-                    `TimesPerDay: ${selectedOption.timesPerDay}, IntervalDays: ${selectedOption.intervalDays}`
+                    `TimesPerDay: ${selectedOption.times_per_day}, IntervalDays: ${selectedOption.interval_days}`
                   )
                 }
               }

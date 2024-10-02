@@ -8,7 +8,7 @@ import { AlertCircleIcon } from "@/components/ui/icon"
 import { Image } from "react-native"
 import { pickImage } from "./ImagePicker"
 
-export const FormField = ({ name, label, control, error, placeholder, isImagePicker = false, setValue, isNumeric }: any) => (
+export const FormField = ({ name, label, control, error, placeholder, isImagePicker = false, setValue, isNumeric, med }: any) => (
   <FormControl isInvalid={!!error}>
     <FormControlLabel>
       <FormControlLabelText className="font-medium text-amost-secondary-dark_1">{label}</FormControlLabelText>
@@ -31,14 +31,14 @@ export const FormField = ({ name, label, control, error, placeholder, isImagePic
             <Input>
               <InputField
                 placeholder={placeholder}
-                value={value ? value.toString() : ""}
+                value={value !== null && value !== undefined ? value.toString() : ""}
                 onChangeText={(val) => {
                   // If the field is numeric, convert the input to a number
                   if (isNumeric) {
-                    const numberValue = val ? parseFloat(val) : 0
+                    const numberValue = val ? parseFloat(val) : null
                     onChange(numberValue)
                   } else {
-                    onChange(val)
+                    onChange(val || null)
                   }
                 }}
                 keyboardType={isNumeric ? 'numeric' : 'default'} // Use numeric keyboard if the input is a number
@@ -50,7 +50,14 @@ export const FormField = ({ name, label, control, error, placeholder, isImagePic
           {/* Display the selected image if available */}
           {value && isImagePicker && (
             <View style={{ marginTop: 10, alignItems: 'center' }}>
-              <Image source={{ uri: value }} style={{ width: 300, height: 300 }} />
+              <Image
+                source={{
+                  uri: value.includes('http') // Check if it's a URL or local image
+                    ? value
+                    : `https://snyctjesxxylnzvygnrn.supabase.co/storage/v1/object/public/med_photos/${value}`,
+                }}
+                style={{ width: 300, height: 300 }}
+              />
             </View>
           )}
         </>
