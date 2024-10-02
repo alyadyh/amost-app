@@ -39,7 +39,7 @@ const Index = () => {
         </VStack>
         {/* Button Section */}
         <Button
-          className="bg-amost-primary rounded-full mt-8"
+          className="bg-amost-primary rounded-full mt-10"
           size="xl"
           onPress={() => {
             router.push("/signIn")
