@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from "react"
 import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
-import { dummyLogs, dummyMeds } from '@/data/dummy'
-import { format, subMonths, isAfter, parseISO } from 'date-fns'
+import { format, subMonths, parseISO } from 'date-fns'
 import { Pressable } from "@/components/ui/pressable"
-import { HStack } from "@/components/ui/hstack"
-import { VStack } from "@/components/ui/vstack"
-import { Text } from "@/components/ui/text"
 import { Icon } from "@/components/ui/icon"
 import { Share2 } from "lucide-react-native"
-import { Medicine, Log, LogWithMeds } from "@/constants/types"
+import { Medicine, LogWithMeds } from "@/constants/types"
 import { supabase } from "@/lib/supabase"
 import { ActivityIndicator } from "react-native"
 
@@ -148,13 +144,7 @@ const ShareReport = ({ userName }: { userName: string }) => {
 
   return (
     <Pressable onPress={handlePrintAndShare}>
-      <HStack className='p-6 justify-between items-center border border-border-300 rounded-xl'>
-        <VStack space='xs'>
-          <Text bold className='text-amost-secondary-dark_2'>Bagikan Laporan Obat</Text>
-          <Text size='xs' className='text-amost-secondary-dark_2'>Kirim riwayat obatmu kepada dokter</Text>
-        </VStack>
-        <Icon as={Share2} size='2xl' className='stroke-amost-secondary-dark_2' />
-      </HStack>
+      <Icon as={Share2} size='2xl' className='stroke-amost-secondary-dark_1' />
     </Pressable>
   )
 }

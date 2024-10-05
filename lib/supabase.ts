@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createClient } from '@supabase/supabase-js'
+import { createClient , User } from '@supabase/supabase-js'
 import Constants from 'expo-constants'
 
 const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL!
@@ -13,3 +13,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 })
+
+// Function to get the current authenticated user
+export const getCurrentUser = async (): Promise<User | null> => {
+  const { data, error } = await supabase.auth.getUser()
+  
+  if (error) {
+    console.error('Error fetching user:', error.message)
+    return null
+  }
+  
+  return data.user
+}

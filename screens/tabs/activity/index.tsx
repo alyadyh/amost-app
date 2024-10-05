@@ -10,7 +10,7 @@ import { Icon } from '@/components/ui/icon'
 import { ChevronRight, Percent } from 'lucide-react-native'
 import SummaryChart from './component/SummaryChart'
 import { ScrollView } from '@/components/ui/scroll-view'
-import { dummyLogs  } from '@/data/dummy'
+import { Medicine, Log, LogWithMeds } from "@/constants/types"
 import ShareReport from './component/ShareExport'
 import { supabase } from '@/lib/supabase'
 import TabLayout from '../layout'
@@ -18,6 +18,9 @@ import TabLayout from '../layout'
 const ActivityScreen = () => {
   const [userName, setUserName] = useState<string>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
+  const [logs, setLogs] = useState<LogWithMeds[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -48,20 +51,72 @@ const ActivityScreen = () => {
     return today.toLocaleDateString('en-CA') // 'en-CA' returns the format 'YYYY-MM-DD'
   }
 
-  // Calculate the adherence percentage for today
   useEffect(() => {
-    const today = getTodayDate()
-    const logsForToday = dummyLogs.filter(log => log.log_date === today)
+    const fetchProfileAndLogs = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        // Fetch user session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError || !sessionData.session?.user?.id) {
+          throw new Error("User is not authenticated")
+        }
 
-    const totalMedications = logsForToday.length
-    const takenMedications = logsForToday.filter(log => log.taken === true).length
+        const userId = sessionData.session.user.id
 
-    if (totalMedications > 0) {
-      const adherencePercentage = Math.round((takenMedications / totalMedications) * 100)
-      setAdherenceRate(adherencePercentage)
-    } else {
-      setAdherenceRate(0)
+        // Get today's date in 'YYYY-MM-DD' format
+        const todayDate = new Date().toLocaleDateString('en-CA') // 'en-CA' for 'YYYY-MM-DD'
+
+        // Fetch med_logs with related medicines
+        const { data: logsData, error: logsError } = await supabase
+          .from('med_logs')
+          .select(`
+            *,
+            medicines:medicines (id, med_name)
+          `)
+          .eq('user_id', userId)
+          .eq('log_date', todayDate)
+
+        if (logsError) {
+          throw logsError
+        }
+
+        // Filter logs where 'taken' is true
+        const takenLogs = logsData?.filter(log => log.taken === true) || []
+
+        setLogs(takenLogs)
+
+        // Calculate adherence rate
+        const totalMedications = logsData?.length || 0
+        const takenMedications = takenLogs.length
+
+        const adherencePercentage = totalMedications > 0
+          ? Math.round((takenMedications / totalMedications) * 100)
+          : 0
+
+        setAdherenceRate(adherencePercentage)
+
+        // Fetch user profile
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", userId)
+          .single()
+
+        if (profileError) {
+          throw profileError
+        }
+
+        setUserName(profileData.full_name || 'No Name')
+      } catch (err: any) {
+        console.error("Error:", err)
+        setError(err.message || "Terjadi kesalahan.")
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchProfileAndLogs()
   }, [])
 
   return (

@@ -5,6 +5,7 @@ import InjectionSvg from "@/components/svg/InjectionSvg"
 import PatchSvg from "@/components/svg/PatchSvg"
 import PowderSvg from "@/components/svg/PowderSvg"
 import TabletSvg from "@/components/svg/TabletSvg"
+import { Timestamp } from 'react-native-reanimated/lib/typescript/commonTypes'
 
 export interface Medicine {
   id: string
@@ -22,6 +23,8 @@ export interface Medicine {
   instructions?: string
   prescribing_doctor?: string
   dispensing_pharmacy?: string
+  updated_at?: Date
+  inserted_at?: Date
 }
 
 export type MedForm = 'cairan' | 'kapsul' | 'tablet' | 'suntikan' | 'bubuk' | 'patch' | 'gel'
@@ -57,9 +60,18 @@ export const medFormInactive: Record<MedForm, any> = {
 //   gel: <GelSvg />
 // }
 
-export type Log = {
-  id: string
+export interface Log {
+  id: string  //medicine_id
+  user_id: string
+  medicine_id: string
   log_date: string // Store date in 'YYYY-MM-DD' format
   log_time: string | null // Store time in 'HH:mm' format
+  reminder_time: string
   taken: boolean | null
+  updated_at: string
+  inserted_at: string
+}
+
+export interface LogWithMeds extends Log {
+  medicine: Medicine
 }

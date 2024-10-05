@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Medicine, MedForm, medFormActive, Log, medFormInactive } from '@/constants/types'
-import { dummyMeds } from '@/data/dummy'
-import { SafeAreaView } from '@/components/ui/safe-area-view'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScrollView } from '@/components/ui/scroll-view'
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
@@ -16,18 +13,26 @@ import { LogModal } from './modal'
 import { AddIcon, Icon } from '@/components/ui/icon'
 import { LinearGradient } from '@/components/ui/linear-gradient'
 import { View } from '@/components/ui/view'
-import { Box } from '@/components/ui/box'
-import { Fab, FabIcon, FabLabel } from '@/components/ui/fab'
+import { Fab, FabIcon } from '@/components/ui/fab'
 import { router } from 'expo-router'
 import { LayoutRectangle } from 'react-native'
 import TabLayout from '../layout'
-import { supabase } from '@/lib/supabase'
+import { supabase, getCurrentUser } from '@/lib/supabase'
 
 const HomeScreen = () => {
-  // Define the grouped meds type
+  // Define a type for grouping medicines by reminder times
   type GroupedMedsType = { [key: string]: Medicine[] }
 
-  const [days, setDays] = useState([
+  // Define a type for days in the week (with display name, date, and fullDate)
+  type Day = {
+    id: number
+    name: string
+    date: string // Displayed day (e.g., 01, 02)
+    fullDate?: string // Full date in 'YYYY-MM-DD' format for logic
+  }
+
+  // State to store week days, medicines, current day, time, and selected medicine for modal
+  const [days, setDays] = useState<Day[]>([
     { id: 1, name: 'Sen', date: '' },
     { id: 2, name: 'Sel', date: '' },
     { id: 3, name: 'Rab', date: '' },
@@ -38,33 +43,31 @@ const HomeScreen = () => {
   ])
 
   const [meds, setMeds] = useState<Medicine[]>([])
-  const [currentDay, setCurrentDay] = useState<number>(new Date().getDay()) // 0 = Sunday, 1 = Monday, etc.
-  const [currentTime, setCurrentTime] = useState<string>(getCurrentTime())
+  const [logs, setLogs] = useState<Log[]>([])
+  const [currentDay, setCurrentDay] = useState<number>(new Date().getDay()) // Get current day of the week (0=Sunday)
+  const [currentTime, setCurrentTime] = useState<string>(getCurrentTime()) // Current time in 'HH:mm'
   const [showModal, setShowModal] = useState(false)
-  const [selectedMed, setSelectedMed] = useState<Medicine | null>(null)
-  const scrollViewRef = useRef<ScrollView>(null) // Reference to ScrollView
-  const activeMedRef = useRef<any>(null) // Reference to active medicine
-  const [activeMedLayout, setActiveMedLayout] = useState<LayoutRectangle | null>(null) // State to store active med layout
+  const [selectedMed, setSelectedMed] = useState<Medicine | null>(null) // Selected medicine for modal
+  const [selectedReminderTime, setSelectedReminderTime] = useState<string>() // Selected reminder time for modal
+  const scrollViewRef = useRef<ScrollView>(null) // Reference to ScrollView for scrolling behavior
+  const [activeMedLayout, setActiveMedLayout] = useState<LayoutRectangle | null>(null) // Layout of the active medicine
 
-  const [logs, setLogs] = useState<Log[]>([]) // Store logs
-
-  // Function to open modal and set selected medicine
-  const handleOpenModal = (med: Medicine) => {
+  // Function: Open the modal and set selected medicine and reminder time
+  const handleOpenModal = (med: Medicine, reminderTime: string) => {
     setSelectedMed(med)
+    setSelectedReminderTime(reminderTime)
     setShowModal(true)
   }
 
-  // Function to log the action
+  // Function: Log medicine action (update logs in state)
   const handleLog = (log: Log) => {
-    console.log("Log received in Home component:", log)
     setLogs((prevLogs) => [...prevLogs, log])
-    console.log("Updated logs:", [...logs, log])
   }
 
-  // Function to get the current week's dates for Monday to Sunday
+  // Function: Calculate and set the dates for Monday to Sunday
   const getWeekDates = () => {
     const today = new Date()
-    const dayOfWeek = today.getDay() // 0 (Sunday) to 6 (Saturday)
+    const dayOfWeek = today.getDay() // Get current day of the week (0=Sunday, 1=Monday, etc.)
     const startOfWeek = new Date(today)
     startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)) // Set to Monday
 
@@ -73,23 +76,47 @@ const HomeScreen = () => {
       currentDay.setDate(startOfWeek.getDate() + index)
       return {
         ...day,
-        date: currentDay.getDate().toString()
+        date: currentDay.getDate().toString(), // Display day (e.g., 03, 04)
+        fullDate: currentDay.toISOString().split('T')[0], // Full date for logic ('YYYY-MM-DD')
       }
     })
     setDays(weekDays)
   }
 
-  // Function to get meds for the current day
+  // Function: Get medicines for a specific day based on the day index
   const getMedsForDay = (dayId: number): Medicine[] => {
+    const currentDayDate = days[dayId - 1]?.fullDate // Get full date for the selected day
+
+    // Map medicines to check if they are taken on the selected day based on logs
     return meds
-      .filter((med: Medicine) => {
-        // Check if today is the day to take this medicine
-        return (dayId - 1) % med.frequency_interval_days === 0
+      .map((med: Medicine) => {
+        const logForCurrentDay = logs.find(
+          (log) =>
+            log.id === med.id &&
+            log.reminder_time === med.reminder_times[0] &&
+            log.log_date === currentDayDate // Ensure the log date matches the selected day
+        )
+
+        return {
+          ...med,
+          taken: logForCurrentDay ? logForCurrentDay.taken : false, // If log exists, mark as taken
+        }
       })
-      .sort((a: Medicine, b: Medicine) => a.reminder_times[0].localeCompare(b.reminder_times[0])) // Sort by reminderTimes
+      .filter((med) => med.taken || !med.taken) // Filter to include taken and not-taken meds
+      .filter((med: Medicine) => {
+        const insertedDate = new Date(med.inserted_at || Date.now())
+        const currentDayDate = new Date(`${days[dayId - 1]?.fullDate}T00:00:00Z`)
+
+        // Calculate the time difference in days between inserted_at and the current day
+        const timeDifference = Math.floor((currentDayDate.getTime() - insertedDate.getTime()) / (1000 * 3600 * 24))
+
+        // Ensure medicine is displayed starting from the inserted_at date and according to frequency interval
+        return timeDifference >= -1 && timeDifference % med.frequency_interval_days === 0
+      })
+      .sort((a: Medicine, b: Medicine) => a.reminder_times[0].localeCompare(b.reminder_times[0])) // Sort by reminder times
   }
 
-  // Function to group meds by reminderTimes and sort them
+  // Function: Group medicines by their reminder times
   const groupMedsByReminderTime = (meds: Medicine[]): GroupedMedsType => {
     const groupedMeds: GroupedMedsType = {}
 
@@ -102,7 +129,7 @@ const HomeScreen = () => {
       })
     })
 
-    // Sort reminderTimes
+    // Sort reminder times and return the grouped result
     const sortedGroupedMeds: GroupedMedsType = Object.keys(groupedMeds)
       .sort((a, b) => a.localeCompare(b))
       .reduce((result: GroupedMedsType, time: string) => {
@@ -113,15 +140,14 @@ const HomeScreen = () => {
     return sortedGroupedMeds
   }
 
-  // Function to get current time in 24-hour format (HH:mm)
+  // Function: Get the current time in 24-hour format (HH:mm)
   function getCurrentTime(): string {
     const now = new Date()
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
   }
 
-  // Check if the time is within the active range (15 minutes before and after)
+  // Function: Check if the reminder time is active (within 15 minutes of the current time)
   const isActive = (reminderTime: string, currentTime: string): boolean => {
-    // Ensure reminderTime uses a colon instead of a period for the split
     const formattedReminderTime = reminderTime.replace('.', ':')
     const [currentHour, currentMinute] = currentTime.split(':').map(Number)
     const [reminderHour, reminderMinute] = formattedReminderTime.split(':').map(Number)
@@ -130,28 +156,27 @@ const HomeScreen = () => {
     const reminderTotalMinutes = reminderHour * 60 + reminderMinute
 
     const minutesDifference = Math.abs(currentTotalMinutes - reminderTotalMinutes)
-    console.log(`Time check - Current: ${currentTime}, Reminder: ${reminderTime}, Diff: ${minutesDifference} minutes`)
 
-    return minutesDifference <= 15
+    return minutesDifference <= 15 // Return true if within 15 minutes
   }
 
-  // Map getDay to the day array (0=Sun, 1=Mon, etc.)
+  // Function: Map the day of the week to the day array index (0=Sunday, 1=Monday, etc.)
   const getCurrentDayIndex = (): number => {
-    return currentDay === 0 ? 7 : currentDay // Adjust to match the days array where 1=Monday
+    return currentDay === 0 ? 7 : currentDay // Adjust so 1=Monday, 7=Sunday
   }
 
-  // Handle day click for testing
+  // Function: Handle day click (for testing purposes, changes the selected day)
   const handleDayClick = (dayId: number) => {
     setCurrentDay(dayId) // Set the clicked day as the current day
   }
 
-  // Fetch user-specific medicines from Supabase
+  // Function: Fetch user-specific medicines from Supabase
   const fetchMedicines = async () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession()
 
       if (sessionData.session && sessionData.session.user) {
-        const userId = sessionData.session.user.id // Now TypeScript will know user exists
+        const userId = sessionData.session.user.id
 
         const { data, error } = await supabase
           .from('medicines')
@@ -171,31 +196,103 @@ const HomeScreen = () => {
     }
   }
 
+  // useEffect: Set week dates and fetch medicines on component load, update time every minute
   useEffect(() => {
-    getWeekDates() // Calculate and set week dates on component load
-    fetchMedicines()
+    getWeekDates() // Calculate and set week dates when the component loads
+    fetchMedicines() // Fetch medicines for the user
 
-    // Update current time every minute
+    // Set an interval to update the current time every minute
     const timer = setInterval(() => {
-      const newTime = getCurrentTime()
-      setCurrentTime(newTime)  // Update time state
-      console.log(`Updated time: ${newTime}`)  // Confirm time update
-    }, 60000)  // Update every minute
+      setCurrentTime(getCurrentTime())
+    }, 60000)
 
-    return () => clearInterval(timer) // Clean up interval on component unmount
+    return () => clearInterval(timer) // Clean up the interval on unmount
   }, [])
 
-  const medsForDay = getMedsForDay(getCurrentDayIndex())
-  const groupedMeds = groupMedsByReminderTime(medsForDay)
+  // Function to initialize med_logs
+  const initializeMedLogsForDay = async (dayDate: string) => {
+    const user = await getCurrentUser();
+    if (!user) {
+      console.log('No authenticated user found.');
+      return;
+    }
 
-  // Measure the layout of the active medicine and trigger scroll if necessary
-  const handleLayout = (event: any, time: string) => {
-    if (isActive(time, currentTime)) {
-      setActiveMedLayout(event.nativeEvent.layout)
+    // Fetch existing logs for the day
+    const { data: existingLogs, error: fetchError } = await supabase
+      .from('med_logs')
+      .select('medicine_id, reminder_time')
+      .eq('user_id', user.id)
+      .eq('log_date', dayDate);
+
+    if (fetchError) {
+      console.error('Error fetching existing logs:', fetchError.message);
+      return;
+    }
+
+    const existingLogSet = new Set(
+      existingLogs?.map(log => `${log.medicine_id}-${log.reminder_time}`) || []
+    );
+
+    // Fetch medicines for the day
+    const medsForDay = getMedsForDay(getCurrentDayIndex());
+
+    // Prepare log entries only for medicines without existing logs
+    const logEntries = medsForDay.flatMap(med => 
+      med.reminder_times
+        .filter(time => !existingLogSet.has(`${med.id}-${time.replace('.', ':')}`))
+        .map(time => ({
+          user_id: user.id,
+          medicine_id: med.id,
+          log_date: dayDate,
+          reminder_time: time.replace('.', ':'),
+          taken: null,
+        }))
+    );
+
+    if (logEntries.length === 0) {
+      console.log('All med_logs already initialized for today.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('med_logs')
+        .upsert(logEntries, {
+          onConflict: 'user_id,medicine_id,log_date,reminder_time',
+        });
+
+      if (error) {
+        console.error('Error initializing med_logs:', error.message);
+      } else {
+        console.log('med_logs initialized successfully:', data);
+      }
+    } catch (err) {
+      console.error('Unexpected error during med_logs initialization:', err);
     }
   }
 
-  // Scroll to first active medicine if it's out of view
+  useEffect(() => {
+    const initializeLogs = async () => {
+      const currentDayDate = days.find(d => d.id === getCurrentDayIndex())?.fullDate
+      if (currentDayDate) {
+        await initializeMedLogsForDay(currentDayDate)
+      }
+    }
+
+    initializeLogs()
+  }, [days, currentDay]) // Runs when 'days' or 'currentDay' changes
+
+  const medsForDay = getMedsForDay(getCurrentDayIndex()) // Get medicines for the current day
+  const groupedMeds = groupMedsByReminderTime(medsForDay) // Group medicines by reminder times
+
+  // Function: Measure the layout of the active medicine for scrolling purposes
+  const handleLayout = (event: any, time: string) => {
+    if (isActive(time, currentTime)) {
+      setActiveMedLayout(event.nativeEvent.layout) // Store the layout of the active medicine
+    }
+  }
+
+  // useEffect: Scroll to the active medicine if it's out of view
   useEffect(() => {
     if (activeMedLayout && scrollViewRef.current) {
       scrollViewRef.current.scrollTo({
@@ -212,13 +309,9 @@ const HomeScreen = () => {
 
         <HStack className='justify-between'>
           {days.map(day => (
-            <Pressable
-              key={day.id}
-              onPress={() => handleDayClick(day.id)}
-            >
+            <Pressable key={day.id} onPress={() => handleDayClick(day.id)}>
               <LinearGradient
                 className="items-center px-2.5 py-2 rounded-lg"
-                // Using a ternary operator to switch colors based on whether it's the selected day
                 colors={getCurrentDayIndex() === day.id ? ["#00A378", "#34B986"] : ['#FFFF', '#EFEFEF']}
                 start={[0, 1]}
                 end={[1, 0]}
@@ -233,11 +326,10 @@ const HomeScreen = () => {
             </Pressable>
           ))}
         </HStack> 
- 
+
         <ScrollView ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }}>
           <VStack space='sm' className='flex-1 mb-4'>
             {meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
-              // Display this message when no meds are scheduled for the day
               <View className='items-center justify-center h-full'>
                 <Text className="text-amost-secondary-dark_2">Belum ada jadwal minum obat</Text>
               </View>
@@ -250,7 +342,7 @@ const HomeScreen = () => {
                     <Divider className="bg-amost-secondary-dark_2" />
                   </HStack>
 
-                  {/* Display all meds that have the same reminder time */}
+                  {/* Display all medicines with the same reminder time */}
                   {groupedMeds[time].map((med) => {
                     const active = isActive(time, currentTime)
                     const medImage = active 
@@ -262,27 +354,15 @@ const HomeScreen = () => {
                     const textClass = active ? 'text-white' : 'text-amost-secondary-dark_2'
                     const strokeClass = active ? 'stroke-white' : 'stroke-amost-secondary-dark_2'
 
-                    // Truncate medName if it exceeds 10 characters
+                    // Truncate medicine name if it exceeds 10 characters
                     const truncatedMedName = med.med_name.length > 11 ? `${med.med_name.slice(0, 11)}..` : med.med_name
 
                     return (
-                      <Pressable
-                        key={`${time}-${med.id}`}
-                        onPress={() => handleOpenModal(med)}
-                      >
-                        <LinearGradient
-                          className='rounded-xl ml-12 p-4'
-                          colors={gradientColors}
-                          start={[0, 1]}
-                          end={[1, 0]}
-                        >
+                      <Pressable key={`${time}-${med.id}`} onPress={() => handleOpenModal(med, time)}>
+                        <LinearGradient className='rounded-xl ml-12 p-4' colors={gradientColors} start={[0, 1]} end={[1, 0]}>
                           <HStack key={med.id} className={`justify-between items-center`}>
                             <HStack space='md' className='items-start'>
-                              <Image
-                                source={medImage} 
-                                size='sm' 
-                                alt={`${med.med_name} image`}
-                              />
+                              <Image source={medImage} size='sm' alt={`${med.med_name} image`} />
                               <VStack>
                                 <Text size='xl' bold className={`${textClass}`}>{truncatedMedName}</Text>
                                 <Text size='sm' className={`font-semibold ${textClass}`}>{med.dosage}</Text>
@@ -300,31 +380,31 @@ const HomeScreen = () => {
           </VStack>
         </ScrollView>
 
+        {/* Modal for logging medicine intake */}
         {selectedMed && (
           <LogModal
             visible={showModal}
             onClose={() => setShowModal(false)}
             medicine={selectedMed}
+            reminderTime={selectedReminderTime || "00:00"}
+            logDate={days.find(d => d.id === getCurrentDayIndex())?.fullDate || new Date().toISOString().split('T')[0]} // Log current day
             onLog={handleLog}
           />
         )}
       </VStack>
       
+      {/* Floating action button for adding new medicine */}
       <Fab 
         size="lg" 
         placement="bottom right" 
         className="bg-amost-secondary-green_1"
-        onPress={() => {
-          router.push("/addMed")
-        }}
+        onPress={() => router.push("/addMed")}
       >
         <FabIcon as={AddIcon} />
-        {/* <FabLabel>Tambah Obat</FabLabel> */}
       </Fab>
     </>
   )
 }
-
 
 export const Home = () => {
   return (
