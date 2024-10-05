@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import { LinearGradient } from '@/components/ui/linear-gradient';
 import { supabase } from '@/lib/supabase';
 import { LogWithMeds } from "@/constants/types";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, Dimensions } from "react-native";
 import { format, startOfWeek, addDays } from 'date-fns';
 
 export default function MedicationAdherenceChart() {
@@ -77,11 +77,11 @@ export default function MedicationAdherenceChart() {
       // Calculate adherence data
       const updatedAdherenceData: barDataItem[] = weekDates.map(dayInfo => {
         const adherencePercentage = calculateAdherenceForDay(logsData || [], dayInfo.date);
-        const validValue = adherencePercentage > 0 ? adherencePercentage : 1; // Changed from 0.001 to 1 to ensure integer
+        // const validValue = adherencePercentage > 0 ? adherencePercentage : 0; // Changed from 0.001 to 1 to ensure integer
         const validLabel = dayInfo.dayName;
 
         return {
-          value: validValue,
+          value: adherencePercentage,
           label: validLabel,
         };
       });
@@ -105,11 +105,13 @@ export default function MedicationAdherenceChart() {
     fetchLogs();
   }, []);
 
-  const minBarValue = 1; // Changed from 0.001 to 1
-  const adherenceDataMaps = adherenceData.map(item => ({
-    ...item,
-    value: item.value > 0 ? item.value : minBarValue,
-  }));
+  // const minBarValue = 1; // Changed from 0.001 to 1
+  // const adherenceDataMaps = adherenceData.map(item => ({
+  //   ...item,
+  //   value: item.value > 0 ? item.value : minBarValue,
+  // }));
+
+  const screenWidth = Dimensions.get('window').width;
 
   return (
     <VStack space='lg'>
@@ -124,10 +126,10 @@ export default function MedicationAdherenceChart() {
             Grafik Kepatuhan Anda
           </Text>
           <BarChart
-            data={adherenceDataMaps}
+            data={adherenceData}
             barWidth={15}
             height={200}
-            width={230}
+            width={screenWidth - 40}
             minHeight={3}
             barBorderRadius={3}
             spacing={17}
@@ -135,6 +137,7 @@ export default function MedicationAdherenceChart() {
             yAxisThickness={0}
             xAxisThickness={0}
             xAxisLabelsVerticalShift={2}
+            yAxisLabelSuffix="%"
             xAxisLabelTextStyle={{ color: "white", fontSize: 10 }}
             yAxisTextStyle={{ color: "white", fontSize: 12 }}
             frontColor="#ffffff"
