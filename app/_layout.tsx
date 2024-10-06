@@ -7,21 +7,21 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
 import "../global.css"
 import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { supabase } from "@/lib/supabase"
+import { getUserSession, useAuth } from "@/lib/supabase"
 import { Session } from "@supabase/supabase-js"
 import * as Linking from 'expo-linking'
+import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
+import * as WebBrowser from 'expo-web-browser'
+import { supabase } from "@/lib/supabase"
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from "expo-router"
 
 export const unstable_settings = {
-  // Ensure that reloading on /modal keeps a back button present.
   initialRouteName: "(tabs)",
 }
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
@@ -31,25 +31,26 @@ export default function RootLayout() {
   })
 
   const [session, setSession] = useState<Session | null>(null)
-  const [isEmailConfirmed, setIsEmailConfirmed] = useState(false)
   const router = useRouter()
+  const toast = useToast()
 
   // Supabase session management
   useEffect(() => {
-    // Check session on load
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      if (!data.session) {
-        // Redirect to sign-in if no session
+    const checkSession = async () => {
+      const currentSession = await getUserSession()
+      setSession(currentSession)
+      if (!currentSession) {
         router.replace("/signIn")
       }
-    })
+    }
 
-    // Listen for session changes (sign-in, sign-out)
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    checkSession()
+
+    const { onAuthStateChange } = useAuth()
+
+    const authListener = onAuthStateChange((event, session) => {
       setSession(session)
       if (!session) {
-        // Redirect to sign-in if user logs out
         router.replace("/signIn")
       }
     })
@@ -59,15 +60,48 @@ export default function RootLayout() {
     }
   }, [])
 
-  // Deep linking to handle email confirmation
+  // Handle deep linking for email confirmation and password reset
   useEffect(() => {
-    const handleDeepLink = (event: { url: string }) => {
-      const data = Linking.parse(event.url)
-      if (data.path === 'confirm-email') {
-        // If the email confirmation link is clicked, set the confirmation state
-        setIsEmailConfirmed(true)
-        // Redirect to the sign-in page
-        router.replace("/signIn")
+    const handleDeepLink = async (event: { url: string }) => {
+      const { url } = event
+      const { path, queryParams } = Linking.parse(url)
+
+      if (queryParams) {
+        const access_token = Array.isArray(queryParams.access_token) ? queryParams.access_token[0] : queryParams.access_token
+        const refresh_token = Array.isArray(queryParams.refresh_token) ? queryParams.refresh_token[0] : queryParams.refresh_token
+
+        if (access_token && refresh_token) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          })
+
+          if (error) {
+            console.error("Error setting session from deep link:", error)
+          } else {
+            if (path === 'reset-pass') {
+              toast.show({
+                placement: "top left",
+                render: ({ id }) => (
+                  <Toast nativeID={id} variant="solid" action="success">
+                    <ToastTitle>Ubah passwordmu sekarang!</ToastTitle>
+                  </Toast>
+                ),
+              })
+              router.replace("/(tabs)")
+            } else if (path === 'confirm-email') {
+              toast.show({
+                placement: "top left",
+                render: ({ id }) => (
+                  <Toast nativeID={id} variant="solid" action="success">
+                    <ToastTitle>Selamat datang di AMOST!.</ToastTitle>
+                  </Toast>
+                ),
+              })
+              router.replace("/(tabs)")
+            }
+          }
+        }
       }
     }
 
@@ -78,7 +112,6 @@ export default function RootLayout() {
     }
   }, [])
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error
   }, [error])
@@ -93,10 +126,10 @@ export default function RootLayout() {
     return null
   }
 
-  return <RootLayoutNav session={session} isEmailConfirmed={isEmailConfirmed} />
+  return <RootLayoutNav session={session} />
 }
 
-function RootLayoutNav({ session, isEmailConfirmed  }: { session: Session | null, isEmailConfirmed: boolean }) {
+function RootLayoutNav({ session }: { session: Session | null }) {
   const insets = useSafeAreaInsets()
 
   return (
@@ -112,9 +145,6 @@ function RootLayoutNav({ session, isEmailConfirmed  }: { session: Session | null
           ) : (
             <Stack.Screen name="(auth)" />
           )}
-
-          {/* Pass isEmailConfirmed to the SignIn screen */}
-          <Stack.Screen name="signIn" initialParams={{ isEmailConfirmed }} />
         </Stack>
       </SafeAreaView>
     </GluestackUIProvider>

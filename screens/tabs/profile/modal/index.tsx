@@ -1,23 +1,22 @@
 import React, { useState, useRef, useEffect } from "react"
-import { Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalHeader } from "@/components/ui/modal"
+import { Keyboard } from "react-native"
+import * as ImagePicker from "expo-image-picker"
 import { Heading } from "@/components/ui/heading"
 import { Center } from "@/components/ui/center"
-import { Avatar, AvatarImage, AvatarBadge, AvatarFallbackText } from "@/components/ui/avatar"
 import { VStack } from "@/components/ui/vstack"
 import { Input, InputField } from "@/components/ui/input"
 import { Button, ButtonText } from "@/components/ui/button"
-import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control"
 import { Icon, CloseIcon } from "@/components/ui/icon"
-import { Pencil, AlertCircleIcon, PencilLine } from "lucide-react-native"
-import { Keyboard } from "react-native"
+import { Avatar, AvatarImage, AvatarBadge, AvatarFallbackText } from "@/components/ui/avatar"
+import { Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalHeader } from "@/components/ui/modal"
+import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control"
+import { Pencil, AlertCircleIcon } from "lucide-react-native"
+import { Pressable } from "@/components/ui/pressable"
 import { Controller, useForm } from "react-hook-form"
+import { uploadAvatar, updateUserProfile, getCurrentUser } from "@/lib/supabase"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import * as ImagePicker from "expo-image-picker"
-import { supabase } from "@/lib/supabase"
-import { Pressable } from "@/components/ui/pressable"
 
-// Define Zod schema for form validation
 const userSchema = z.object({
   name: z.string().min(1, "Nama harus diisi").max(50, "Nama harus kurang dari 50 karakter")
 })
@@ -38,16 +37,11 @@ export const ModalComponent = ({
   onUpdateProfile: (newName: string, newAvatar: string) => void
 }) => {
   const ref = useRef(null)
-  const [avatarUrl, setAvatarUrl] = useState<string>(avatar) // For preview
-  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null) // To store selected image URI for upload later
+  const [avatarUrl, setAvatarUrl] = useState<string>(avatar)
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
-  const {
-    control,
-    formState: { errors },
-    handleSubmit,
-    reset,
-  } = useForm<userSchemaDetails>({
+  const { control, formState: { errors }, handleSubmit, reset } = useForm<userSchemaDetails>({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: name,
@@ -55,9 +49,8 @@ export const ModalComponent = ({
   })
 
   useEffect(() => {
-    // Set avatar from the initial value (profile) if available
     if (avatar) {
-      setAvatarUrl(`https://snyctjesxxylnzvygnrn.supabase.co/storage/v1/object/public/avatars/${avatar}`)
+      setAvatarUrl(avatar)
     }
     reset({ name })
   }, [avatar, name, reset])
@@ -68,7 +61,6 @@ export const ModalComponent = ({
 
   const selectAvatar = async () => {
     try {
-      // Open the image picker to select from the gallery
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true, // Enable editing (cropping)
@@ -90,30 +82,33 @@ export const ModalComponent = ({
     try {
       setUploading(true)
 
+      const currentUser = await getCurrentUser()
+
+      if (!currentUser) return
+
       let uploadedAvatarUrl = avatarUrl
+      let updateData: { full_name?: string, avatar_url?: string } = {}
 
-      // Only upload the image if a new image was selected
+      // If the user has selected a new avatar, upload it and update the avatar field
       if (selectedImageUri) {
-        const response = await fetch(selectedImageUri)
-        const arrayBuffer = await response.arrayBuffer()
-        const fileExt = selectedImageUri.split(".").pop()
-        const fileName = `${Date.now()}.${fileExt}`
-
-        const { data, error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, arrayBuffer, {
-            contentType: `image/${fileExt}`,
-          })
-
-        if (uploadError) {
-          throw uploadError
+        const uploadedPath = await uploadAvatar(selectedImageUri)
+        if (uploadedPath) {
+          uploadedAvatarUrl = uploadedPath
+          updateData.avatar_url = uploadedPath
         }
-
-        uploadedAvatarUrl = data.path // Save the path for later use
       }
 
-      // Update profile with new name and avatar
-      onUpdateProfile(_data.name, uploadedAvatarUrl)
+      // If the user has changed the full name, update the full_name field
+      if (_data.name !== name) {
+        updateData.full_name = _data.name
+      }
+
+      // If either the avatar or full name has changed, update the user's profile
+      if (Object.keys(updateData).length > 0) {
+        await updateUserProfile(updateData.full_name ?? name, uploadedAvatarUrl)
+        onUpdateProfile(updateData.full_name ?? name, uploadedAvatarUrl)
+      }
+
       setShowModal(false)
       reset()
     } catch (error) {
@@ -124,12 +119,7 @@ export const ModalComponent = ({
   }
 
   return (
-    <Modal
-      isOpen={showModal}
-      onClose={() => setShowModal(false)}
-      finalFocusRef={ref}
-      size="md"
-    >
+    <Modal isOpen={showModal} onClose={() => setShowModal(false)} finalFocusRef={ref} size="md">
       <ModalBackdrop />
       <ModalContent className="bg-background-500 bg-white">
         <ModalHeader className="w-full justify-between items-center mb-4">
@@ -143,14 +133,8 @@ export const ModalComponent = ({
 
         <Center className="w-full">
           <Avatar size="xl" className="bg-amost-primary">
-            <AvatarFallbackText className="text-white">
-              {name}
-            </AvatarFallbackText>
-            <AvatarImage
-              source={{
-                uri: avatarUrl || ""
-              }}
-            />
+            <AvatarFallbackText className="text-white">{name}</AvatarFallbackText>
+            <AvatarImage source={{ uri: avatarUrl || "" }} />
             <AvatarBadge size="2xl" className="items-center justify-center bg-amost-secondary-dark_1">
               <Pressable onPress={selectAvatar}>
                 <Icon as={Pencil} size="xs" className="stroke-white" />

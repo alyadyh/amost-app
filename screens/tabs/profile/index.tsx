@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react"
-import { SafeAreaView } from "@/components/ui/safe-area-view"
-import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
 import { HStack } from "@/components/ui/hstack"
 import { Box } from "@/components/ui/box"
@@ -10,12 +8,12 @@ import { Avatar, AvatarFallbackText, AvatarImage } from "@/components/ui/avatar"
 import { Divider } from "@/components/ui/divider"
 import { Icon, LockIcon } from "@/components/ui/icon"
 import { ModalComponent } from "./modal"
-import { LogOut, ChevronRightIcon, ShieldAlert, Globe, type LucideIcon, Bell } from "lucide-react-native"
+import { LogOut, ChevronRightIcon, ShieldAlert, Globe, Bell } from "lucide-react-native"
 import { Heading } from "@/components/ui/heading"
 import { Pressable } from "@/components/ui/pressable"
 import { router } from "expo-router"
 import { Switch } from "@/components/ui/switch"
-import { supabase } from "@/lib/supabase"
+import { getCurrentUser, fetchUserProfile, useAuth } from "@/lib/supabase"
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
 import TabLayout from "../layout"
 
@@ -26,24 +24,17 @@ const ProfileScreen = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: session } = await supabase.auth.getSession()
-      const userId = session?.session?.user?.id
+      const currentUser = await getCurrentUser()
 
-      if (userId) {
-        const { data: profileData, error } = await supabase
-          .from("profiles")
-          .select("full_name, avatar_url")
-          .eq("id", userId)
-          .single()
-
-        if (!error && profileData) {
+      if (currentUser?.id) {
+        const profileData = await fetchUserProfile(currentUser.id)
+        
+        if (profileData) {
           setUser({
             name: profileData.full_name || "No Name",
-            email: session?.session?.user?.email || "",
+            email: currentUser.email || "",
             avatar: profileData.avatar_url || "",
           })
-        } else {
-          console.error("Error fetching profile:", error)
         }
       }
     }
@@ -52,22 +43,8 @@ const ProfileScreen = () => {
   }, [])
 
   // Handle the name change from the modal
-  const handleUpdateProfile = async (newName: string, newAvatar: string) => {
-    const { data: session } = await supabase.auth.getSession()
-    const userId = session?.session?.user?.id
-
-    if (userId) {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ full_name: newName, avatar_url: newAvatar })
-        .eq("id", userId)
-
-      if (error) {
-        console.error("Error updating profile:", error)
-      } else {
-        setUser((prevUser) => ({ ...prevUser, name: newName, avatar: newAvatar }))
-      }
-    }
+  const handleUpdateProfile = (newName: string, newAvatar: string) => {
+    setUser((prevUser) => ({ ...prevUser, name: newName, avatar: newAvatar }))
   }
 
   return (
@@ -84,7 +61,7 @@ const ProfileScreen = () => {
                 <AvatarImage
                   source={{
                     uri: user.avatar
-                      ? `https://snyctjesxxylnzvygnrn.supabase.co/storage/v1/object/public/avatars/${user.avatar}`
+                      ? user.avatar
                       : "",
                   }}
                 />
@@ -177,10 +154,11 @@ const ProfileScreen = () => {
 // Component for rendering the log-out card
 const LogOutCard = () => {
   const [showAlertDialog, setShowAlertDialog] = useState(false)
+  const { signOut } = useAuth()
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
+      await signOut()
       router.push("/signIn")
     } catch (error) {
       console.error("Error logging out:", error)

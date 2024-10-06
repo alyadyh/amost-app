@@ -44,7 +44,7 @@ export const MedDetail = () => {
       if (error) {
         console.error('Error deleting medicine:', error.message)
         toast.show({
-          placement: "bottom right",
+          placement: "top left",
           render: ({ id }) => (
             <Toast nativeID={id} variant="solid" action="error">
               <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
@@ -54,7 +54,7 @@ export const MedDetail = () => {
       } else {
         handleClose()
         toast.show({
-          placement: "bottom right",
+          placement: "top left",
           render: ({ id }) => (
             <Toast nativeID={id} variant="solid" action="success">
               <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>

@@ -1,72 +1,50 @@
 import React, { useEffect, useState } from "react"
-import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
-import { HStack } from "@/components/ui/hstack"
+import { useToast } from "@/components/ui/toast"
 import { VStack } from "@/components/ui/vstack"
-import { Heading } from "@/components/ui/heading"
-import { Text } from "@/components/ui/text"
-import { LinkText } from "@/components/ui/link"
-import Link from "@unitools/link"
-import {
-  FormControl,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control"
-import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input"
-import {
-  AlertCircleIcon,
-  ArrowLeftIcon,
-  EyeIcon,
-  EyeOffIcon,
-  Icon,
-} from "@/components/ui/icon"
 import { Button, ButtonText } from "@/components/ui/button"
-import { Alert, Keyboard } from "react-native"
-import { useForm, Controller } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { Pressable } from "@/components/ui/pressable"
 import useRouter from "@unitools/router"
 import { AuthLayout } from "../layout"
-import { Box } from "@/components/ui/box"
-import { supabase } from "@/lib/supabase"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { loginSchema } from "@/schemas/authSchemas"
+import FormInput from "@/components/auth/FormInput"
+import PasswordInput from "@/components/auth//PasswordInput"
+import AuthHeader from "@/components/auth/AuthHeader"
+import AuthFooter from "@/components/auth/AuthFooter"
+import { Toast, ToastTitle } from "@/components/ui/toast"
+import { Text } from "@/components/ui/text"
+import { useAuth } from "@/lib/supabase"
+import { z } from "zod"
 
-const loginSchema = z.object({
-  email: z.string().min(1, "Email belum diisi").email(),
-  password: z.string().min(1, "Password belum diisi"),
-})
+type LoginFormType = z.infer<typeof loginSchema>
 
-type LoginSchemaType = z.infer<typeof loginSchema>
-
-const LoginScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
+const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<LoginSchemaType>({
+  } = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema),
   })
+
   const toast = useToast()
+  const router = useRouter()
+  const { signIn } = useAuth()
+
   const [validated, setValidated] = useState({
     emailValid: true,
     passwordValid: true,
   })
 
-  const onSubmit = async (data: LoginSchemaType) => {
+  const onSubmit = async (data: LoginFormType) => {
     try {
-      // Call Supabase's sign-in method
-      const { error, data: authData } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
+      const { error } = await signIn(data.email, data.password)
 
       if (!error) {
         router.push("/home")
       } else {
-        // Error occurred: Set validation based on the error message
         if (error.message === "Invalid login credentials") {
           setValidated({ emailValid: true, passwordValid: false })
         } else if (error.message === "User not found") {
@@ -74,195 +52,93 @@ const LoginScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
         } else if (error.message.includes("Invalid email or password")) {
           setValidated({ emailValid: false, passwordValid: false })
         }
+
+        // Show specific error message from Zod
+        toast.show({
+          placement: "top left",
+          render: ({ id }) => (
+            <Toast nativeID={id} variant="solid" action="error">
+              <ToastTitle className="text-white">Login gagal: {error.message}</ToastTitle>
+            </Toast>
+          ),
+        })
       }
     } catch (err) {
       console.error("Error during login:", err)
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="error">
+            <ToastTitle className="text-white">Terjadi kesalahan saat login.</ToastTitle>
+          </Toast>
+        ),
+      })
     }
   }
 
-  const [showPassword, setShowPassword] = useState(false)
-
-  const handleState = () => {
-    setShowPassword((showState) => {
-      return !showState
-    })
-  }
-
-  const handleKeyPress = () => {
-    Keyboard.dismiss()
-    handleSubmit(onSubmit)()
-  }
-  const router = useRouter()
-
-  // Show toast if email is confirmed
   useEffect(() => {
     if (isEmailConfirmed) {
       toast.show({
-        placement: "bottom right",
+        placement: "top left",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle className="text-white">Email berhasil dikonfirmasi!</ToastTitle>
           </Toast>
         ),
-      });
+      })
     }
   }, [isEmailConfirmed])
 
   return (
-    <VStack className="w-full h-full justify-between" space="md">
-      <VStack className="md:items-center" space="md">
-        <Pressable
-          onPress={() => {
-            router.back()
-          }}
-        >
-          <Icon
-            as={ArrowLeftIcon}
-            className="md:hidden text-amost-secondary-dark_1"
-            size="2xl"
+    <AuthLayout>
+      <VStack className="w-full h-full justify-between" space="md">
+        <VStack className="md:items-center" space="md">
+          <AuthHeader
+            titleBig="Halo,"
+            title="Bagaimana kabarmu?"
+            subtitle="Masuk kembali untuk mengelola obatmu"
           />
-        </Pressable>
-        <VStack space="sm">
-          <Heading className="md:text-center text-amost-primary mt-12" size="3xl">
-            Halo,
-          </Heading>
-          <Heading className="md:text-center text-amost-primary" size="2xl">
-            Bagaimana kabarmu?
-          </Heading>
-          <Text className="font-normal text-amost-secondary-dark_2" size="sm">Masuk kembali untuk mengelola obatmu</Text>
-        </VStack>
-        <VStack space="xl" className="w-full mt-12">
-          {/* Email */}
-          <FormControl
-            isInvalid={!!errors.email || !validated.emailValid}
-            className="w-full"
-            >
-            <FormControlLabel>
-              <FormControlLabelText className="font-medium text-amost-secondary-dark_1">Email</FormControlLabelText>
-            </FormControlLabel>
-            <Controller
-              defaultValue=""
+          <VStack space="xl" className="w-full mt-12">
+            <FormInput
               name="email"
               control={control}
-              rules={{
-                validate: async (value) => {
-                  try {
-                    await loginSchema.parseAsync({ email: value })
-                    return true
-                  } catch (error: any) {
-                    return error.message
-                  }
-                },
-              }}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input>
-                  <InputField
-                    className="text-sm"
-                    placeholder="email@address.com"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    onSubmitEditing={handleKeyPress}
-                    returnKeyType="done"
-                  />
-                </Input>
-              )}
+              label="Email"
+              placeholder="email@address.com"
+              errors={errors}
             />
-            <FormControlError>
-              <FormControlErrorIcon as={AlertCircleIcon} />
-              <FormControlErrorText size="sm">
-                {errors?.email?.message ||
-                  (!validated.emailValid && "Email tidak ditemukan")}
-              </FormControlErrorText>
-            </FormControlError>
-          </FormControl>
-
-          {/* Password */}
-          <FormControl
-            isInvalid={!!errors.password || !validated.passwordValid}
-            className="w-full"
-            >
-            <FormControlLabel>
-              <FormControlLabelText className="font-medium text-amost-secondary-dark_1">Password</FormControlLabelText>
-            </FormControlLabel>
-            <Controller
-              defaultValue=""
+            <PasswordInput
               name="password"
               control={control}
-              rules={{
-                validate: async (value) => {
-                  try {
-                    await loginSchema.parseAsync({ password: value })
-                    return true
-                  } catch (error: any) {
-                    return error.message
-                  }
-                },
-              }}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input>
-                  <InputField
-                    className="text-sm"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="******"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    onSubmitEditing={handleKeyPress}
-                    returnKeyType="done"
-                  />
-                  <InputSlot onPress={handleState} className="pr-3">
-                    <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
-                  </InputSlot>
-                </Input>
-              )}
+              label="Password"
+              placeholder="******"
+              errors={errors}
             />
-            <FormControlError>
-              <FormControlErrorIcon as={AlertCircleIcon} />
-              <FormControlErrorText size="sm">
-                {errors?.password?.message ||
-                  (!validated.passwordValid && "Password tidak valid")}
-              </FormControlErrorText>
-            </FormControlError>
-          </FormControl>
-
-          {/* Forgot Password */}
-          <Box className="w-full items-end">
-            <Link href="/forgotPassword">
-              <LinkText className="font-medium text-sm text-amost-secondary-dark_2">
-                Lupa Password?
-              </LinkText>
-            </Link>
-          </Box>
+            <VStack className="w-full items-end">
+              <Pressable onPress={() => router.push("/forgotPassword")}>
+                <Text className="font-medium text-sm text-amost-secondary-dark_2">
+                  Lupa Password?
+                </Text>
+              </Pressable>
+            </VStack>
+          </VStack>
+        </VStack>
+        <VStack space="md" className="items-center">
+          <Button
+            className="bg-amost-primary rounded-full w-full"
+            size="xl"
+            onPress={handleSubmit(onSubmit)}
+          >
+            <ButtonText className="font-medium text-white">Masuk</ButtonText>
+          </Button>
+          <AuthFooter
+            question="Belum punya akun?"
+            linkText="Daftar"
+            linkTo="/signUp"
+          />
         </VStack>
       </VStack>
-      <VStack space="md" className="items-center">
-        <Button 
-          className="bg-amost-primary rounded-full w-full" 
-          size="xl"
-          onPress={handleSubmit(onSubmit)}>
-          <ButtonText className="font-medium text-white">Masuk</ButtonText>
-        </Button>
-        <HStack className="self-center" space="sm">
-          <Text size="md" className="text-amost-secondary-dark_2">Belum punya akun?</Text>
-          <Link href="/signUp">
-            <LinkText
-              className="font-medium text-amost-primary no-underline"
-              size="md"
-            >
-              Daftar
-            </LinkText>
-          </Link>
-        </HStack>
-      </VStack>
-    </VStack>
-  )
-}
-
-export const SignIn = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
-  return (
-    <AuthLayout>
-      <LoginScreen isEmailConfirmed={isEmailConfirmed} />
     </AuthLayout>
   )
 }
+
+export const SignIn = SignInScreen
