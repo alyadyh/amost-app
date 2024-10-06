@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
 import { router, useLocalSearchParams } from "expo-router"
-import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
 import { HStack } from "@/components/ui/hstack"
@@ -17,28 +16,12 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/component
 import { TimePickerField } from "./components/TimePickerField"
 import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { uploadImage, updateMedicine } from "@/lib/supabase"
+import { editMedSchema } from "@/schemas/medSchemas"
 import MedLayout from "../layout"
-import { supabase } from "@/lib/supabase"
+import { z } from "zod"
 
-const EditMedSchema = z.object({
-  med_name: z.string().min(1, "Nama Obat belum diisi"),
-  med_form: z.string().min(1, "Bentuk Obat belum diisi"),
-  dosage: z.string().min(1, "Dosis belum diisi"),
-  dose_quantity: z.number().positive(),
-  frequency: z.string().min(1, "Frekuensi belum diisi"),
-  frequency_times_per_day: z.number().min(1),
-  frequency_interval_days: z.number().min(1),
-  reminder_times: z.array(z.string().min(1, "Pengingat belum dipilih")),
-  stock_quantity: z.number().positive("Stok Obat harus lebih dari 0").min(1, "Stok Obat belum diisi"),
-  duration: z.number().positive("Durasi harus lebih dari 0").min(1, "Durasi belum diisi"),
-  instructions: z.string().nullable().optional().transform(val => val ?? ""),
-  prescribing_doctor: z.string().nullable().optional().transform(val => val ?? ""),
-  dispensing_pharmacy: z.string().nullable().optional().transform(val => val ?? ""),
-  med_photos: z.string().nullable().optional().transform(val => val ?? "")
-})
-
-type EditMedSchemaType = z.infer<typeof EditMedSchema>
+type EditMedSchemaType = z.infer<typeof editMedSchema>
 
 const EditMedScreen = () => {
   const { med: medString } = useLocalSearchParams()
@@ -53,7 +36,7 @@ const EditMedScreen = () => {
     getValues,
     watch,
   } = useForm<EditMedSchemaType>({
-    resolver: zodResolver(EditMedSchema),
+    resolver: zodResolver(editMedSchema),
     defaultValues: {
       ...med,
       reminder_times: med?.reminder_times || [],
@@ -98,22 +81,8 @@ const EditMedScreen = () => {
     // Upload new image if needed
     if (selectedImageUri && selectedImageUri !== med?.med_photos) {
       try {
-        const response = await fetch(selectedImageUri)
-        const arrayBuffer = await response.arrayBuffer()
-        const fileExt = selectedImageUri.split(".").pop()
-        const fileName = `${Date.now()}.${fileExt}`
-
-        const { data: storageData, error: uploadError } = await supabase.storage
-          .from("med_photos")
-          .upload(fileName, arrayBuffer, {
-            contentType: `image/${fileExt}`,
-          })
-
-        if (uploadError) {
-          throw uploadError
-        }
-
-        uploadedImagePath = storageData.path
+        uploadedImagePath = await uploadImage(selectedImageUri, "med_photos")
+        console.log("Uploaded Image Path:", uploadedImagePath)
       } catch (error) {
         console.error("Error uploading image:", error)
       }
@@ -126,23 +95,16 @@ const EditMedScreen = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("medicines")
-        .update(formattedData)
-        .eq("id", med.id)
+      const updateSuccess = await updateMedicine(med.id, formattedData)
 
-      if (error) {
-        throw error
-      }
-
-      toast.show({
-        placement: "top left",
-        render: ({ id }: { id: string }) => (
-          <Toast nativeID={id} variant="solid" action="success">
+      if (updateSuccess) {
+        toast.show({
+          placement: "top left",
+          render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle className="text-white">Obat berhasil diperbarui!</ToastTitle>
-          </Toast>
-        ),
-      })
+          </Toast>,
+        })
+      }
       router.push("/medication")
       reset()
     } catch (error) {

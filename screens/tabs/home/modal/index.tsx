@@ -5,10 +5,9 @@ import { HStack } from '@/components/ui/hstack'
 import { Text } from '@/components/ui/text'
 import { Button, ButtonText } from '@/components/ui/button'
 import { Medicine, Log } from '@/constants/types'
-import { Icon, CloseIcon, CheckIcon } from '@/components/ui/icon'
-import { ButtonIcon } from '@/components/ui/button'
+import { Icon } from '@/components/ui/icon'
 import { Pressable } from 'react-native'
-import { Check, SquareCheck, SquareCheckBig, X } from 'lucide-react-native'
+import { Check, X } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
 import { supabase } from '@/lib/supabase'
 import { router } from 'expo-router'
@@ -57,60 +56,6 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
       fetchLog(reminderTime, logDate) // Ensure logDate matches fullDate from UI
     }
   }, [visible, reminderTime, logDate])
-
-  // const handleLog = async (taken: boolean, reminderTime: string) => {
-  //   const now = new Date()
-  //   const log_date = now.toISOString().split('T')[0] // Ensure we're using the correct log_date in YYYY-MM-DD format
-  //   const log_time = now.toTimeString().split(' ')[0].slice(0, 5) // Get time in 'HH:mm' format
-
-  //   try {
-  //     // Retrieve the current session
-  //     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  //     if (sessionError || !sessionData.session) {
-  //       throw new Error('User is not logged in')
-  //     }
-
-  //     // Insert the new log into Supabase and retrieve the inserted row
-  //     const { data, error } = await supabase
-  //       .from('med_logs')
-  //       .insert([{
-  //         user_id: sessionData.session.user.id,
-  //         medicine_id: medicine.id,
-  //         log_date,
-  //         log_time,
-  //         reminder_time: reminderTime,
-  //         taken,
-  //       }])
-  //       .select() // Ensures the inserted row is returned
-
-  //     if (error) {
-  //       console.error('Error inserting log:', error.message)
-  //     } else if (data && data.length > 0) {
-  //       const insertedLog: Log = data[0] // Complete log with all required fields
-
-  //       // Update stock quantity if the medicine was taken
-  //       if (taken) {
-  //         const newStockQuantity = medicine.stock_quantity - medicine.dose_quantity
-  //         const { error: updateError } = await supabase
-  //           .from('medicines')
-  //           .update({ stock_quantity: newStockQuantity })
-  //           .eq('id', medicine.id)
-
-  //         if (updateError) {
-  //           console.error('Error updating stock quantity:', updateError.message)
-  //         }
-  //       }
-
-  //       // Pass the complete log to the parent component and update local state
-  //       onLog(insertedLog)
-  //       setLog(insertedLog)
-  //     }
-  //   } catch (err) {
-  //     console.error('Error logging medicine:', err)
-  //   }
-
-  //   onClose()
-  // }
 
   const handleLog = async (taken: boolean, reminderTime: string) => {
     const now = new Date()

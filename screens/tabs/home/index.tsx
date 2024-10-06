@@ -17,7 +17,7 @@ import { Fab, FabIcon } from '@/components/ui/fab'
 import { router } from 'expo-router'
 import { LayoutRectangle } from 'react-native'
 import TabLayout from '../layout'
-import { supabase, getCurrentUser } from '@/lib/supabase'
+import { supabase, getCurrentUser, fetchMedicines } from '@/lib/supabase'
 
 const HomeScreen = () => {
   // Define a type for grouping medicines by reminder times
@@ -171,35 +171,38 @@ const HomeScreen = () => {
   }
 
   // Function: Fetch user-specific medicines from Supabase
-  const fetchMedicines = async () => {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession()
+  // const fetchMedicines = async () => {
+  //   try {
+  //     const { data: sessionData } = await supabase.auth.getSession()
 
-      if (sessionData.session && sessionData.session.user) {
-        const userId = sessionData.session.user.id
+  //     if (sessionData.session && sessionData.session.user) {
+  //       const userId = sessionData.session.user.id
 
-        const { data, error } = await supabase
-          .from('medicines')
-          .select('*')
-          .eq('user_id', userId)
+  //       const { data, error } = await supabase
+  //         .from('medicines')
+  //         .select('*')
+  //         .eq('user_id', userId)
 
-        if (error) {
-          console.error('Error fetching medicines:', error.message)
-        } else {
-          setMeds(data || [])
-        }
-      } else {
-        console.log('No user session found')
-      }
-    } catch (err) {
-      console.error('Error during fetch:', err)
-    }
-  }
+  //       if (error) {
+  //         console.error('Error fetching medicines:', error.message)
+  //       } else {
+  //         setMeds(data || [])
+  //       }
+  //     } else {
+  //       console.log('No user session found')
+  //     }
+  //   } catch (err) {
+  //     console.error('Error during fetch:', err)
+  //   }
+  // }
 
   // useEffect: Set week dates and fetch medicines on component load, update time every minute
   useEffect(() => {
     getWeekDates() // Calculate and set week dates when the component loads
-    fetchMedicines() // Fetch medicines for the user
+    // fetchMedicines() // Fetch medicines for the user
+    fetchMedicines()
+      .then((medicines: any) => setMeds(medicines || []))
+      .catch((error: any) => console.error('Error fetching medicines:', error))
 
     // Set an interval to update the current time every minute
     const timer = setInterval(() => {

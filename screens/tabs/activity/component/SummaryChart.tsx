@@ -14,7 +14,7 @@ export default function MedicationAdherenceChart() {
   // Helper function to get the date in 'YYYY-MM-DD' format using local time
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-CA'); // 'en-CA' returns the format 'YYYY-MM-DD'
-  }
+  };
 
   // Get the current week's dates (Monday to Sunday)
   const getCurrentWeekDates = (): { dayName: string, date: string }[] => {
@@ -28,16 +28,16 @@ export default function MedicationAdherenceChart() {
         date: formatDate(currentDate),
       };
     });
-  }
+  };
 
   // Function to calculate adherence percentage for a given day
   const calculateAdherenceForDay = (logs: LogWithMeds[], date: string): number => {
     const logsForDay = logs.filter(log => log.log_date === date);
     const totalLogs = logsForDay.length;
-    const takenLogs = logsForDay.filter(log => log.taken === true).length;
+    const takenLogs = logsForDay.filter(log => log.taken === true).length; // Only count logs where 'taken' is true
 
     return totalLogs > 0 ? Math.round((takenLogs / totalLogs) * 100) : 0;
-  }
+  };
 
   const fetchLogs = async () => {
     try {
@@ -61,27 +61,24 @@ export default function MedicationAdherenceChart() {
           *
         `)
         .eq('user_id', userId)
-        .gte('updated_at', formatDate(startOfWeekDate))
-        .lte('updated_at', formatDate(endOfWeekDate));
+        .gte('log_date', formatDate(startOfWeekDate)) // Ensure filtering by log_date instead of updated_at
+        .lte('log_date', formatDate(endOfWeekDate));
 
       if (logsError) {
         throw logsError;
       }
 
-      // Filter logs where 'taken' is true and medicines data exists
-      const takenLogs = logsData?.filter(log => log.taken === true && log.medicines !== null) || [];
-
       // Get the current week's dates
       const weekDates = getCurrentWeekDates();
 
-      // Calculate adherence data
+      // Calculate adherence data based on 'taken' logs
       const updatedAdherenceData: barDataItem[] = weekDates.map(dayInfo => {
-        const adherencePercentage = calculateAdherenceForDay(logsData || [], dayInfo.date);
-        // const validValue = adherencePercentage > 0 ? adherencePercentage : 0; // Changed from 0.001 to 1 to ensure integer
+        const adherencePercentage = calculateAdherenceForDay(logsData || [], dayInfo.date); // Filter 'taken' logs
+        const validValue = adherencePercentage > 0 ? adherencePercentage : 0;
         const validLabel = dayInfo.dayName;
 
         return {
-          value: adherencePercentage,
+          value: validValue,
           label: validLabel,
         };
       });
@@ -99,23 +96,17 @@ export default function MedicationAdherenceChart() {
     } catch (err: any) {
       console.error("Error fetching logs:", err);
     }
-  }
+  };
 
   useEffect(() => {
     fetchLogs();
   }, []);
 
-  // const minBarValue = 1; // Changed from 0.001 to 1
-  // const adherenceDataMaps = adherenceData.map(item => ({
-  //   ...item,
-  //   value: item.value > 0 ? item.value : minBarValue,
-  // }));
-
   const screenWidth = Dimensions.get('window').width;
 
   return (
     <VStack space='lg'>
-      <LinearGradient 
+      <LinearGradient
         className="w-full rounded-xl p-6"
         colors={["#fb8c00", "#F0B201"]}
         start={[0, 1]}

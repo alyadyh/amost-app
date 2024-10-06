@@ -46,10 +46,10 @@ export const FormField = ({
                 onChangeText={(val) => {
                   // If the field is numeric, convert the input to a number
                   if (isNumeric) {
-                    const numberValue = val ? parseFloat(val) : 0
+                    const numberValue = val ? parseFloat(val)  : null
                     onChange(numberValue)
                   } else {
-                    onChange(val)
+                    onChange(val || null)
                   }
                 }}
                 keyboardType={isNumeric ? 'numeric' : 'default'} // Use numeric keyboard if the input is a number

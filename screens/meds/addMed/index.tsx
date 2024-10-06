@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
 import { router } from "expo-router"
-import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
 import { HStack } from "@/components/ui/hstack"
@@ -17,28 +16,12 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/component
 import { TimePickerField } from "./components/TimePickerField"
 import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { uploadImage, getUserSession, insertMedicine } from "@/lib/supabase"
+import { addMedSchema } from "@/schemas/medSchemas"
 import MedLayout from "../layout"
-import { supabase } from "@/lib/supabase"
+import { z } from "zod"
 
-const AddMedSchema = z.object({
-  med_name: z.string().min(1, "Nama Obat belum diisi"),
-  med_form: z.string().min(1, "Bentuk Obat belum diisi"),
-  dosage: z.string().min(1, "Dosis belum diisi"),
-  dose_quantity: z.number().positive(),
-  frequency: z.string().min(1, "Frekuensi belum diisi"),
-  frequency_times_per_day: z.number().min(1),
-  frequency_interval_days: z.number().min(1),
-  reminder_times: z.array(z.date().refine((date) => !isNaN(date.getTime()), { message: "Pengingat belum dipilih" })),
-  stock_quantity: z.number().positive("Stok Obat harus lebih dari 0").min(1, "Stok Obat belum diisi"),
-  duration: z.number().positive("Durasi harus lebih dari 0").min(1, "Durasi belum diisi"),
-  instructions: z.string().optional(),
-  prescribing_doctor: z.string().optional(),
-  dispensing_pharmacy: z.string().optional(),
-  med_photos: z.string().optional(),
-})
-
-type AddMedSchemaType = z.infer<typeof AddMedSchema>
+type AddMedSchemaType = z.infer<typeof addMedSchema>
 
 const AddMedScreen = () => {
   const {
@@ -50,7 +33,7 @@ const AddMedScreen = () => {
     getValues,
     watch,
   } = useForm<AddMedSchemaType>({
-    resolver: zodResolver(AddMedSchema),
+    resolver: zodResolver(addMedSchema),
     defaultValues: {
       reminder_times: [],
     },
@@ -89,30 +72,15 @@ const AddMedScreen = () => {
   }
 
   const onSubmit = async (data: AddMedSchemaType) => {
-    let uploadedImagePath = null
     const selectedImageUri = getValues("med_photos")
+    let uploadedImagePath = null
     console.log("Selected Image URI before upload:", selectedImageUri)
 
     // Upload the image
     if (selectedImageUri) {
       try {
-        const response = await fetch(selectedImageUri)
-        const arrayBuffer = await response.arrayBuffer()
-        const fileExt = selectedImageUri.split(".").pop()
-        const fileName = `${Date.now()}.${fileExt}`
-
-        const { data: storageData, error: uploadError } = await supabase.storage
-          .from("med_photos")
-          .upload(fileName, arrayBuffer, {
-            contentType: `image/${fileExt}`,
-          })
-
-        if (uploadError) {
-          throw uploadError
-        }
-
-        uploadedImagePath = storageData.path
-        console.log("Supabase Storage Response:", storageData);
+        uploadedImagePath = await uploadImage(selectedImageUri, "med_photos")
+        console.log("Uploaded Image Path:", uploadedImagePath)
       } catch (error) {
         console.error("Error uploading image:", error)
       }
@@ -127,32 +95,22 @@ const AddMedScreen = () => {
     console.log("Submitted Data:", formattedData)
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-      if (sessionError || !session) {
-        throw new Error("User is not logged in")
-      }
+      const session = await getUserSession()
+      if (!session) throw new Error("User is not logged in")
 
       console.log("User id:", session.user.id)
 
       // Insert the medicine data into Supabase
-      const { error } = await supabase.from("medicines").insert({
-        user_id: session.user.id,
-        ...formattedData
-      })
+      const insertSuccess = await insertMedicine(formattedData, session.user.id)
 
-      if (error) {
-        throw error
-      }
-
-      toast.show({
-        placement: "top left",
-        render: ({ id }: { id: string }) => (
-          <Toast nativeID={id} variant="solid" action="success">
+      if (insertSuccess) {
+        toast.show({
+          placement: "top left",
+          render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle className="text-white">Obat berhasil ditambahkan!</ToastTitle>
-          </Toast>
-        ),
-      })
+          </Toast>,
+        })
+      }
       router.push("/medication")
       reset()
     } catch (error) {

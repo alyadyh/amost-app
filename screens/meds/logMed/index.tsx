@@ -14,7 +14,7 @@ import { LogMedModal } from "./modal"
 import { format, isToday, isYesterday, parseISO } from 'date-fns'
 import { id } from 'date-fns/locale'
 import MedLayout from "../layout"
-import { supabase } from '@/lib/supabase'
+import { supabase, getCurrentUser, fetchUserProfile } from '@/lib/supabase'
 import ShareReport from "./components/ShareExport"
 
 interface GroupedLogs {
