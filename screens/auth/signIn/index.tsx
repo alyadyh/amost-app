@@ -14,8 +14,9 @@ import AuthHeader from "@/components/auth/AuthHeader"
 import AuthFooter from "@/components/auth/AuthFooter"
 import { Toast, ToastTitle } from "@/components/ui/toast"
 import { Text } from "@/components/ui/text"
-import { useAuth } from "@/lib/supabase"
+import { signIn } from "@/utils/SupaLegend"
 import { z } from "zod"
+import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter } from "@/components/ui/alert-dialog"
 
 type LoginFormType = z.infer<typeof loginSchema>
 
@@ -31,7 +32,6 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
 
   const toast = useToast()
   const router = useRouter()
-  const { signIn } = useAuth()
 
   const [validated, setValidated] = useState({
     emailValid: true,
@@ -57,7 +57,7 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
         toast.show({
           placement: "top left",
           render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="error">
+            <Toast nativeID={`${id}`} variant="solid" action="error">
               <ToastTitle className="text-white">Login gagal: {error.message}</ToastTitle>
             </Toast>
           ),
@@ -68,7 +68,7 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
       toast.show({
         placement: "top left",
         render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
+          <Toast nativeID={`${id}`} variant="solid" action="error">
             <ToastTitle className="text-white">Terjadi kesalahan saat login.</ToastTitle>
           </Toast>
         ),
@@ -81,7 +81,7 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
       toast.show({
         placement: "top left",
         render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="success">
+          <Toast nativeID={`${id}`} variant="solid" action="success">
             <ToastTitle className="text-white">Email berhasil dikonfirmasi!</ToastTitle>
           </Toast>
         ),

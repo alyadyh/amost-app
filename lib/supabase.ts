@@ -1,7 +1,15 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient, Session, User } from '@supabase/supabase-js'
 import Constants from 'expo-constants'
+import { observable } from '@legendapp/state'
+import { syncedSupabase } from '@legendapp/state/sync-plugins/supabase'
+import { configureSynced } from '@legendapp/state/sync'
+import { observablePersistAsyncStorage } from '@legendapp/state/persist-plugins/async-storage'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import 'react-native-get-random-values'
+import { v4 as uuidv4 } from 'uuid'
+import { Log, Medicine } from '@/constants/types'
 
+// Create the Supabase client
 const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL!
 const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY!
 
@@ -13,6 +21,78 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 })
+
+// Configure synced function
+const generateId = () => uuidv4()
+const customSynced = configureSynced(syncedSupabase, {
+  persist: {
+    plugin: observablePersistAsyncStorage({ AsyncStorage }),
+  },
+  generateId,
+  supabase,
+  changesSince: 'last-sync',
+  fieldCreatedAt: 'created_at',
+  fieldUpdatedAt: 'updated_at',
+  fieldDeleted: 'deleted',
+})
+
+const uid = ''
+
+// Define observables for medicines and med_logs
+export const medicines$ = observable(
+  customSynced({
+    supabase,
+    collection: 'medicines',
+    select: (from) => from.select('*'),
+    // Filter by the current user
+    filter: (select) => select.eq('user_id', uid),
+    actions: ['read', 'create', 'update', 'delete'],
+    realtime: true,
+    persist: {
+      name: 'medicines',
+      retrySync: true,
+    },
+    retry: {
+      infinite: true,
+    },
+  })
+)
+
+export const medLogs$ = observable(
+  customSynced({
+    supabase,
+    collection: 'med_logs',
+    select: (from) => from.select('*'),
+    // Filter by the current user
+    filter: (select) => select.eq('user_id', uid),
+    actions: ['read', 'create', 'update', 'delete'],
+    realtime: true,
+    persist: {
+      name: 'med_logs',
+      retrySync: true,
+    },
+    retry: {
+      infinite: true,
+    },
+  })
+)
+
+export const profiles$ = observable(
+  customSynced({
+    supabase,
+    collection: 'profiles',
+    select: (from) => from.select('*'),
+    actions: ['read', 'create', 'update', 'delete'],
+    realtime: true,
+    persist: {
+      name: 'profiles',
+      retrySync: true,
+    },
+    retry: {
+      infinite: true,
+    },
+  })
+)
 
 export const useAuth = () => {
   const signIn = async (email: string, password: string) => {
@@ -144,32 +224,20 @@ export const uploadImage = async (selectedImageUri: string, storagePath: string)
 
 export const fetchMedicines = async () => {
   try {
-    const { data, error } = await supabase.from('medicines').select('*')
+    const user = await getCurrentUser();
+    if (!user) {
+      console.error('User not found');
+      return [];
+    }
+
+    const { data, error } = await supabase.from('medicines').select('*').eq('user_id', user.id)
     if (error) {
+      console.error('Error while fetching medicines:', error.message)
       throw new Error(error.message)
     }
     return data
   } catch (error) {
     console.error('Error fetching medicines:', error)
-    return null
-  }
-}
-
-export const fetchLogsWithMedicines = async () => {
-  const session = await getUserSession()
-  try {
-    const { data, error } = await supabase
-      .from('med_logs')
-      .select('*, medicines(*)')
-      .eq('user_id', session?.user.id)
-      .order('log_date', { ascending: false })
-
-    if (error) {
-      throw new Error(error.message)
-    }
-    return data
-  } catch (error) {
-    console.error('Error fetching logs with medicines:', error)
     return null
   }
 }
@@ -204,6 +272,43 @@ export const fetchLog = async (medicineId: string, logDate: string, reminderTime
     return null
   }
 }
+
+interface LogWithMedicine extends Log {
+  medicines?: Medicine
+}
+
+export const fetchUserLogsWithMeds = async () => {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      console.error('User not found')
+      return null
+    }
+
+    const { data: logsData, error } = await supabase
+      .from('med_logs')
+      .select('*, medicines(*)')
+      .eq('user_id', user.id)
+      .order('log_date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching logs with medicines:', error.message)
+      return null
+    }
+
+    const today = new Date().toLocaleDateString('en-CA')
+
+    // Filter logs to only include those up to today
+    return logsData.filter((log: LogWithMedicine) => {
+      const logDate = new Date(log.log_date).toLocaleDateString('en-CA')
+      return logDate <= today
+    })
+  } catch (error) {
+    console.error('Error fetching logs with medicines:', error)
+    return null
+  }
+}
+
 
 export const insertMedicine = async (medicineData: any, userId: string) => {
   try {

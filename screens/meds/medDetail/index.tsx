@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
@@ -14,57 +14,72 @@ import { ModalComponent } from "./modal"
 import { MedForm, medFormActive } from '@/constants/types'
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
 import { Heading } from '@/components/ui/heading'
-import { supabase } from '@/lib/supabase'
+import { deleteMedicine, fetchMedicines } from '@/utils/SupaLegend'
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
 
 export const MedDetail = () => {
   const [showModal, setShowModal] = useState<string | null>(null)
   const { med: medString } = useLocalSearchParams()
   const med = medString ? JSON.parse(medString as string) : null
+  const [medDetails, setMedDetails] = useState(med || null)
 
-  if (!med) return <Text>Error: No medication details available.</Text>
+  if (!medDetails) return <Text>Error: No medication details available.</Text>
 
   const medImage = medFormActive[med.med_form as MedForm]
 
   const toggleModal = (modalName: string | null) => setShowModal(modalName)
 
+  const toast = useToast()
   const [showAlertDialog, setShowAlertDialog] = React.useState(false)
   const handleClose = () => setShowAlertDialog(false)
 
-  const toast = useToast()
+  // Fetch medicine details using Supabase (if needed)
+  useEffect(() => {
+    const fetchMedicineDetails = async () => {
+      try {
+        const fetchedMedicines = await fetchMedicines()
+        // Convert fetchedMedicines to an array if it is an object
+        const medicinesArray = Array.isArray(fetchedMedicines) ? fetchedMedicines : Object.values(fetchedMedicines);
+
+        // Find the medicine that matches the current medDetails.id
+        const foundMedicine = medicinesArray.find((m: any) => m.id === medDetails.id)
+
+        if (foundMedicine) {
+          setMedDetails(foundMedicine)
+        }
+      } catch (error) {
+        console.error("Error fetching medicine details:", error)
+      }
+    }
+
+    if (!medDetails) {
+      fetchMedicineDetails()
+    }
+  }, [medDetails])
 
   // Function to delete the medicine in Supabase
-  const deleteMedicine = async () => {
+  const deleteMedicineHandler = async () => {
     try {
-      const { error } = await supabase
-        .from('medicines')
-        .delete()
-        .eq('id', med.id)
-
-      if (error) {
-        console.error('Error deleting medicine:', error.message)
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
-            </Toast>
-          ),
-        })
-      } else {
-        handleClose()
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="success">
-              <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>
-            </Toast>
-          ),
-        })
-        router.push("/medication")
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err)
+      await deleteMedicine(medDetails.id) // Call the delete function from SupaLegend
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="success">
+            <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>
+          </Toast>
+        ),
+      })
+      router.push("/medication") // Redirect to medication list
+    } catch (error) {
+      console.error("Error deleting medicine:", error)
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="error">
+            <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
+          </Toast>
+        ),
+      })
     }
   }
 
@@ -77,14 +92,14 @@ export const MedDetail = () => {
           </Pressable>
 
           <Pressable onPress={() => router.push({ pathname: '/editMed', params: { med: JSON.stringify(med) } })}>
-            <Icon as={PencilLine} className="stroke-white" size="2xl" /> 
+            <Icon as={PencilLine} className="stroke-white" size="2xl" />
           </Pressable>
         </HStack>
         <ScrollView>
           <VStack space='2xl'>
             {/* PNG Image */}
             <Image source={medImage} size='lg' alt={`${med.med_name} image`} className='self-center' />
-            
+
             {/* Medication Title */}
             <Text size='3xl' bold className="text-white text-center">
                 {med.med_name}
@@ -200,7 +215,7 @@ export const MedDetail = () => {
                     >
                       <ButtonText>Batalkan</ButtonText>
                     </Button>
-                    <Button size="sm" action="negative" onPress={deleteMedicine}>
+                    <Button size="sm" action="negative" onPress={deleteMedicineHandler}>
                       <ButtonText>Hapus</ButtonText>
                     </Button>
                   </AlertDialogFooter>

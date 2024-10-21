@@ -1,108 +1,96 @@
-import React, { useEffect, useState } from 'react';
-import { BarChart, barDataItem } from "react-native-gifted-charts";
-import { VStack } from '@/components/ui/vstack';
-import { Text } from '@/components/ui/text';
-import { LinearGradient } from '@/components/ui/linear-gradient';
-import { supabase } from '@/lib/supabase';
-import { LogWithMeds } from "@/constants/types";
-import { ActivityIndicator, Dimensions } from "react-native";
-import { format, startOfWeek, addDays } from 'date-fns';
+import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Dimensions } from "react-native"
+import { BarChart, barDataItem } from "react-native-gifted-charts"
+import { VStack } from '@/components/ui/vstack'
+import { Text } from '@/components/ui/text'
+import { LinearGradient } from '@/components/ui/linear-gradient'
+import { format, startOfWeek, addDays } from 'date-fns'
+import { LogWithMeds } from "@/constants/types"
+import { fetchLogs, getUserId } from '@/utils/SupaLegend'
 
 export default function MedicationAdherenceChart() {
-  const [adherenceData, setAdherenceData] = useState<barDataItem[]>([]);
+  const [adherenceData, setAdherenceData] = useState<barDataItem[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
 
   // Helper function to get the date in 'YYYY-MM-DD' format using local time
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-CA'); // 'en-CA' returns the format 'YYYY-MM-DD'
-  };
+    return date.toLocaleDateString('en-CA') // 'en-CA' returns the format 'YYYY-MM-DD'
+  }
 
   // Get the current week's dates (Monday to Sunday)
   const getCurrentWeekDates = (): { dayName: string, date: string }[] => {
-    const today = new Date();
-    const start = startOfWeek(today, { weekStartsOn: 1 }); // Monday as the first day
-    const weekDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const today = new Date()
+    const start = startOfWeek(today, { weekStartsOn: 1 }) // Monday as the first day
+    const weekDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
     return weekDays.map((day, index) => {
-      const currentDate = addDays(start, index);
+      const currentDate = addDays(start, index)
       return {
         dayName: day,
         date: formatDate(currentDate),
-      };
-    });
-  };
+      }
+    })
+  }
 
   // Function to calculate adherence percentage for a given day
   const calculateAdherenceForDay = (logs: LogWithMeds[], date: string): number => {
-    const logsForDay = logs.filter(log => log.log_date === date);
-    const totalLogs = logsForDay.length;
-    const takenLogs = logsForDay.filter(log => log.taken === true).length; // Only count logs where 'taken' is true
+    const logsForDay = logs.filter(log => log.log_date === date)
+    const totalLogs = logsForDay.length
+    const takenLogs = logsForDay.filter(log => log.taken === true).length // Only count logs where 'taken' is true
 
-    return totalLogs > 0 ? Math.round((takenLogs / totalLogs) * 100) : 0;
-  };
+    return totalLogs > 0 ? Math.round((takenLogs / totalLogs) * 100) : 0
+  }
 
-  const fetchLogs = async () => {
+  const fetchUserAdherenceLogs = async () => {
+    setLoading(true)
     try {
-      // Fetch user session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session?.user?.id) {
-        throw new Error("User is not authenticated");
-      }
-
-      const userId = sessionData.session.user.id;
-
-      // Define the date range: current week (Monday to Sunday)
-      const currentDate = new Date();
-      const startOfWeekDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
-      const endOfWeekDate = addDays(startOfWeekDate, 6); // Sunday
-
-      // Fetch med_logs with related medicines
-      const { data: logsData, error: logsError } = await supabase
-        .from('med_logs')
-        .select(`
-          *
-        `)
-        .eq('user_id', userId)
-        .gte('log_date', formatDate(startOfWeekDate)) // Ensure filtering by log_date instead of updated_at
-        .lte('log_date', formatDate(endOfWeekDate));
-
-      if (logsError) {
-        throw logsError;
+      // Get the current user ID
+      const userId = getUserId()
+      if (!userId) {
+        throw new Error("User is not authenticated")
       }
 
       // Get the current week's dates
-      const weekDates = getCurrentWeekDates();
+      const weekDates = getCurrentWeekDates()
 
-      // Calculate adherence data based on 'taken' logs
+      // Fetch logs using SupaLegend's fetchLogs function
+      const logsData = await fetchLogs()
+
+      // Sanitize logsData to ensure med_name is always a string
+      const sanitizedLogs = logsData.map((log: any) => ({
+        ...log,
+        med_name: log.med_name ?? 'Unknown Medicine',  // Ensure med_name is always a string
+      })) as LogWithMeds[]
+
       const updatedAdherenceData: barDataItem[] = weekDates.map(dayInfo => {
-        const adherencePercentage = calculateAdherenceForDay(logsData || [], dayInfo.date); // Filter 'taken' logs
-        const validValue = adherencePercentage > 0 ? adherencePercentage : 0;
-        const validLabel = dayInfo.dayName;
+        const adherencePercentage = calculateAdherenceForDay(sanitizedLogs || [], dayInfo.date);
+        // const adherencePercentage = calculateAdherenceForDay(sanitizedLogs, dayInfo.date)
+        const validValue = adherencePercentage > 0 ? adherencePercentage : 0
+        const validLabel = dayInfo.dayName
 
         return {
           value: validValue,
           label: validLabel,
-        };
-      });
+        }
+      })
 
-      // Log adherence data for debugging
-      console.log("Adherence Data:", updatedAdherenceData);
-
-      // Validate the structure before setting the state
-      if (updatedAdherenceData.every(item => typeof item.value === 'number' && typeof item.label === 'string')) {
-        setAdherenceData(updatedAdherenceData);
-      } else {
-        throw new Error("Invalid adherence data format");
-      }
+      setAdherenceData(updatedAdherenceData)
 
     } catch (err: any) {
-      console.error("Error fetching logs:", err);
+      console.error("Error fetching logs:", err)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    fetchUserAdherenceLogs()
+  }, [])
 
-  const screenWidth = Dimensions.get('window').width;
+  useEffect(() => {
+    fetchUserAdherenceLogs()
+  }, [])
+
+  const screenWidth = Dimensions.get('window').width
 
   return (
     <VStack space='lg'>
@@ -136,5 +124,5 @@ export default function MedicationAdherenceChart() {
         </VStack>
       </LinearGradient>
     </VStack>
-  );
+  )
 }

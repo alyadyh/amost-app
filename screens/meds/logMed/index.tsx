@@ -9,23 +9,19 @@ import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
 import { Heading } from "@/components/ui/heading"
 import { CheckCircle, Circle, PencilLine, Share2, XCircle } from "lucide-react-native"
 import { Button, ButtonIcon } from "@/components/ui/button"
-import { Medicine, Log } from '@/constants/types'
+import { Medicine, Log, LogWithMeds } from '@/constants/types'
 import { LogMedModal } from "./modal"
 import { format, isToday, isYesterday, parseISO } from 'date-fns'
 import { id } from 'date-fns/locale'
 import MedLayout from "../layout"
-import { supabase, getCurrentUser, fetchUserProfile } from '@/lib/supabase'
+import { getUserId, fetchLogs, fetchUserProfile, insertOrUpdateLog } from '@/utils/SupaLegend'
 import ShareReport from "./components/ShareExport"
 
 interface GroupedLogs {
   [key: string]: Log[]
 }
 
-interface LogWithMedicine extends Log {
-  medicines?: Medicine
-}
-
-const groupLogsByDate = (logs: LogWithMedicine[]): GroupedLogs => {
+const groupLogsByDate = (logs: LogWithMeds[]): GroupedLogs => {
   const groups: GroupedLogs = {}
   logs.forEach(log => {
     (groups[log.log_date] = groups[log.log_date] || []).push(log)
@@ -33,7 +29,7 @@ const groupLogsByDate = (logs: LogWithMedicine[]): GroupedLogs => {
   return groups
 }
 
-const sortLogsByDate = (groupedLogs: GroupedLogs): [string, LogWithMedicine[]][] => {
+const sortLogsByDate = (groupedLogs: GroupedLogs): [string, LogWithMeds[]][] => {
   return Object.entries(groupedLogs).sort(([dateA], [dateB]) => {
     return parseISO(dateB).getTime() - parseISO(dateA).getTime() // Newest to oldest
   })
@@ -46,18 +42,18 @@ const getDisplayDate = (dateString: string): string => {
   return format(date, 'dd MMMM yyyy', { locale: id })
 }
 
-const getMedNameById = (log: LogWithMedicine) => {
+const getMedNameById = (log: LogWithMeds) => {
   return log.medicines?.med_name || 'Unknown'
 }
 
-const LogCard: React.FC<{ log: LogWithMedicine, onEdit: () => void }> = ({ log, onEdit }) => {
+const LogCard: React.FC<{ log: LogWithMeds, onEdit: () => void }> = ({ log, onEdit }) => {
   const medName = getMedNameById(log)
   const borderColor = log.taken === true ? 'border-green-500' : log.taken === false ? 'border-red-500' : 'border-gray-400'
   const iconColor = log.taken === true ? 'text-green-500 stroke-green-500' : log.taken === false ? 'text-red-500 stroke-red-500' : 'text-gray-400 stroke-gray-400'
   const IconComponent = log.taken === true ? CheckCircle : log.taken === false ? XCircle : Circle
 
   const formattedTime = log.log_time ? log.log_time.slice(0, 5) : "00:00"
-  
+
   const displayText = log.taken === true
     ? `Diminum pada pukul ${formattedTime}`
     : log.taken === false
@@ -85,52 +81,37 @@ const LogCard: React.FC<{ log: LogWithMedicine, onEdit: () => void }> = ({ log, 
 }
 
 const LogMedScreen = () => {
-  const [userName, setUserName] = useState<string>('')
+  const [userName, setUserName] = useState<any>('')
   const [showModal, setShowModal] = useState(false)
   const [selectedMed, setSelectedMed] = useState<Medicine | null>(null)
   const [selectedReminderTime, setSelectedReminderTime] = useState<string>()
-  const [logs, setLogs] = useState<LogWithMedicine[]>([])
+  const [logs, setLogs] = useState<LogWithMeds[]>([])
   const [loading, setLoading] = useState(false)
-  const [selectedLog, setSelectedLog] = useState<LogWithMedicine | null>(null) // New state
+  const [selectedLog, setSelectedLog] = useState<LogWithMeds | null>(null)
 
   const fetchProfile = async () => {
-    const { data: session } = await supabase.auth.getSession()
-    const userId = session?.session?.user?.id
-
-    if (userId) {
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", userId)
-        .single()
-
-      if (!error && profileData) {
-        setUserName(profileData.full_name || 'No Name')
-      } else {
-        console.error("Error fetching profile:", error)
+    try {
+      const userId = getUserId()
+      if (userId) {
+        const profile = await fetchUserProfile()
+        setUserName(profile.full_name || 'No Name')
       }
+    } catch (error) {
+      console.error("Error fetching profile:", error)
     }
   }
 
   const fetchLogsWithMedicines = async () => {
     setLoading(true)
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (sessionData?.session?.user?.id) {
-        const { data: logsData, error } = await supabase
-          .from('med_logs')
-          .select('*, medicines(*)')
-          .eq('user_id', sessionData.session.user.id)
-          .order('log_date', { ascending: false })
-
-        if (error) {
-          console.error('Error fetching logs with medicines:', error.message)
-        } else {
-          setLogs(logsData || [])
-        }
-      }
+      const logsData = fetchLogs()
+      const sanitizedLogsData = logsData.map(log => ({
+        ...log,
+        med_name: log.med_name || 'Unnamed Medicine',
+      }))
+      setLogs(sanitizedLogsData || [])
     } catch (error) {
-      console.error('Error during fetching logs:', error)
+      console.error('Error fetching logs with medicines:', error)
     } finally {
       setLoading(false)
     }
@@ -141,7 +122,8 @@ const LogMedScreen = () => {
     fetchLogsWithMedicines()
   }, [])
 
-  const handleOpenModal = async (log: LogWithMedicine) => {
+
+  const handleOpenModal = async (log: LogWithMeds) => {
     try {
       const med = log.medicines
 
@@ -158,7 +140,7 @@ const LogMedScreen = () => {
     }
   }
 
-  const handleLogUpdate = (updatedLog: LogWithMedicine) => {
+  const handleLogUpdate = (updatedLog: LogWithMeds) => {
     setLogs((prevLogs) =>
       prevLogs.map((log) =>
         log.id === updatedLog.id
@@ -173,7 +155,7 @@ const LogMedScreen = () => {
   const sortedLogs = sortLogsByDate(groupedLogs)
 
   return (
-    <VStack space="3xl">
+    <VStack space="3xl" className="flex-1">
       <HStack className="items-center justify-between">
         <HStack space="md" className="items-center">
           <Pressable onPress={() => router.back()}>
@@ -184,18 +166,25 @@ const LogMedScreen = () => {
         <ShareReport userName={userName} />
       </HStack>
 
-      <ScrollView className="mb-12">
-        {sortedLogs.map(([date, logs]: [string, LogWithMedicine[]]) => (
-          <VStack key={date} space="md" className="mb-6">
-            <Text size="lg" bold className="text-amost-secondary-dark_1">
-              {getDisplayDate(date)}
-            </Text>
-            {logs.map((log) => (
-              <LogCard key={log.id} log={log} onEdit={() => handleOpenModal(log)} />
-            ))}
-          </VStack>
-        ))}
-      </ScrollView>
+      {logs.length === 0 ? (
+        <VStack className="flex-1 justify-center items-center">
+          <Text className="text-amost-secondary-dark_2">Belum ada riwayat log obat</Text>
+        </VStack>
+      ) : (
+        <ScrollView className="mb-12">
+          {sortedLogs.map(([date, logs]: [string, LogWithMeds[]]) => (
+            <VStack key={date} space="md" className="mb-6">
+              <Text size="lg" bold className="text-amost-secondary-dark_1">
+                {getDisplayDate(date)}
+              </Text>
+              {logs.map((log) => (
+                <LogCard key={log.id} log={log} onEdit={() => handleOpenModal(log)} />
+              ))}
+            </VStack>
+          ))}
+        </ScrollView>
+      )}
+
       {selectedMed && selectedLog && (
         <LogMedModal
           visible={showModal}

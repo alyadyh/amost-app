@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/icon'
 import { Pressable } from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
-import { supabase } from '@/lib/supabase'
+import { insertOrUpdateLog, fetchLogs, updateMedicine, getUserId } from '@/utils/SupaLegend'
 import { router } from 'expo-router'
 
 interface LogModalProps {
@@ -25,99 +25,78 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
   const [log, setLog] = useState<Log | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Fetch log for this medicine if it exists
-  const fetchLog = async (reminderTime: string, logDate: string) => {
-    setLoading(true)
+  // Fetch log using the utility function from supalegend
+  const loadLog = async () => {
     try {
-      const { data, error } = await supabase
-        .from('med_logs')
-        .select('*')
-        .eq('medicine_id', medicine.id)
-        .eq('reminder_time', reminderTime)
-        .eq('log_date', logDate)
-        .limit(1)
-      
-      if (error) {
-        console.error('Error fetching log:', error.message)
-      } else if (data && data.length > 0) {
-        setLog(data[0])
-      } else {
-        setLog(null)
+      const userId = getUserId()
+      if (!userId) {
+        throw new Error('User is not logged in')
       }
-    } catch (err) {
-      console.error('Error during log fetch:', err)
-    } finally {
-      setLoading(false)
+
+      const logs = fetchLogs()
+      const fetchedLog = logs?.find(
+        (entry) =>
+          entry.medicine_id === medicine.id &&
+          entry.log_date === logDate &&
+          entry.reminder_time === reminderTime
+      )
+
+      setLog(fetchedLog || null)
+    } catch (error) {
+      console.error('Error fetching log:', error)
     }
   }
 
   useEffect(() => {
     if (visible && reminderTime && logDate) {
-      fetchLog(reminderTime, logDate) // Ensure logDate matches fullDate from UI
+      loadLog()
     }
   }, [visible, reminderTime, logDate])
 
-  const handleLog = async (taken: boolean, reminderTime: string) => {
-    const now = new Date()
-    const log_date = logDate; // Use the prop
-    const log_time = now.toTimeString().split(' ')[0].slice(0, 5) // Get time in 'HH:mm' format
-
+  const handleLog = async (taken: boolean) => {
     try {
-      // Retrieve the current session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError || !sessionData.session) {
+      const userId = getUserId()
+      if (!userId) {
         throw new Error('User is not logged in')
       }
 
-      // Perform upsert
-      const { data, error } = await supabase
-        .from('med_logs')
-        .upsert([{
-          user_id: sessionData.session.user.id,
-          medicine_id: medicine.id,
-          log_date,
-          reminder_time: reminderTime,
-          taken,
-          log_time,
-        }], {
-          onConflict: 'user_id,medicine_id,log_date,reminder_time',
-        })
-        .select()
-
-      if (error) {
-        console.error('Error upserting log:', error.message)
-      } else if (data && data.length > 0) {
-        const upsertedLog: Log = data[0]
-
-        // Update stock quantity if the medicine was taken
-        if (taken) {
-          const newStockQuantity = medicine.stock_quantity - medicine.dose_quantity
-          const { error: updateError } = await supabase
-            .from('medicines')
-            .update({ stock_quantity: newStockQuantity })
-            .eq('id', medicine.id)
-
-          if (updateError) {
-            console.error('Error updating stock quantity:', updateError.message)
-          }
-        }
-
-        // Pass the complete log to the parent component and update local state
-        onLog(upsertedLog)
-        setLog(upsertedLog)
+      const logData: Log = {
+        id: log?.id || '',
+        medicine_id: medicine.id,
+        log_date: logDate,
+        reminder_time: reminderTime,
+        taken,
+        log_time: new Date().toTimeString().slice(0, 5),  // Current time in 'HH:mm'
+        user_id: userId,
+        created_at: log?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        med_name: medicine.med_name,
+        deleted: log?.deleted || false
       }
-    } catch (err) {
-      console.error('Error logging medicine:', err)
-    }
 
-    onClose()
+      // Insert or update log using the utility function from SupaLegend
+      insertOrUpdateLog(logData)
+
+      // Update stock if the medicine is taken
+      if (taken) {
+        const newStockQuantity = medicine.stock_quantity - medicine.dose_quantity
+        await updateMedicine(medicine.id, { stock_quantity: newStockQuantity })
+      }
+
+      // Pass updated log to parent
+      onLog(logData)
+      onClose()
+
+    } catch (error) {
+      console.error('Error handling log:', error)
+    }
   }
 
   // Conditional text based on medForm
   const getMedicineText = (med_form: string, med_name: string, taken: boolean, log_date?: string | null, log_time?: string | null) => {
     const takeOrUse = ['cairan', 'kapsul', 'tablet', 'bubuk'].includes(med_form) ? 'minum' : 'pakai'
     const formattedTime = log_time ? log_time.slice(0, 5) : "00:00"
-    
+
     if (taken && log_date && log_time) {
       // If the medicine is already taken
       return `${med_name} telah ${takeOrUse} pada ${log_date} pukul ${formattedTime}`
@@ -152,7 +131,7 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
             </Button>
           ) : (
             <HStack space="3xl">
-              <Pressable onPress={() => handleLog(true, reminderTime)}>
+              <Pressable onPress={() => handleLog(true)}>
                 <VStack space='sm' className='items-center'>
                   <Box className='p-2 border-2 border-amost-primary rounded-lg'>
                     <Icon as={Check} size="2xl" className="stroke-amost-primary" />
@@ -161,7 +140,7 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
                 </VStack>
               </Pressable>
 
-              <Pressable onPress={() => handleLog(false, reminderTime)}>
+              <Pressable onPress={() => handleLog(false)}>
                 <VStack space='sm' className='items-center'>
                   <Box className='p-2 border-2 border-amost-secondary-dark_2 rounded-lg'>
                     <Icon as={X} size="2xl" className="stroke-amost-secondary-dark_2" />

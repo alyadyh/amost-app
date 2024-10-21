@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'expo-router'
-import { SafeAreaView } from '@/components/ui/safe-area-view'
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
 import { LinearGradient } from '@/components/ui/linear-gradient'
@@ -10,85 +9,42 @@ import { Icon } from '@/components/ui/icon'
 import { ChevronRight, Percent } from 'lucide-react-native'
 import SummaryChart from './component/SummaryChart'
 import { ScrollView } from '@/components/ui/scroll-view'
-import { Medicine, Log, LogWithMeds } from "@/constants/types"
+import { LogWithMeds } from "@/constants/types"
 import ShareReport from './component/ShareExport'
-import { supabase } from '@/lib/supabase'
+import { fetchLogs, fetchUserProfile, getUserId } from '@/utils/SupaLegend'
 import TabLayout from '../layout'
 
 const ActivityScreen = () => {
-  const [userName, setUserName] = useState<string>('')
+  const [userName, setUserName] = useState<any>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
   const [logs, setLogs] = useState<LogWithMeds[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: session } = await supabase.auth.getSession()
-      const userId = session?.session?.user?.id
-
-      if (userId) {
-        const { data: profileData, error } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", userId)
-          .single()
-
-        if (!error && profileData) {
-          setUserName(profileData.full_name || 'No Name')
-        } else {
-          console.error("Error fetching profile:", error)
-        }
-      }
-    }
-
-    fetchProfile()
-  }, [])
-
-  // Function to get today's date in 'YYYY-MM-DD' format using local time
-  const getTodayDate = () => {
-    const today = new Date()
-    return today.toLocaleDateString('en-CA') // 'en-CA' returns the format 'YYYY-MM-DD'
-  }
-
-  useEffect(() => {
     const fetchProfileAndLogs = async () => {
       setLoading(true)
       setError(null)
       try {
-        // Fetch user session
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError || !sessionData.session?.user?.id) {
+        // Get the current user ID from SupaLegend
+        const userId = getUserId()
+
+        if (!userId) {
           throw new Error("User is not authenticated")
         }
 
-        const userId = sessionData.session.user.id
+        // Fetch user's logs with medicines from SupaLegend
+        const logsData = await fetchLogs()
 
         // Get today's date in 'YYYY-MM-DD' format
         const todayDate = new Date().toLocaleDateString('en-CA') // 'en-CA' for 'YYYY-MM-DD'
+        const todaysLogs = logsData?.filter((log: LogWithMeds) => log.log_date === todayDate) || []
 
-        // Fetch med_logs with related medicines
-        const { data: logsData, error: logsError } = await supabase
-          .from('med_logs')
-          .select(`
-            *,
-            medicines:medicines (id, med_name)
-          `)
-          .eq('user_id', userId)
-          .eq('log_date', todayDate)
-
-        if (logsError) {
-          throw logsError
-        }
-
-        // Filter logs where 'taken' is true
-        const takenLogs = logsData?.filter(log => log.taken === true) || []
-
-        setLogs(takenLogs)
+        setLogs(todaysLogs)
 
         // Calculate adherence rate
         const totalMedications = logsData?.length || 0
-        const takenMedications = takenLogs.length
+        const takenMedications = todaysLogs.filter(log => log.taken).length
 
         const adherencePercentage = totalMedications > 0
           ? Math.round((takenMedications / totalMedications) * 100)
@@ -96,18 +52,10 @@ const ActivityScreen = () => {
 
         setAdherenceRate(adherencePercentage)
 
-        // Fetch user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", userId)
-          .single()
+        // Fetch user profile from SupaLegend
+        const profileData = await fetchUserProfile()
+        setUserName(profileData?.full_name || 'No Name')
 
-        if (profileError) {
-          throw profileError
-        }
-
-        setUserName(profileData.full_name || 'No Name')
       } catch (err: any) {
         console.error("Error:", err)
         setError(err.message || "Terjadi kesalahan.")
@@ -126,7 +74,7 @@ const ActivityScreen = () => {
       <ScrollView>
         <VStack space='2xl' className='mb-4'>
           <VStack>
-            <LinearGradient 
+            <LinearGradient
               className="w-full px-6 py-8 flex-row justify-between items-center rounded-t-xl"
               colors={["#00A378", "#34B986"]}
               start={[0, 1]}

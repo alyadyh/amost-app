@@ -10,7 +10,7 @@ import useRouter from "@unitools/router"
 import FormInput from "@/components/auth/FormInput"
 import AuthHeader from "@/components/auth/AuthHeader"
 import { Toast, ToastTitle } from "@/components/ui/toast"
-import { useAuth } from "@/lib/supabase"
+import { resetPasswordForEmail } from "@/utils/SupaLegend"
 import { z } from "zod"
 
 type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>
@@ -27,7 +27,6 @@ const ForgotPasswordScreen = () => {
 
   const toast = useToast()
   const router = useRouter()
-const { resetPasswordForEmail } = useAuth()
 
   const onSubmit = async (data: ForgotPasswordFormType) => {
     try {

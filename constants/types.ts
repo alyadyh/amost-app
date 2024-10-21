@@ -6,9 +6,11 @@ import PatchSvg from "@/components/svg/PatchSvg"
 import PowderSvg from "@/components/svg/PowderSvg"
 import TabletSvg from "@/components/svg/TabletSvg"
 import { Timestamp } from 'react-native-reanimated/lib/typescript/commonTypes'
+import { medicines$ } from '@/utils/SupaLegend';
 
 export interface Medicine {
   id: string
+  user_id: string
   med_name: string
   med_form: string
   dosage: string
@@ -20,11 +22,12 @@ export interface Medicine {
   duration: number
   stock_quantity: number
   med_photos?: string | null
-  instructions?: string
-  prescribing_doctor?: string
-  dispensing_pharmacy?: string
-  updated_at?: Date
-  inserted_at?: Date
+  instructions?: string | null
+  prescribing_doctor?: string | null
+  dispensing_pharmacy?: string | null
+  updated_at?: string | null
+  created_at?: string
+  deleted: boolean | null
 }
 
 export type MedForm = 'cairan' | 'kapsul' | 'tablet' | 'suntikan' | 'bubuk' | 'patch' | 'gel'
@@ -61,17 +64,19 @@ export const medFormInactive: Record<MedForm, any> = {
 // }
 
 export interface Log {
-  id: string  //medicine_id
+  id: string
   user_id: string
-  medicine_id: string
+  medicine_id: string | null
+  med_name: string
   log_date: string // Store date in 'YYYY-MM-DD' format
   log_time: string | null // Store time in 'HH:mm' format
   reminder_time: string
   taken: boolean | null
-  updated_at: string
-  inserted_at: string
+  updated_at: string | null
+  created_at: string | null
+  deleted: boolean | null
 }
 
 export interface LogWithMeds extends Log {
-  medicine: Medicine
+  medicines?: Medicine
 }

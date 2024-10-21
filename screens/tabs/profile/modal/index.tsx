@@ -13,7 +13,7 @@ import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, 
 import { Pencil, AlertCircleIcon } from "lucide-react-native"
 import { Pressable } from "@/components/ui/pressable"
 import { Controller, useForm } from "react-hook-form"
-import { uploadAvatar, updateUserProfile, getCurrentUser } from "@/lib/supabase"
+import { uploadImage, updateUserProfile, currentUser$ } from "@/utils/SupaLegend"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
@@ -82,16 +82,19 @@ export const ModalComponent = ({
     try {
       setUploading(true)
 
-      const currentUser = await getCurrentUser()
+      const currentUser = currentUser$.get()
 
-      if (!currentUser) return
+      if (!currentUser) {
+        console.error("User is not logged in");
+        return;
+      }
 
       let uploadedAvatarUrl = avatarUrl
       let updateData: { full_name?: string, avatar_url?: string } = {}
 
       // If the user has selected a new avatar, upload it and update the avatar field
       if (selectedImageUri) {
-        const uploadedPath = await uploadAvatar(selectedImageUri)
+        const uploadedPath = await uploadImage(selectedImageUri, "avatars")
         if (uploadedPath) {
           uploadedAvatarUrl = uploadedPath
           updateData.avatar_url = uploadedPath

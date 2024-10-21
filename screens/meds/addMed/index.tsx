@@ -16,7 +16,7 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/component
 import { TimePickerField } from "./components/TimePickerField"
 import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
 import { zodResolver } from "@hookform/resolvers/zod"
-import { uploadImage, getUserSession, insertMedicine } from "@/lib/supabase"
+import { uploadImage, addMedicine, getUserId } from "@/utils/SupaLegend"
 import { addMedSchema } from "@/schemas/medSchemas"
 import MedLayout from "../layout"
 import { z } from "zod"
@@ -45,7 +45,7 @@ const AddMedScreen = () => {
 
   // Watch the frequency field
   const selectedFrequency = watch("frequency")
-  
+
   // Watch the medForm field
   const selectedMedForm = watch("med_form") as keyof typeof dosageOptions
   const applicableDosageOptions = selectedMedForm ? dosageOptions[selectedMedForm] : []
@@ -76,7 +76,7 @@ const AddMedScreen = () => {
     let uploadedImagePath = null
     console.log("Selected Image URI before upload:", selectedImageUri)
 
-    // Upload the image
+    // Upload the image using Supalegend's `uploadImage`
     if (selectedImageUri) {
       try {
         uploadedImagePath = await uploadImage(selectedImageUri, "med_photos")
@@ -95,22 +95,24 @@ const AddMedScreen = () => {
     console.log("Submitted Data:", formattedData)
 
     try {
-      const session = await getUserSession()
-      if (!session) throw new Error("User is not logged in")
+      // Get user ID using `getUserId` from Supalegend
+      const userId = getUserId()
+      if (!userId) throw new Error("User is not logged in")
 
-      console.log("User id:", session.user.id)
+      console.log("User id:", userId)
 
-      // Insert the medicine data into Supabase
-      const insertSuccess = await insertMedicine(formattedData, session.user.id)
+      // Insert the medicine data using `addMedicine` from Supalegend
+      addMedicine({
+        ...formattedData,
+        user_id: userId,
+      })
 
-      if (insertSuccess) {
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle className="text-white">Obat berhasil ditambahkan!</ToastTitle>
-          </Toast>,
-        })
-      }
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
+          <ToastTitle className="text-white">Obat berhasil ditambahkan!</ToastTitle>
+        </Toast>,
+      })
       router.push("/medication")
       reset()
     } catch (error) {
@@ -184,7 +186,7 @@ const AddMedScreen = () => {
             <FormField name="duration" label="Durasi Konsumsi Obat" control={control} error={errors.duration?.message} placeholder="0" isNumeric={true} />
             <Text size="xs" className="text-amost-secondary-dark_2">(Tulis durasi dalam hitungan hari)</Text>
           </VStack>
-          
+
           {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
 
           <ToggleDetailsButton isDetailVisible={isDetailVisible} setDetailVisible={setDetailVisible} />

@@ -15,46 +15,33 @@ import { HStack } from '@/components/ui/hstack'
 import { Divider } from '@/components/ui/divider'
 import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input'
 import TabLayout from '../layout'
-import { supabase } from '@/lib/supabase'
+import { fetchMedicines } from '@/utils/SupaLegend'
 import { View } from '@/components/ui/view'
 
 const MedScreen = () => {
   const [meds, setMeds] = useState<Medicine[]>([])
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
-  // Fetch user-specific medicines from Supabase
-  const fetchMedicines = async () => {
+  // Fetch user-specific medicines using SupaLegend
+  const fetchMedicinesData = async () => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-
-      if (sessionData.session && sessionData.session.user) {
-        const userId = sessionData.session.user.id
-
-        const { data, error } = await supabase
-          .from('medicines')
-          .select('*')
-          .eq('user_id', userId)
-
-        if (error) {
-          console.error('Error fetching medicines:', error.message)
-        } else {
-          console.log('Fetched Medicines:', data)
-          setMeds(data || [])
-        }
-      } else {
-        console.log('No user session found')
+      const fetchedMeds = await fetchMedicines() // Fetch medicines from SupaLegend
+      if (Array.isArray(fetchedMeds)) {
+        setMeds(fetchedMeds) // Set the medicines state if fetched successfully
       }
-    } catch (err) {
-      console.error('Error during fetch:', err)
+    } catch (error) {
+      console.error('Error fetching medicines:', error)
     }
   }
 
   useEffect(() => {
-    fetchMedicines()
+    fetchMedicinesData()
   }, [])
 
+
   // Filter the meds based on the search term
-  const filteredMeds = searchTerm 
+  const filteredMeds = searchTerm
   ? meds.filter(med => med.med_name && med.med_name.toLowerCase().includes(searchTerm.toLowerCase()))
   : meds
 
@@ -63,7 +50,7 @@ const MedScreen = () => {
       <VStack>
         <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Obatku</Heading>
 
-        <LinearGradient 
+        <LinearGradient
           className="w-full px-6 py-8 mt-6 flex-row justify-between items-center rounded-xl"
           colors={["#00A378", "#34B986"]}
           start={[0, 1]}

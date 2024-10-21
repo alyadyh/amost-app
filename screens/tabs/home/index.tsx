@@ -17,7 +17,7 @@ import { Fab, FabIcon } from '@/components/ui/fab'
 import { router } from 'expo-router'
 import { LayoutRectangle } from 'react-native'
 import TabLayout from '../layout'
-import { supabase, getCurrentUser, fetchMedicines } from '@/lib/supabase'
+import { fetchMedicines, getUserId, insertOrUpdateLog, fetchLogs } from '@/utils/SupaLegend'
 
 const HomeScreen = () => {
   // Define a type for grouping medicines by reminder times
@@ -33,13 +33,13 @@ const HomeScreen = () => {
 
   // State to store week days, medicines, current day, time, and selected medicine for modal
   const [days, setDays] = useState<Day[]>([
-    { id: 1, name: 'Sen', date: '' },
-    { id: 2, name: 'Sel', date: '' },
-    { id: 3, name: 'Rab', date: '' },
-    { id: 4, name: 'Kam', date: '' },
-    { id: 5, name: 'Jum', date: '' },
-    { id: 6, name: 'Sab', date: '' },
-    { id: 7, name: 'Min', date: '' },
+    { id: 0, name: 'Sen', date: '' },
+    { id: 1, name: 'Sel', date: '' },
+    { id: 2, name: 'Rab', date: '' },
+    { id: 3, name: 'Kam', date: '' },
+    { id: 4, name: 'Jum', date: '' },
+    { id: 5, name: 'Sab', date: '' },
+    { id: 6, name: 'Min', date: '' },
   ])
 
   const [meds, setMeds] = useState<Medicine[]>([])
@@ -60,16 +60,18 @@ const HomeScreen = () => {
   }
 
   // Function: Log medicine action (update logs in state)
-  const handleLog = (log: Log) => {
+  const handleLog = async (log: Log) => {
     setLogs((prevLogs) => [...prevLogs, log])
+    await insertOrUpdateLog(log)
   }
 
   // Function: Calculate and set the dates for Monday to Sunday
   const getWeekDates = () => {
     const today = new Date()
     const dayOfWeek = today.getDay() // Get current day of the week (0=Sunday, 1=Monday, etc.)
+    const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Shift so that Monday is 0, and Sunday is 6
     const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)) // Set to Monday
+    startOfWeek.setDate(today.getDate() - offset) // Set the start to Monday (id 0)
 
     const weekDays = days.map((day, index) => {
       const currentDay = new Date(startOfWeek)
@@ -104,14 +106,23 @@ const HomeScreen = () => {
       })
       .filter((med) => med.taken || !med.taken) // Filter to include taken and not-taken meds
       .filter((med: Medicine) => {
-        const insertedDate = new Date(med.inserted_at || Date.now())
-        const currentDayDate = new Date(`${days[dayId - 1]?.fullDate}T00:00:00Z`)
+        const createdDate = new Date(med.created_at || Date.now())
+        const currentDayDate = new Date(`${days[dayId - 1]?.fullDate}T18:00:00Z`)
 
-        // Calculate the time difference in days between inserted_at and the current day
-        const timeDifference = Math.floor((currentDayDate.getTime() - insertedDate.getTime()) / (1000 * 3600 * 24))
+        const createdDateString = createdDate.toLocaleDateString('en-CA') // Format: YYYY-MM-DD
+        const currentDayDateString = currentDayDate.toLocaleDateString('en-CA')
 
-        // Ensure medicine is displayed starting from the inserted_at date and according to frequency interval
-        return timeDifference >= -1 && timeDifference % med.frequency_interval_days === 0
+        // Calculate the time difference in days between created_at and the current day
+        const timeDifference = Math.floor(
+          (currentDayDate.setHours(0,0,0,0) - createdDate.setHours(0,0,0,0)) / (1000 * 3600 * 24)
+        )
+
+        console.log("currentDayDate: ", currentDayDateString)
+        console.log("createdDate: ", createdDateString)
+        console.log("Time difference: ", timeDifference)
+
+        // Ensure medicine is displayed starting from the created_at date and according to frequency interval
+        return timeDifference === 0 || (timeDifference > 0 && timeDifference % med.frequency_interval_days === 0)
       })
       .sort((a: Medicine, b: Medicine) => a.reminder_times[0].localeCompare(b.reminder_times[0])) // Sort by reminder times
   }
@@ -162,117 +173,81 @@ const HomeScreen = () => {
 
   // Function: Map the day of the week to the day array index (0=Sunday, 1=Monday, etc.)
   const getCurrentDayIndex = (): number => {
-    return currentDay === 0 ? 7 : currentDay // Adjust so 1=Monday, 7=Sunday
+    return currentDay === 0 ? 6 : currentDay - 1 // Adjust so 0=Monday and 6=Sunday
   }
 
   // Function: Handle day click (for testing purposes, changes the selected day)
   const handleDayClick = (dayId: number) => {
-    setCurrentDay(dayId) // Set the clicked day as the current day
+    setCurrentDay(dayId + 1) // Set the clicked day as the current day
   }
-
-  // Function: Fetch user-specific medicines from Supabase
-  // const fetchMedicines = async () => {
-  //   try {
-  //     const { data: sessionData } = await supabase.auth.getSession()
-
-  //     if (sessionData.session && sessionData.session.user) {
-  //       const userId = sessionData.session.user.id
-
-  //       const { data, error } = await supabase
-  //         .from('medicines')
-  //         .select('*')
-  //         .eq('user_id', userId)
-
-  //       if (error) {
-  //         console.error('Error fetching medicines:', error.message)
-  //       } else {
-  //         setMeds(data || [])
-  //       }
-  //     } else {
-  //       console.log('No user session found')
-  //     }
-  //   } catch (err) {
-  //     console.error('Error during fetch:', err)
-  //   }
-  // }
 
   // useEffect: Set week dates and fetch medicines on component load, update time every minute
   useEffect(() => {
     getWeekDates() // Calculate and set week dates when the component loads
-    // fetchMedicines() // Fetch medicines for the user
-    fetchMedicines()
-      .then((medicines: any) => setMeds(medicines || []))
-      .catch((error: any) => console.error('Error fetching medicines:', error))
+    const loadMedicines = async () => {
+      try {
+        const medicines = await fetchMedicines()
+
+        // Ensure the result is a valid array
+        const cleanMedicines = Array.isArray(medicines) ? medicines : Object.values(medicines)
+
+        if (Array.isArray(cleanMedicines)) {
+          setMeds(cleanMedicines as Medicine[])
+        } else {
+          console.error("Unexpected data format, medicines is not an array.")
+          setMeds([]) // Fallback in case of error
+        }
+      } catch (error) {
+        console.error("Error fetching medicines:", error)
+        setMeds([]) // Handle error case by setting an empty array
+      }
+    }
+
+    loadMedicines()
 
     // Set an interval to update the current time every minute
-    const timer = setInterval(() => {
+    const intervalId = setInterval(() => {
       setCurrentTime(getCurrentTime())
     }, 60000)
 
-    return () => clearInterval(timer) // Clean up the interval on unmount
+    return () => clearInterval(intervalId) // Clean up the interval on unmount
   }, [])
 
   // Function to initialize med_logs
   const initializeMedLogsForDay = async (dayDate: string) => {
-    const user = await getCurrentUser();
-    if (!user) {
-      console.log('No authenticated user found.');
-      return;
+    const userId = getUserId()
+    if (!userId) {
+      console.log('No authenticated user found.')
+      return
     }
 
-    // Fetch existing logs for the day
-    const { data: existingLogs, error: fetchError } = await supabase
-      .from('med_logs')
-      .select('medicine_id, reminder_time')
-      .eq('user_id', user.id)
-      .eq('log_date', dayDate);
+    const medsForDay = getMedsForDay(getCurrentDayIndex())
 
-    if (fetchError) {
-      console.error('Error fetching existing logs:', fetchError.message);
-      return;
-    }
+    for (const med of medsForDay) {
+      for (const time of med.reminder_times) {
+        const allLogs = await fetchLogs() // Fetch all logs first
+        const existingLog = allLogs.find(log => log.medicine_id === med.id && log.log_date === dayDate && log.reminder_time === time)
 
-    const existingLogSet = new Set(
-      existingLogs?.map(log => `${log.medicine_id}-${log.reminder_time}`) || []
-    );
-
-    // Fetch medicines for the day
-    const medsForDay = getMedsForDay(getCurrentDayIndex());
-
-    // Prepare log entries only for medicines without existing logs
-    const logEntries = medsForDay.flatMap(med => 
-      med.reminder_times
-        .filter(time => !existingLogSet.has(`${med.id}-${time.replace('.', ':')}`))
-        .map(time => ({
-          user_id: user.id,
-          medicine_id: med.id,
-          log_date: dayDate,
-          reminder_time: time.replace('.', ':'),
-          taken: null,
-        }))
-    );
-
-    if (logEntries.length === 0) {
-      console.log('All med_logs already initialized for today.');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('med_logs')
-        .upsert(logEntries, {
-          onConflict: 'user_id,medicine_id,log_date,reminder_time',
-        });
-
-      if (error) {
-        console.error('Error initializing med_logs:', error.message);
-      } else {
-        console.log('med_logs initialized successfully:', data);
+        if (!existingLog) {
+          const logData: Log = {
+            id: '',
+            user_id: userId,
+            medicine_id: med.id,
+            med_name: med.med_name,
+            log_date: dayDate,
+            reminder_time: time,
+            taken: null,
+            log_time: '00:00:00',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            deleted: false,
+          }
+          await insertOrUpdateLog(logData)
+        }
       }
-    } catch (err) {
-      console.error('Unexpected error during med_logs initialization:', err);
     }
   }
+
 
   useEffect(() => {
     const initializeLogs = async () => {
@@ -328,7 +303,7 @@ const HomeScreen = () => {
               </LinearGradient>
             </Pressable>
           ))}
-        </HStack> 
+        </HStack>
 
         <ScrollView ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }}>
           <VStack space='sm' className='flex-1 mb-4'>
@@ -348,8 +323,8 @@ const HomeScreen = () => {
                   {/* Display all medicines with the same reminder time */}
                   {groupedMeds[time].map((med) => {
                     const active = isActive(time, currentTime)
-                    const medImage = active 
-                      ? medFormActive[med.med_form as MedForm] 
+                    const medImage = active
+                      ? medFormActive[med.med_form as MedForm]
                       : medFormInactive[med.med_form as MedForm]
                     const gradientColors = active
                       ? ['#00A378', '#34B986']
@@ -366,7 +341,7 @@ const HomeScreen = () => {
                           <HStack key={med.id} className={`justify-between items-center`}>
                             <HStack space='md' className='items-start'>
                               <Image source={medImage} size='sm' alt={`${med.med_name} image`} />
-                              <VStack>
+                              <VStack space='xs'>
                                 <Text size='xl' bold className={`${textClass}`}>{truncatedMedName}</Text>
                                 <Text size='sm' className={`font-semibold ${textClass}`}>{med.dosage}</Text>
                               </VStack>
@@ -395,11 +370,11 @@ const HomeScreen = () => {
           />
         )}
       </VStack>
-      
+
       {/* Floating action button for adding new medicine */}
-      <Fab 
-        size="lg" 
-        placement="bottom right" 
+      <Fab
+        size="lg"
+        placement="bottom right"
         className="bg-amost-secondary-green_1"
         onPress={() => router.push("/addMed")}
       >

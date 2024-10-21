@@ -16,7 +16,7 @@ import AuthFooter from "@/components/auth/AuthFooter"
 import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from "@/components/ui/checkbox"
 import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control"
 import { CheckIcon } from "@/components/ui/icon"
-import { useAuth } from "@/lib/supabase"
+import { signUp } from "@/utils/SupaLegend"
 import { z } from "zod"
 
 type SignUpFormType = z.infer<typeof signUpSchema>
@@ -33,7 +33,6 @@ const SignUpScreen = () => {
 
   const toast = useToast()
   const router = useRouter()
-  const { signUp } = useAuth()
 
   const onSubmit = async (data: SignUpFormType) => {
     if (data.password !== data.confirmpassword) {

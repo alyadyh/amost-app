@@ -11,7 +11,7 @@ import useRouter from "@unitools/router"
 import PasswordInput from "@/components/auth/PasswordInput"
 import AuthHeader from "@/components/auth/AuthHeader"
 import { z } from "zod"
-import { useAuth } from "@/lib/supabase"
+import { updatePassword } from "@/utils/SupaLegend"
 
 
 type CreatePasswordFormType = z.infer<typeof createPasswordSchema>
@@ -28,7 +28,6 @@ const CreatePasswordScreen = () => {
 
   const toast = useToast()
   const router = useRouter()
-  const { updatePassword } = useAuth()
 
   const onSubmit = async (data: CreatePasswordFormType) => {
     if (data.password !== data.confirmpassword) {

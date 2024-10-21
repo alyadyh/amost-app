@@ -13,7 +13,7 @@ import { Heading } from "@/components/ui/heading"
 import { Pressable } from "@/components/ui/pressable"
 import { router } from "expo-router"
 import { Switch } from "@/components/ui/switch"
-import { getCurrentUser, fetchUserProfile, useAuth } from "@/lib/supabase"
+import { signOut, fetchUserProfile, currentUser$ } from "@/utils/SupaLegend"
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
 import TabLayout from "../layout"
 
@@ -24,23 +24,24 @@ const ProfileScreen = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const currentUser = await getCurrentUser()
+      const currentUser = currentUser$.get();
 
-      if (currentUser?.id) {
-        const profileData = await fetchUserProfile(currentUser.id)
-        
+      if (currentUser) {
+        const profileData = await fetchUserProfile();
+
         if (profileData) {
           setUser({
-            name: profileData.full_name || "No Name",
-            email: currentUser.email || "",
-            avatar: profileData.avatar_url || "",
-          })
+            name: profileData.full_name ?? "No Name", // Use fallback "No Name" if full_name is null
+            email: currentUser.email || "", // Ensure email is a string
+            avatar: profileData.avatar_url ?? "", // Use fallback empty string if avatar_url is null
+          });
         }
       }
-    }
+    };
 
-    fetchProfile()
-  }, [])
+    fetchProfile();
+  }, []);
+
 
   // Handle the name change from the modal
   const handleUpdateProfile = (newName: string, newAvatar: string) => {
@@ -140,8 +141,8 @@ const ProfileScreen = () => {
       </VStack>
 
       {/* Modal for editing profile */}
-      <ModalComponent 
-        showModal={showModal} 
+      <ModalComponent
+        showModal={showModal}
         setShowModal={setShowModal}
         name={user.name}
         avatar={user.avatar}
@@ -154,7 +155,6 @@ const ProfileScreen = () => {
 // Component for rendering the log-out card
 const LogOutCard = () => {
   const [showAlertDialog, setShowAlertDialog] = useState(false)
-  const { signOut } = useAuth()
 
   const handleLogout = async () => {
     try {

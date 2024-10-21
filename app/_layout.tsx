@@ -7,12 +7,10 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
 import "../global.css"
 import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getUserSession, useAuth } from "@/lib/supabase"
+import { getUserId, useAuth, syncSession, supabase } from "@/utils/SupaLegend"
 import { Session } from "@supabase/supabase-js"
 import * as Linking from 'expo-linking'
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
-import * as WebBrowser from 'expo-web-browser'
-import { supabase } from "@/lib/supabase"
 
 export {
   ErrorBoundary,
@@ -37,26 +35,31 @@ export default function RootLayout() {
   // Supabase session management
   useEffect(() => {
     const checkSession = async () => {
-      const currentSession = await getUserSession()
-      setSession(currentSession)
-      if (!currentSession) {
-        router.replace("/signIn")
+      await syncSession() // Sync the session using `syncSession` from supalegend.ts
+      const currentUserId = getUserId() // Get the user ID from observable
+
+      if (!currentUserId) {
+        router.replace("/signIn") // If no user ID, redirect to sign-in
+      } else {
+        const { data: userSession } = await supabase.auth.getSession()
+        setSession(userSession?.session ?? null) // Set session based on Supabase session
       }
     }
 
     checkSession()
 
-    const { onAuthStateChange } = useAuth()
-
-    const authListener = onAuthStateChange((event, session) => {
-      setSession(session)
-      if (!session) {
-        router.replace("/signIn")
+    // Use `supabase.auth.onAuthStateChange` directly for session updates
+    const authListener = supabase.auth.onAuthStateChange(
+      (_: string, session: Session | null) => {
+        setSession(session) // Update the session state when authentication state changes
+        if (!session) {
+          router.replace("/signIn") // Redirect to sign-in if no session
+        }
       }
-    })
+    )
 
     return () => {
-      authListener?.subscription?.unsubscribe()
+      authListener?.data?.subscription?.unsubscribe() // Clean up listener
     }
   }, [])
 
@@ -67,8 +70,12 @@ export default function RootLayout() {
       const { path, queryParams } = Linking.parse(url)
 
       if (queryParams) {
-        const access_token = Array.isArray(queryParams.access_token) ? queryParams.access_token[0] : queryParams.access_token
-        const refresh_token = Array.isArray(queryParams.refresh_token) ? queryParams.refresh_token[0] : queryParams.refresh_token
+        const access_token = Array.isArray(queryParams.access_token)
+          ? queryParams.access_token[0]
+          : queryParams.access_token
+        const refresh_token = Array.isArray(queryParams.refresh_token)
+          ? queryParams.refresh_token[0]
+          : queryParams.refresh_token
 
         if (access_token && refresh_token) {
           const { data, error } = await supabase.auth.setSession({
@@ -108,7 +115,7 @@ export default function RootLayout() {
     const subscription = Linking.addEventListener('url', handleDeepLink)
 
     return () => {
-      subscription.remove()
+      subscription.remove() // Clean up deep link listener
     }
   }, [])
 

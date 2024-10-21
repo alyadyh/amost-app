@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/icon'
 import { Pressable } from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
-import { supabase } from '@/lib/supabase'
+import { fetchLogs, insertOrUpdateLog, updateMedicine, getUserId } from '@/utils/SupaLegend'
 import { TimePickerComponent } from '../components/TimePicker'
 import { format } from 'date-fns'
 
@@ -35,27 +35,19 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
   const [showTimePicker, setShowTimePicker] = useState(false)
 
   useEffect(() => {
-    const fetchLog = async () => {
+    const loadLog = async () => {
       try {
-        const { data: logData, error } = await supabase
-          .from('med_logs')
-          .select('*')
-          .eq('medicine_id', medicine.id)
-          .eq('log_date', logDate)
-          .eq('reminder_time', reminderTime)
-          .single()
-
-        if (error) {
-          console.error('Error fetching log:', error.message)
-        } else {
-          setLog(logData || null)
-        }
+        const logs = fetchLogs() // Fetch logs
+        const logData = logs.find(log => log.medicine_id === medicine.id && log.log_date === logDate && log.reminder_time === reminderTime)
+        setLog(logData || null)
       } catch (error) {
-        console.error('Error during log fetch:', error)
+        console.error('Error fetching log:', error)
       }
     }
 
-    if (visible) fetchLog()
+    if (visible) {
+      loadLog()
+    }
   }, [visible, logDate, reminderTime, medicine.id])
 
   const handleLogUpdate = async (taken: boolean, newTime?: Date) => {
@@ -78,21 +70,7 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
     }
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-      if (sessionError || !session) {
-        throw new Error("User is not logged in")
-      }
-
-      // Update the log in Supabase using the log's ID
-      const { error } = await supabase
-        .from('med_logs')
-        .update(updatedFields)
-        .eq('id', log.id)
-
-      if (error) {
-        throw new Error(error.message)
-      }
+      const userId = getUserId()
 
       // Update stock based on taken status
       if (log.taken === false && taken === true) {
@@ -101,14 +79,16 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
         await updateStock(medicine, medicine.dose_quantity) // Increase stock
       }
 
-      // Prepare the updated log object
-      const updatedLog: Log = {
+      // Update the log in Supabase using the log's ID
+      const updatedLogData: Log = {
         ...log,
         taken,
         log_time: updatedFields.log_time || log.log_time,
       }
 
-      onLog(updatedLog)
+      await insertOrUpdateLog(updatedLogData) // Save updated log locally
+
+      onLog(updatedLogData)
       onClose()
     } catch (error) {
       console.error('Error updating log or stock:', error)
@@ -117,13 +97,10 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
 
   const updateStock = async (medicine: Medicine, change: number) => {
     const newStockQuantity = medicine.stock_quantity + change
-    const { error } = await supabase
-      .from('medicines')
-      .update({ stock_quantity: newStockQuantity })
-      .eq('id', medicine.id)
-
-    if (error) {
-      console.error('Error updating stock quantity:', error.message)
+    try {
+      const success = await updateMedicine(medicine.id, { stock_quantity: newStockQuantity })
+    } catch (error) {
+      console.error('Error updating stock:', error)
     }
   }
 
@@ -136,7 +113,7 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
     log_time?: string | null,
   ) => {
     const takeOrUse = ['cairan', 'kapsul', 'tablet', 'bubuk'].includes(med_form) ? 'minum' : 'pakai'
-    
+
     if (taken && updated_at && log_time) {
       const formattedDate = format(new Date(updated_at), 'yyyy-MM-dd')
       const formattedTime = log_time ? log_time.slice(0, 5) : "00:00"

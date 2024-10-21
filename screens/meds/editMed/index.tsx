@@ -16,7 +16,7 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/component
 import { TimePickerField } from "./components/TimePickerField"
 import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
 import { zodResolver } from "@hookform/resolvers/zod"
-import { uploadImage, updateMedicine } from "@/lib/supabase"
+import { uploadImage, updateMedicine } from "@/utils/SupaLegend"
 import { editMedSchema } from "@/schemas/medSchemas"
 import MedLayout from "../layout"
 import { z } from "zod"
@@ -90,21 +90,20 @@ const EditMedScreen = () => {
 
     const formattedData = {
       ...data,
-      reminder_times: data.reminder_times, // Use the existing reminder times as strings
+      reminder_times: data.reminder_times,
       med_photos: uploadedImagePath || null,
     }
 
     try {
-      const updateSuccess = await updateMedicine(med.id, formattedData)
+      // Update the medicine using the `updateMedicine` function
+      updateMedicine(med.id, formattedData)
 
-      if (updateSuccess) {
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle className="text-white">Obat berhasil diperbarui!</ToastTitle>
-          </Toast>,
-        })
-      }
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
+          <ToastTitle className="text-white">Obat berhasil diperbarui!</ToastTitle>
+        </Toast>,
+      })
       router.push("/medication")
       reset()
     } catch (error) {
