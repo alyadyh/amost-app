@@ -12,7 +12,7 @@ import { Session } from "@supabase/supabase-js"
 import * as Linking from 'expo-linking'
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
 import * as WebBrowser from 'expo-web-browser'
-import { supabase } from "@/lib/supabase"
+import { setSession as updateSession } from "@/lib/supabase"
 
 export {
   ErrorBoundary,
@@ -71,14 +71,9 @@ export default function RootLayout() {
         const refresh_token = Array.isArray(queryParams.refresh_token) ? queryParams.refresh_token[0] : queryParams.refresh_token
 
         if (access_token && refresh_token) {
-          const { data, error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          })
+          const sessionData = updateSession(access_token, refresh_token)
 
-          if (error) {
-            console.error("Error setting session from deep link:", error)
-          } else {
+          if (sessionData !== null && sessionData !== undefined) {
             if (path === 'reset-pass') {
               toast.show({
                 placement: "top left",

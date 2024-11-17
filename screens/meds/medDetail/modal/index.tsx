@@ -19,8 +19,8 @@ export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: st
             <VStack space='lg' className="items-center">
               <Text className="text-black font-bold">Foto</Text>
               {med.med_photos ? (
-                <Image 
-                  source={{ uri: `https://snyctjesxxylnzvygnrn.supabase.co/storage/v1/object/public/med_photos/${med.med_photos}` }} 
+                <Image
+                  source={{ uri: med.med_photos }}
                   className="w-64 h-64"
                 />
               ) : (

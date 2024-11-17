@@ -28,7 +28,8 @@ const ProfileScreen = () => {
 
       if (currentUser?.id) {
         const profileData = await fetchUserProfile(currentUser.id)
-        
+        console.log('Profile data:', profileData)
+
         if (profileData) {
           setUser({
             name: profileData.full_name || "No Name",
@@ -140,8 +141,8 @@ const ProfileScreen = () => {
       </VStack>
 
       {/* Modal for editing profile */}
-      <ModalComponent 
-        showModal={showModal} 
+      <ModalComponent
+        showModal={showModal}
         setShowModal={setShowModal}
         name={user.name}
         avatar={user.avatar}

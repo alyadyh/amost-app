@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/icon'
 import { Pressable } from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
-import { supabase } from '@/lib/supabase'
+import { fetchLog, updateLog, updateMedicine } from '@/lib/supabase'
 import { TimePickerComponent } from '../components/TimePicker'
 import { format } from 'date-fns'
 
@@ -35,96 +35,27 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
   const [showTimePicker, setShowTimePicker] = useState(false)
 
   useEffect(() => {
-    const fetchLog = async () => {
-      try {
-        const { data: logData, error } = await supabase
-          .from('med_logs')
-          .select('*')
-          .eq('medicine_id', medicine.id)
-          .eq('log_date', logDate)
-          .eq('reminder_time', reminderTime)
-          .single()
+    const fetchLogData = async () => {
+      const fetchedLog = await fetchLog()
 
-        if (error) {
-          console.error('Error fetching log:', error.message)
-        } else {
-          setLog(logData || null)
-        }
-      } catch (error) {
-        console.error('Error during log fetch:', error)
-      }
+      // Find the log where medicine_id matches
+      const matchingLog = fetchedLog?.find(log => log.medicine_id === medicine.id && log.reminder_time === reminderTime && log.log_date === logDate)
+      setLog(matchingLog || null)
     }
-
-    if (visible) fetchLog()
+    if (visible) fetchLogData()
   }, [visible, logDate, reminderTime, medicine.id])
 
   const handleLogUpdate = async (taken: boolean, newTime?: Date) => {
-    if (!log) {
-      console.error("No log to update")
-      return
-    }
+    if (!log) return
+    const log_time = taken && newTime ? format(newTime, "HH:mm") : null
+    await updateLog({ ...log, taken, log_time })
 
-    let updatedFields: Partial<Log> = { taken }
+    const stockChange = taken ? -medicine.dose_quantity : medicine.dose_quantity
+    await updateMedicine(medicine.id, { stock_quantity: medicine.stock_quantity + stockChange })
 
-    if (taken) {
-      if (newTime) {
-        // Format the new time to 'HH:mm'
-        const formattedTime = format(newTime, "HH:mm")
-        updatedFields.log_time = formattedTime
-      }
-    } else {
-      // When setting taken to false, clear log_time
-      updatedFields.log_time = null
-    }
-
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-      if (sessionError || !session) {
-        throw new Error("User is not logged in")
-      }
-
-      // Update the log in Supabase using the log's ID
-      const { error } = await supabase
-        .from('med_logs')
-        .update(updatedFields)
-        .eq('id', log.id)
-
-      if (error) {
-        throw new Error(error.message)
-      }
-
-      // Update stock based on taken status
-      if (log.taken === false && taken === true) {
-        await updateStock(medicine, -medicine.dose_quantity) // Decrease stock
-      } else if (log.taken === true && taken === false) {
-        await updateStock(medicine, medicine.dose_quantity) // Increase stock
-      }
-
-      // Prepare the updated log object
-      const updatedLog: Log = {
-        ...log,
-        taken,
-        log_time: updatedFields.log_time || log.log_time,
-      }
-
-      onLog(updatedLog)
-      onClose()
-    } catch (error) {
-      console.error('Error updating log or stock:', error)
-    }
-  }
-
-  const updateStock = async (medicine: Medicine, change: number) => {
-    const newStockQuantity = medicine.stock_quantity + change
-    const { error } = await supabase
-      .from('medicines')
-      .update({ stock_quantity: newStockQuantity })
-      .eq('id', medicine.id)
-
-    if (error) {
-      console.error('Error updating stock quantity:', error.message)
-    }
+    const updatedLog = { ...log, taken, log_time }
+    onLog(updatedLog)
+    onClose()
   }
 
   // Conditional text based on med_form
@@ -132,15 +63,15 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
     med_form: string,
     med_name: string,
     taken: boolean,
-    updated_at?: string | null,
+    log_date?: string | null,
     log_time?: string | null,
   ) => {
     const takeOrUse = ['cairan', 'kapsul', 'tablet', 'bubuk'].includes(med_form) ? 'minum' : 'pakai'
-    
-    if (taken && updated_at && log_time) {
-      const formattedDate = format(new Date(updated_at), 'yyyy-MM-dd')
+
+    if (taken && log_date && log_time) {
+      // const formattedDate = format(new Date(updated_at), 'yyyy-MM-dd')
       const formattedTime = log_time ? log_time.slice(0, 5) : "00:00"
-      return `${med_name} telah ${takeOrUse} pada ${formattedDate} pukul ${formattedTime}`
+      return `${med_name} telah ${takeOrUse} pada ${log_date} pukul ${formattedTime}`
     } else {
       return `Sudah ${takeOrUse} ${med_name}?`
     }

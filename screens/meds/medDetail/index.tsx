@@ -14,7 +14,7 @@ import { ModalComponent } from "./modal"
 import { MedForm, medFormActive } from '@/constants/types'
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
 import { Heading } from '@/components/ui/heading'
-import { supabase } from '@/lib/supabase'
+import { deleteMedicine } from '@/lib/supabase'
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
 
 export const MedDetail = () => {
@@ -23,6 +23,8 @@ export const MedDetail = () => {
   const med = medString ? JSON.parse(medString as string) : null
 
   if (!med) return <Text>Error: No medication details available.</Text>
+
+  console.log('Medication:', med)
 
   const medImage = medFormActive[med.med_form as MedForm]
 
@@ -34,25 +36,9 @@ export const MedDetail = () => {
   const toast = useToast()
 
   // Function to delete the medicine in Supabase
-  const deleteMedicine = async () => {
+  const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('medicines')
-        .delete()
-        .eq('id', med.id)
-
-      if (error) {
-        console.error('Error deleting medicine:', error.message)
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
-            </Toast>
-          ),
-        })
-      } else {
-        handleClose()
+      await deleteMedicine(med.id, () => {
         toast.show({
           placement: "top left",
           render: ({ id }) => (
@@ -61,10 +47,16 @@ export const MedDetail = () => {
             </Toast>
           ),
         })
-        router.push("/medication")
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err)
+      })
+    } catch (error) {
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="error">
+            <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
+          </Toast>
+        ),
+      })
     }
   }
 
@@ -77,14 +69,14 @@ export const MedDetail = () => {
           </Pressable>
 
           <Pressable onPress={() => router.push({ pathname: '/editMed', params: { med: JSON.stringify(med) } })}>
-            <Icon as={PencilLine} className="stroke-white" size="2xl" /> 
+            <Icon as={PencilLine} className="stroke-white" size="2xl" />
           </Pressable>
         </HStack>
         <ScrollView>
           <VStack space='2xl'>
             {/* PNG Image */}
             <Image source={medImage} size='lg' alt={`${med.med_name} image`} className='self-center' />
-            
+
             {/* Medication Title */}
             <Text size='3xl' bold className="text-white text-center">
                 {med.med_name}
@@ -200,7 +192,7 @@ export const MedDetail = () => {
                     >
                       <ButtonText>Batalkan</ButtonText>
                     </Button>
-                    <Button size="sm" action="negative" onPress={deleteMedicine}>
+                    <Button size="sm" action="negative" onPress={handleDelete}>
                       <ButtonText>Hapus</ButtonText>
                     </Button>
                   </AlertDialogFooter>

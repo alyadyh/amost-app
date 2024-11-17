@@ -45,7 +45,7 @@ const AddMedScreen = () => {
 
   // Watch the frequency field
   const selectedFrequency = watch("frequency")
-  
+
   // Watch the medForm field
   const selectedMedForm = watch("med_form") as keyof typeof dosageOptions
   const applicableDosageOptions = selectedMedForm ? dosageOptions[selectedMedForm] : []
@@ -90,6 +90,7 @@ const AddMedScreen = () => {
       ...data,
       reminder_times: data.reminder_times.map((time) => time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })),
       med_photos: uploadedImagePath || null,
+      deleted: false
     }
 
     console.log("Submitted Data:", formattedData)
@@ -184,7 +185,7 @@ const AddMedScreen = () => {
             <FormField name="duration" label="Durasi Konsumsi Obat" control={control} error={errors.duration?.message} placeholder="0" isNumeric={true} />
             <Text size="xs" className="text-amost-secondary-dark_2">(Tulis durasi dalam hitungan hari)</Text>
           </VStack>
-          
+
           {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
 
           <ToggleDetailsButton isDetailVisible={isDetailVisible} setDetailVisible={setDetailVisible} />

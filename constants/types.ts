@@ -1,12 +1,3 @@
-import React from 'react'
-import CapsuleSvg from "@/components/svg/CapsuleSvg"
-import GelSvg from "@/components/svg/GelSvg"
-import InjectionSvg from "@/components/svg/InjectionSvg"
-import PatchSvg from "@/components/svg/PatchSvg"
-import PowderSvg from "@/components/svg/PowderSvg"
-import TabletSvg from "@/components/svg/TabletSvg"
-import { Timestamp } from 'react-native-reanimated/lib/typescript/commonTypes'
-
 export interface Medicine {
   id: string
   med_name: string
@@ -16,7 +7,7 @@ export interface Medicine {
   frequency: string
   frequency_times_per_day: number
   frequency_interval_days: number
-  reminder_times: string[]  // Format: "HH:mm"
+  reminder_times: string[] // Format: "HH:mm"
   duration: number
   stock_quantity: number
   med_photos?: string | null
@@ -24,7 +15,8 @@ export interface Medicine {
   prescribing_doctor?: string
   dispensing_pharmacy?: string
   updated_at?: Date
-  inserted_at?: Date
+  created_at?: Date
+  deleted?: boolean
 }
 
 export type MedForm = 'cairan' | 'kapsul' | 'tablet' | 'suntikan' | 'bubuk' | 'patch' | 'gel'
@@ -37,7 +29,7 @@ export const medFormActive: Record<MedForm, any> = {
   suntikan: require('@/assets/images/med-form/active/injection.png'),
   bubuk: require('@/assets/images/med-form/active/powder.png'),
   patch: require('@/assets/images/med-form/active/patch.png'),
-  gel: require('@/assets/images/med-form/active/gel.png'),
+  gel: require('@/assets/images/med-form/active/gel.png')
 }
 
 export const medFormInactive: Record<MedForm, any> = {
@@ -47,31 +39,18 @@ export const medFormInactive: Record<MedForm, any> = {
   suntikan: require('@/assets/images/med-form/inactive/injection.png'),
   bubuk: require('@/assets/images/med-form/inactive/powder.png'),
   patch: require('@/assets/images/med-form/inactive/patch.png'),
-  gel: require('@/assets/images/med-form/inactive/gel.png'),
+  gel: require('@/assets/images/med-form/inactive/gel.png')
 }
 
-// export const medFormImages: Record<MedForm, JSX.Element> = {
-//   cairan: <LiquidSvg />,
-//   kapsul: <CapsuleSvg />,
-//   tablet: <TabletSvg />,
-//   suntikan: <InjectionSvg />,
-//   bubuk: <PowderSvg />,
-//   patch: <PatchSvg />,
-//   gel: <GelSvg />
-// }
-
 export interface Log {
-  id: string  //medicine_id
+  id: string //medicine_id
   user_id: string
   medicine_id: string
+  med_name: string
   log_date: string // Store date in 'YYYY-MM-DD' format
   log_time: string | null // Store time in 'HH:mm' format
   reminder_time: string
   taken: boolean | null
   updated_at: string
-  inserted_at: string
-}
-
-export interface LogWithMeds extends Log {
-  medicine: Medicine
+  created_at: string
 }

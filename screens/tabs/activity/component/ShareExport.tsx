@@ -9,15 +9,15 @@ import { VStack } from "@/components/ui/vstack"
 import { Text } from "@/components/ui/text"
 import { Icon } from "@/components/ui/icon"
 import { Share2 } from "lucide-react-native"
-import { Medicine, Log, LogWithMeds } from "@/constants/types"
-import { supabase } from "@/lib/supabase"
+import { Medicine, Log } from "@/constants/types"
+import { getUserSession, fetchMonthLogs } from '@/lib/supabase'
 import { ActivityIndicator } from "react-native"
 
 const ShareReport = ({ userName }: { userName: string }) => {
-  const [logs, setLogs] = useState<LogWithMeds[]>([])
+  const [logs, setLogs] = useState<Log[]>([])
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [loading, setLoading] = useState<boolean>(false)
-  
+
   const currentMonth = format(new Date(), 'MMMM yyyy') // Get current month
   const oneMonthAgo = subMonths(new Date(), 1) // Calculate one month ago
 
@@ -25,35 +25,16 @@ const ShareReport = ({ userName }: { userName: string }) => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        // Get the current user session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const session = await getUserSession()
+        if (!session) throw new Error("User is not logged in")
 
-        if (sessionError || !session?.user) {
-          throw new Error("User is not authenticated")
-        }
+        console.log("User id:", session.user.id)
 
         const userId = session.user.id
 
-        // Fetch med_logs with related medicines using Supabase's foreign table feature
-        const { data: logsData, error: logsError } = await supabase
-          .from('med_logs')
-          .select(`
-            *,
-            medicine:medicines (id, med_name)
-          `)
-          .eq('user_id', userId)
-          .eq('taken', true)
-          .gte('updated_at', oneMonthAgo.toISOString())
+        const logsData = await fetchMonthLogs(userId, oneMonthAgo)
 
-        if (logsError) {
-          throw logsError
-        }
-
-        // Filter out logs with no associated medicine
-        const validLogs: LogWithMeds[] = logsData
-          ?.filter(log => log.medicine_id !== null && log.medicine !== null) || []
-
-        setLogs(validLogs)
+        setLogs(logsData)
       } catch (error) {
         console.error("Error fetching logs:", error)
       } finally {
@@ -66,8 +47,8 @@ const ShareReport = ({ userName }: { userName: string }) => {
 
   // Group logs by log_date
   const groupedLogs = logs.reduce<{ [key: string]: { med_name: string, time: string }[] }>((acc, log) => {
-    const logDate = log.updated_at
-    const medName = log.medicine?.med_name
+    const logDate = log.log_date
+    const medName = log.med_name
     if (medName && log.log_time) {
       if (!acc[logDate]) acc[logDate] = []
       acc[logDate].push({ med_name: medName, time: log.log_time })
