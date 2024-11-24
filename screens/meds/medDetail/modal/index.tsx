@@ -1,10 +1,13 @@
-import React from 'react'
-import { Modal, Pressable, View } from 'react-native'
+import React, { useState } from 'react'
+import { Modal, Pressable, View, ActivityIndicator } from 'react-native'
 import { Text } from "@/components/ui/text"
 import { Image } from "@/components/ui/image"
 import { VStack } from '@/components/ui/vstack'
 
-export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: string | null, setShowModal: (modalName: string | null) => void, med: any }) => (
+export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: string | null, setShowModal: (modalName: string | null) => void, med: any }) => {
+  const [isLoading, setIsLoading] = useState(false)
+
+  return (
   <Modal
     visible={showModal !== null}
     transparent={true}
@@ -19,10 +22,18 @@ export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: st
             <VStack space='lg' className="items-center">
               <Text className="text-black font-bold">Foto</Text>
               {med.med_photos ? (
-                <Image
-                  source={{ uri: med.med_photos }}
-                  className="w-64 h-64"
-                />
+                <>
+                    {isLoading && (
+                      <ActivityIndicator size="large" color="#000" className="self-center" />
+                    )}
+                    <Image
+                      source={{ uri: med.med_photos }}
+                      className="w-64 h-64"
+                      alt={`${med.med_name} photo`}
+                      onLoadStart={() => setIsLoading(true)} // Start spinner
+                      onLoad={() => setIsLoading(false)} // Stop spinner
+                    />
+                  </>
               ) : (
                 <Text className="text-black">Tidak ada foto obat</Text> // Fallback message
               )}
@@ -56,4 +67,5 @@ export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: st
       </Pressable>
     </Pressable>
   </Modal>
-)
+  )
+}

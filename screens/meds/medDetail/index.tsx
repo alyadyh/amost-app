@@ -25,6 +25,7 @@ export const MedDetail = () => {
   if (!med) return <Text>Error: No medication details available.</Text>
 
   console.log('Medication:', med)
+  console.log('Med photo:', med.med_photos)
 
   const medImage = medFormActive[med.med_form as MedForm]
 
@@ -127,7 +128,7 @@ export const MedDetail = () => {
               </HStack>
               <HStack className="bg-white items-center rounded-lg p-4 justify-between">
                 <Text bold className="text-amost-secondary-dark_2">Bentuk Obat</Text>
-                <Image size='xs' source={medImage} />
+                <Image size='xs' source={medImage} alt="Medication form" />
               </HStack>
               <HStack className="bg-white rounded-lg p-4 justify-between">
                 <Text bold className="text-amost-secondary-dark_2">Jumlah stok obat</Text>
