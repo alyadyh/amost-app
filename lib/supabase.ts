@@ -226,9 +226,10 @@ export const updateLog = async (logData: {
   taken: boolean | null
   log_time?: string | null
 }) => {
-  const { data, error } = await supabase.from('logs').upsert(logData, {
-    onConflict: 'user_id,medicine_id,log_date,reminder_time'
-  })
+  const { data, error } = await supabase.from('logs').upsert(logData)
+  // const { data, error } = await supabase.from('logs').upsert(logData, {
+  //   onConflict: 'user_id,medicine_id,reminder_time'
+  // })
   if (error) {
     console.error('Error upserting log:', error.message)
     throw error

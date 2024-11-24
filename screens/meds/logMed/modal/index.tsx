@@ -37,23 +37,26 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
   useEffect(() => {
     const fetchLogData = async () => {
       const fetchedLog = await fetchLog()
+      console.log('Fetched logs:', fetchedLog);
 
       // Find the log where medicine_id matches
       const matchingLog = fetchedLog?.find(log => log.medicine_id === medicine.id && log.reminder_time === reminderTime && log.log_date === logDate)
+      console.log('Matching log:', matchingLog)
       setLog(matchingLog || null)
     }
     if (visible) fetchLogData()
   }, [visible, logDate, reminderTime, medicine.id])
 
-  const handleLogUpdate = async (taken: boolean, newTime?: Date) => {
+  const handleLogUpdate = async (taken: boolean, selectedDateTime?: Date) => {
     if (!log) return
-    const log_time = taken && newTime ? format(newTime, "HH:mm") : null
-    await updateLog({ ...log, taken, log_time })
+    const log_time = taken && selectedDateTime ? format(selectedDateTime, "HH:mm") : null
+    const log_date = taken && selectedDateTime ? format(selectedDateTime, "yyyy-MM-dd") : log.log_date
+    await updateLog({ ...log, taken, log_time, log_date })
 
     const stockChange = taken ? -medicine.dose_quantity : medicine.dose_quantity
     await updateMedicine(medicine.id, { stock_quantity: medicine.stock_quantity + stockChange })
 
-    const updatedLog = { ...log, taken, log_time }
+    const updatedLog = { ...log, taken, log_time, log_date }
     onLog(updatedLog)
     onClose()
   }
@@ -99,7 +102,7 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
                 className="rounded-full bg-amost-primary"
                 onPress={() => setShowTimePicker(true)}
               >
-                <ButtonText className="font-normal text-white">Edit Waktu</ButtonText>
+                <ButtonText className="font-normal text-white">Edit Log</ButtonText>
               </Button>
 
               <Button
@@ -113,7 +116,7 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
             </VStack>
           ) : (
             <HStack space="3xl">
-              <Pressable onPress={() => handleLogUpdate(true)}>
+              <Pressable onPress={() => setShowTimePicker(true)}>
                 <VStack space='sm' className='items-center'>
                   <Box className='p-2 border-2 border-amost-primary rounded-lg'>
                     <Icon as={Check} size="2xl" className="stroke-amost-primary" />
@@ -135,10 +138,11 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
           {showTimePicker && (
             <TimePickerComponent
               value={new Date()}
-              onConfirm={(time) => {
-                handleLogUpdate(true, time) // Pass the new time to log update
+              onConfirm={(selectedDateTime) => {
+                handleLogUpdate(true, selectedDateTime)
                 setShowTimePicker(false)
               }}
+              onCancel={() => setShowTimePicker(false)}
             />
           )}
         </ModalBody>

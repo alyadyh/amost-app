@@ -25,33 +25,24 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
   const [log, setLog] = useState<Log | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Fetch log for this medicine if it exists
-  const fetchLogForMedicine = async () => {
-    setLoading(true)
-    try {
-      const userSession = await getUserSession()
-      const userId = userSession?.user.id
-
-      if (!userId) {
-        throw new Error('User is not authenticated')
-      }
-
-      const fetchedLogs = await fetchLog()
-      // Find the log where medicine_id matches
-      const matchingLog = fetchedLogs?.find(log => log.medicine_id === medicine.id && log.reminder_time === reminderTime && log.log_date === logDate)
-      setLog(matchingLog || null)
-    } catch (error) {
-      console.error('Error fetching log:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    if (visible && reminderTime && logDate) {
-      fetchLogForMedicine() // Fetch log on modal open
+    // Fetch log for this medicine if it exists
+    const fetchLogData = async () => {
+      const fetchedLog = await fetchLog()
+      console.log('Fetched logs:', fetchedLog);
+
+      const matchingLog = fetchedLog?.find(log =>
+        log.medicine_id === medicine.id &&
+        log.reminder_time.slice(0, 5) === reminderTime &&
+        log.log_date === logDate
+      );
+
+      console.log('Matching log:', matchingLog)
+      setLog(matchingLog || null)
     }
-  }, [visible, reminderTime, logDate])
+
+    if (visible) fetchLogData()
+  }, [visible, logDate, reminderTime, medicine.id])
 
   const handleLog = async (taken: boolean, reminderTime: string) => {
     const now = new Date()
@@ -95,10 +86,10 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
   // Conditional text based on medForm
   const getMedicineText = (med_form: string, med_name: string, taken: boolean, log_date?: string | null, log_time?: string | null) => {
     const takeOrUse = ['cairan', 'kapsul', 'tablet', 'bubuk'].includes(med_form) ? 'minum' : 'pakai'
-    const formattedTime = log_time ? log_time.slice(0, 5) : "00:00"
 
     if (taken && log_date && log_time) {
       // If the medicine is already taken
+      const formattedTime = log_time ? log_time.slice(0, 5) : "00:00"
       return `${med_name} telah ${takeOrUse} pada ${log_date} pukul ${formattedTime}`
     } else {
       // If not taken
@@ -112,7 +103,7 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
       <ModalContent className="bg-white rounded-xl p-6 items-center">
         <ModalHeader>
           <Text size='md' bold className='text-amost-secondary-dark_1 text-center mb-2'>
-            {log && log.taken && log.log_date === logDate
+            {log && log.taken
               ? getMedicineText(medicine.med_form, medicine.med_name, true, log.log_date, log.log_time)
               : getMedicineText(medicine.med_form, medicine.med_name, false)
             }
@@ -120,11 +111,14 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
         </ModalHeader>
 
         <ModalBody>
-          {log && log.taken && log.log_date === logDate ? (
+          {log && log.taken ? (
             <Button
               size="sm"
               variant="outline"
-              onPress={() => router.push('/logMed')}
+              onPress={() => {
+                router.push('/logMed')
+                onClose()
+              }}
               className="rounded-full border border-border-300"
             >
               <ButtonText className="font-normal text-amost-secondary-dark_1">Edit Log</ButtonText>
