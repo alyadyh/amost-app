@@ -1,20 +1,27 @@
-import React, { useState } from "react"
-import { VStack } from "@/components/ui/vstack"
-import { Box } from "@/components/ui/box"
-import { Text } from "@/components/ui/text"
-import { Heading } from "@/components/ui/heading"
-import { Accordion, AccordionContent, AccordionContentText, AccordionHeader, AccordionIcon, AccordionItem, AccordionTitleText, AccordionTrigger } from "@/components/ui/accordion"
-import { Divider } from "@/components/ui/divider"
-import { InfoLayout } from "../layout"
-import { HStack } from "@/components/ui/hstack"
-import { router } from "expo-router"
-import { Pressable, ScrollView } from "react-native"
-import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
-import { ChevronDown } from "lucide-react-native"
+import React, { useState } from "react";
+import { VStack } from "@/components/ui/vstack";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
+import { Heading } from "@/components/ui/heading";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionContentText,
+  AccordionHeader,
+  AccordionIcon,
+  AccordionItem,
+  AccordionTitleText,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Divider } from "@/components/ui/divider";
+import { InfoLayout } from "../layout";
+import { HStack } from "@/components/ui/hstack";
+import { router } from "expo-router";
+import { Pressable, ScrollView } from "react-native";
+import { ArrowLeftIcon, Icon } from "@/components/ui/icon";
+import { ChevronUp, ChevronDown } from "lucide-react-native";
 
 export const HelpCenter = () => {
-  const [expandedItems, setExpandedItems] = useState<string[]>([])
-
   const faqData = [
     {
       question: "Bagaimana cara membuat pengingat obat?",
@@ -36,11 +43,7 @@ export const HelpCenter = () => {
       answer:
         "Ya, data Anda dilindungi. Namun, kami menyarankan Anda untuk menjaga kerahasiaan akun Anda.",
     },
-  ]
-
-  const handleValueChange = (values: string[]) => {
-    setExpandedItems(values);
-  };
+  ];
 
   return (
     <InfoLayout>
@@ -48,7 +51,7 @@ export const HelpCenter = () => {
         <HStack space="md" className="items-center">
           <Pressable
             onPress={() => {
-              router.back()
+              router.back();
             }}
           >
             <Icon as={ArrowLeftIcon} className="text-amost-secondary-dark_1" size="2xl" />
@@ -58,36 +61,32 @@ export const HelpCenter = () => {
           </Heading>
         </HStack>
         <ScrollView>
-          <Text size="md" className="mb-6 text-amost-secondary-dark_1">
-            Selamat datang di Pusat Bantuan AMOST. Temukan jawaban atas pertanyaan umum atau hubungi kami untuk bantuan lebih lanjut.
+          <Text className="mb-6 text-amost-secondary-dark_1">
+            Selamat datang di Pusat Bantuan <Text bold>AMOST</Text>. Temukan jawaban atas pertanyaan umum atau hubungi kami untuk bantuan lebih lanjut.
           </Text>
-          <Divider className="mb-6" />
+          {/* <Divider /> */}
 
           {/* FAQ Section */}
           <VStack space="lg">
-            <Accordion value={expandedItems} onValueChange={handleValueChange}>
-              {faqData.map((faq, index) => {
-                const value = `item-${index}`;
-                return (
-                  <AccordionItem key={index} value={value}>
-                    <AccordionHeader>
-                      <AccordionTrigger className="flex-row justify-between items-center">
-                        <AccordionTitleText>{faq.question}</AccordionTitleText>
-                        <AccordionIcon
-                          as={ChevronDown}
-                          className="transition-transform"
-                          style={{
-                            transform: [{ rotate: expandedItems.includes(value) ? "180deg" : "0deg" }],
-                          }}
-                        />
-                      </AccordionTrigger>
-                    </AccordionHeader>
-                    <AccordionContent>
-                      <AccordionContentText>{faq.answer}</AccordionContentText>
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
+            <Accordion size="md" variant="filled" type="single" isCollapsible>
+              {faqData.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionHeader>
+                    <AccordionTrigger>
+                      {({ isExpanded }) => (
+                        <HStack className="flex-row justify-between items-center">
+                          <AccordionTitleText>{faq.question}</AccordionTitleText>
+                          <AccordionIcon as={isExpanded ? ChevronUp : ChevronDown} className="ml-3" />
+                        </HStack>
+                      )}
+                    </AccordionTrigger>
+                  </AccordionHeader>
+                  <AccordionContent>
+                    <AccordionContentText>{faq.answer}</AccordionContentText>
+                  </AccordionContent>
+                  {index < faqData.length - 1 && <Divider />}
+                </AccordionItem>
+              ))}
             </Accordion>
           </VStack>
 
@@ -104,7 +103,7 @@ export const HelpCenter = () => {
             </Text>
           </Box>
         </ScrollView>
-    </VStack>
+      </VStack>
     </InfoLayout>
-  )
-}
+  );
+};
