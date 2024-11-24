@@ -45,28 +45,45 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
       if (!error) {
         router.push("/home")
       } else {
-        if (error.message === "Invalid login credentials") {
-          setValidated({ emailValid: true, passwordValid: false })
-        } else if (error.message === "User not found") {
-          setValidated({ emailValid: false, passwordValid: true })
-        } else if (error.message.includes("Invalid email or password")) {
-          setValidated({ emailValid: false, passwordValid: false })
-        }
+        console.log("Supabase sign-in error:", error)
 
-        // Show specific error message from Zod
+        // Ensure error.message is a string
+        // const errorMessage =
+        //   typeof error.message === "string"
+        //     ? error.message
+        //     : JSON.stringify(error.message)
+
+        // console.log("Toast Error Message:", errorMessage)
+
+        // Display error toast with forced string conversion
         toast.show({
-          placement: "top left",
+          placement: "top",
           render: ({ id }) => (
             <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle className="text-white">Login gagal: {error.message}</ToastTitle>
+              <ToastTitle className="text-white">Login gagal: email atau password invalid</ToastTitle>
             </Toast>
           ),
         })
+
+        // Handle specific validation states for email and password
+        if (error.message === "Invalid login credentials") {
+          setValidated({ emailValid: false, passwordValid: false })
+        }
+        // if (error.message === "Invalid login credentials") {
+        //   setValidated({ emailValid: true, passwordValid: false })
+        // } else if (error.message === "User not found") {
+        //   setValidated({ emailValid: false, passwordValid: true })
+        // } else if (error.message.includes("Invalid email or password")) {
+        //   setValidated({ emailValid: false, passwordValid: false })
+        // }
+        console.log("setValidated emailValid:", validated.emailValid, "passwordValid:", validated.passwordValid)
       }
     } catch (err) {
-      console.error("Error during login:", err)
+      console.error("Unexpected error during login:", err)
+
+      // Generic fallback error toast
       toast.show({
-        placement: "top left",
+        placement: "top",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="error">
             <ToastTitle className="text-white">Terjadi kesalahan saat login.</ToastTitle>

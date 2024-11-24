@@ -10,7 +10,7 @@ import useRouter from "@unitools/router"
 import FormInput from "@/components/auth/FormInput"
 import AuthHeader from "@/components/auth/AuthHeader"
 import { Toast, ToastTitle } from "@/components/ui/toast"
-import { useAuth } from "@/lib/supabase"
+import { checkIfEmailExists, useAuth } from "@/lib/supabase"
 import { z } from "zod"
 
 type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>
@@ -31,11 +31,27 @@ const { resetPasswordForEmail } = useAuth()
 
   const onSubmit = async (data: ForgotPasswordFormType) => {
     try {
+      // Check if email exists
+      const emailExists = await checkIfEmailExists(data.email)
+
+      if (!emailExists) {
+        toast.show({
+          placement: "top",
+          render: ({ id }) => (
+            <Toast nativeID={id} variant="solid" action="error">
+              <ToastTitle>Email tidak ditemukan</ToastTitle>
+            </Toast>
+          ),
+        })
+        return
+      }
+
+      // Proceed with password reset
       const { error } = await resetPasswordForEmail(data.email)
 
       if (error) {
         toast.show({
-          placement: "top left",
+          placement: "top",
           render: ({ id }) => (
             <Toast nativeID={id} variant="solid" action="error">
               <ToastTitle>{error.message}</ToastTitle>
@@ -46,7 +62,7 @@ const { resetPasswordForEmail } = useAuth()
       }
 
       toast.show({
-        placement: "top left",
+        placement: "top",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle>Link telah terkirim ke email anda</ToastTitle>
@@ -58,7 +74,7 @@ const { resetPasswordForEmail } = useAuth()
     } catch (err) {
       console.error("Error during password reset:", err)
       toast.show({
-        placement: "top left",
+        placement: "top",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="error">
             <ToastTitle>Terjadi kesalahan saat mengirim link reset password.</ToastTitle>

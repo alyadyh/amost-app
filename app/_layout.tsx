@@ -13,6 +13,7 @@ import * as Linking from 'expo-linking'
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
 import * as WebBrowser from 'expo-web-browser'
 import { setSession as updateSession } from "@/lib/supabase"
+import { StatusBar } from "@/components/ui/status-bar"
 
 export {
   ErrorBoundary,
@@ -129,6 +130,7 @@ function RootLayoutNav({ session }: { session: Session | null }) {
 
   return (
     <GluestackUIProvider mode={'light'}>
+      <StatusBar barStyle="light-content" translucent />
       <SafeAreaView style={{ flex: 1, paddingTop: insets.top }}>
         <Stack screenOptions={{ headerShown: false, animation: "none" }}>
           <Stack.Screen name="index" />

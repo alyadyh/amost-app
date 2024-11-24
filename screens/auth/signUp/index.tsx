@@ -38,7 +38,7 @@ const SignUpScreen = () => {
   const onSubmit = async (data: SignUpFormType) => {
     if (data.password !== data.confirmpassword) {
       toast.show({
-        placement: "top left",
+        placement: "top",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="error">
             <ToastTitle>Password tidak cocok</ToastTitle>
@@ -52,12 +52,12 @@ const SignUpScreen = () => {
       const { error } = await signUp(data.email, data.password, data.fullname)
 
       if (error) {
-        Alert.alert("Sign up gagal", error.message)
+        console.log("Sign up gagal", error.message)
         return
       }
 
       toast.show({
-        placement: "top left",
+        placement: "top",
         render: ({ id }) => (
           <Toast nativeID={id} variant="solid" action="success">
             <ToastTitle>Silakan periksa email Anda untuk verifikasi.</ToastTitle>
@@ -69,7 +69,15 @@ const SignUpScreen = () => {
       router.push("/signIn")
     } catch (err) {
       console.error("Error during sign-up:", err)
-      Alert.alert("Sign up gagal", "Terjadi kesalahan saat mendaftar. Silakan coba lagi.")
+      toast.show({
+        placement: "top",
+
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="error">
+            <ToastTitle className="text-white">Terjadi kesalahan saat mendaftar. Silakan coba lagi.</ToastTitle>
+          </Toast>
+        ),
+      })
     }
   }
 

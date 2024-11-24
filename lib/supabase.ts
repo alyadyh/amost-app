@@ -70,6 +70,24 @@ export const useAuth = () => {
   return { signIn, signUp, signOut, resetPasswordForEmail, updatePassword, onAuthStateChange }
 }
 
+export const checkIfEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.from('profiles').select('id').eq('email', email).maybeSingle()
+
+    if (error) {
+      if (error.message === 'The result contains 0 rows') {
+        return false
+      }
+      throw error
+    }
+
+    return !!data
+  } catch (err) {
+    console.error('Error checking if email exists:', err)
+    throw err
+  }
+}
+
 // User-related functions
 export const getCurrentUser = async (): Promise<User | null> => {
   const { data, error } = await supabase.auth.getUser()
