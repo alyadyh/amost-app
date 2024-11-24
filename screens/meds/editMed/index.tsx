@@ -175,9 +175,8 @@ const EditMedScreen = () => {
             <Text size="xs" className="text-amost-secondary-dark_2">(Tulis durasi dalam hitungan hari)</Text>
           </VStack>
 
-          {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
-
           <ToggleDetailsButton isDetailVisible={isDetailVisible} setDetailVisible={setDetailVisible} />
+          {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
         </VStack>
         <SubmitButton onSubmit={handleSubmit(onSubmit, onError)} />
       </ScrollView>
@@ -196,7 +195,7 @@ const DetailFields = ({ control, setValue }: any) => (
 
 const ToggleDetailsButton = ({ isDetailVisible, setDetailVisible }: any) => (
   <Button
-    className="max-w-36 h-12 rounded-full"
+    className="max-w-36 h-12 rounded-lg mt-4"
     action="secondary"
     size="sm"
     onPress={() => setDetailVisible((prev: boolean) => !prev)}
