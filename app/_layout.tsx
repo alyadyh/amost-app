@@ -136,6 +136,7 @@ function RootLayoutNav({ session }: { session: Session | null }) {
             <>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(meds)" />
+              <Stack.Screen name="(info)" />
             </>
           ) : (
             <Stack.Screen name="(auth)" />

@@ -60,11 +60,7 @@ const ProfileScreen = () => {
                   {user.name}
                 </AvatarFallbackText>
                 <AvatarImage
-                  source={{
-                    uri: user.avatar
-                      ? user.avatar
-                      : "",
-                  }}
+                  source={{ uri: user.avatar }}
                 />
               </Avatar>
               <VStack className="gap-1 w-full items-center">
@@ -111,7 +107,7 @@ const ProfileScreen = () => {
               <Divider className="my-1" />
 
               {/* Privasi Row */}
-              <Pressable>
+              <Pressable onPress={() => router.push('/privacyPolicy')}>
                 <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
                   <HStack className="items-center" space="md">
                     <Icon as={ShieldAlert} className="stroke-amost-secondary-dark_2" />
@@ -124,7 +120,7 @@ const ProfileScreen = () => {
               <Divider className="my-1" />
 
               {/* Help Center Row */}
-              <Pressable>
+              <Pressable onPress={() => router.push('/helpCenter')}>
                 <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
                   <HStack className="items-center" space="md">
                     <Icon as={Globe} className="stroke-amost-secondary-dark_2" />

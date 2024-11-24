@@ -12,6 +12,11 @@ import PasswordInput from "@/components/auth/PasswordInput"
 import AuthHeader from "@/components/auth/AuthHeader"
 import { z } from "zod"
 import { useAuth } from "@/lib/supabase"
+import { Text } from "@/components/ui/text"
+import { HStack } from "@/components/ui/hstack"
+import { Pressable } from "@/components/ui/pressable"
+import { Heading } from "@/components/ui/heading"
+import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
 
 
 type CreatePasswordFormType = z.infer<typeof createPasswordSchema>
@@ -78,11 +83,22 @@ const CreatePasswordScreen = () => {
   return (
     <AuthLayout>
       <VStack className="w-full h-full justify-between" space="md">
-        <VStack className="md:items-center" space="2xl">
-          <AuthHeader
-            title="Ubah Password"
-            subtitle="Password harus berbeda dengan yang telah digunakan sebelumnya"
-          />
+        <VStack className="md:items-center" space="3xl">
+          <HStack space="md" className="items-center">
+            <Pressable
+              onPress={() => {
+                router.back()
+              }}
+            >
+              <Icon as={ArrowLeftIcon} className="text-amost-secondary-dark_1" size="2xl" />
+            </Pressable>
+            <Heading size="2xl" className="text-amost-primary font-black">
+              Ubah Password
+            </Heading>
+          </HStack>
+          <Text size="md" className="text-amost-secondary-dark_1">
+            Password harus berbeda dengan yang telah digunakan sebelumnya.
+          </Text>
           <VStack space="3xl">
             <PasswordInput
               name="password"
