@@ -6,10 +6,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development",
-      "environment": {
-        "GOOGLE_SERVICES_JSON": "@AMOST/GOOGLE_SERVICES_JSON"
-      }
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
@@ -17,10 +14,7 @@
     },
     "production": {
       "channel": "production",
-      "distribution": "store",
-      "environment": {
-        "GOOGLE_SERVICES_JSON": "@AMOST/GOOGLE_SERVICES_JSON"
-      }
+      "distribution": "store"
     }
   },
   "submit": {
