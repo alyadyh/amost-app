@@ -9,5 +9,6 @@ google-services.json
 node_modules
 dist
 .expo
+.env
 .env.local
 android
