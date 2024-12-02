@@ -107,6 +107,16 @@ export const getUserSession = async (): Promise<Session | null> => {
   return session?.session ?? null
 }
 
+export async function savePushTokenToSupabase(userId: string, expoPushToken: string) {
+  const { error } = await supabase.from('profiles').update({ expo_push_token: expoPushToken }).eq('id', userId)
+
+  if (error) {
+    console.error('Error saving push token to Supabase:', error.message)
+  } else {
+    console.log('Push token saved successfully')
+  }
+}
+
 export const fetchUserProfile = async (id: string) => {
   const session = await getUserSession()
   if (session?.user) {
