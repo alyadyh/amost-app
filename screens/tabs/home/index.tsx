@@ -369,7 +369,7 @@ const HomeScreen = () => {
         size="lg"
         placement="bottom right"
         className="bg-amost-secondary-green_1"
-        onPress={() => router.push("/pushNotif")}
+        onPress={() => router.push("/addMed")}
       >
         <FabIcon as={AddIcon} />
       </Fab>
