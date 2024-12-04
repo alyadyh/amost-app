@@ -13,6 +13,7 @@ import * as Linking from "expo-linking"
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
 import { setSession as updateSession } from "@/lib/supabase"
 import { StatusBar } from "@/components/ui/status-bar"
+import * as Notifications from "expo-notifications"
 import { registerForPushNotificationsAsync } from "@/lib/getToken"
 
 export {
@@ -36,6 +37,7 @@ export default function RootLayout() {
 
   const session = useSessionManagement()
   useDeepLinking()
+  useNotificationHandler()
 
   useEffect(() => {
     if (error) throw error
@@ -169,6 +171,29 @@ function useDeepLinking() {
       subscription.remove()
     }
   }, [router, toast])
+}
+
+/**
+ * Custom Hook: useNotificationHandler
+ */
+function useNotificationHandler() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
+      const { data } = response.notification.request.content;
+
+      if (data.action === "OPEN_APP") {
+        router.push('/home');
+      }
+    };
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
 }
 
 /**
