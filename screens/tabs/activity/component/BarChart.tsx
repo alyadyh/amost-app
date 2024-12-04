@@ -5,50 +5,41 @@ import { Text } from '@/components/ui/text'
 import { LinearGradient } from '@/components/ui/linear-gradient'
 import { getUserSession, fetchWeeklyLogs } from '@/lib/supabase'
 import { Log } from "@/constants/types"
-import { ActivityIndicator, Dimensions } from "react-native"
-import { format, startOfWeek, addDays } from 'date-fns'
+import { Dimensions } from "react-native"
+import { startOfWeek, addDays } from 'date-fns'
 
-export default function MedicationAdherenceChart() {
+const MedicationAdherenceChart = () => {
   const [adherenceData, setAdherenceData] = useState<barDataItem[]>([])
+  const screenWidth = Dimensions.get('window').width
 
   // Helper function to get the date in 'YYYY-MM-DD' format using local time
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-CA') // 'en-CA' returns the format 'YYYY-MM-DD'
-  }
+  const formatDate = (date: Date) => date.toLocaleDateString('en-CA') // 'en-CA' returns 'YYYY-MM-DD'
 
   // Get the current week's dates (Monday to Sunday)
   const getCurrentWeekDates = (): { dayName: string, date: string }[] => {
-    const today = new Date()
-    const start = startOfWeek(today, { weekStartsOn: 1 }) // Monday as the first day
+    const start = startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday
     const weekDays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
-    return weekDays.map((day, index) => {
-      const currentDate = addDays(start, index)
-      return {
-        dayName: day,
-        date: formatDate(currentDate),
-      }
-    })
+    return weekDays.map((day, index) => ({
+      dayName: day,
+      date: formatDate(addDays(start, index)),
+    }))
   }
 
-  // Function to calculate adherence percentage for a given day
+  // Calculate adherence percentage for a given day
   const calculateAdherenceForDay = (logs: Log[], date: string): number => {
     const logsForDay = logs.filter(log => log.log_date === date)
     const totalLogs = logsForDay.length
-    const takenLogs = logsForDay.filter(log => log.taken === true).length // Only count logs where 'taken' is true
-
+    const takenLogs = logsForDay.filter(log => log.taken).length
     return totalLogs > 0 ? Math.round((takenLogs / totalLogs) * 100) : 0
   }
 
-  const fetchLogs = async () => {
+  // Fetch logs and update adherence data
+  const fetchAndUpdateAdherenceData = async () => {
     try {
       const session = await getUserSession()
-        if (!session) throw new Error("User is not logged in")
+      if (!session) throw new Error("User is not logged in")
 
-        console.log("User id:", session.user.id)
-
-        const userId = session.user.id
-
-      // Define the date range: current week (Monday to Sunday)
+      const userId = session.user.id
       const currentDate = new Date()
       const startOfWeekDate = startOfWeek(currentDate, { weekStartsOn: 1 }) // Monday
       const endOfWeekDate = addDays(startOfWeekDate, 6) // Sunday
@@ -60,48 +51,39 @@ export default function MedicationAdherenceChart() {
       const weekDates = getCurrentWeekDates()
 
       // Calculate adherence data based on 'taken' logs
-      const updatedAdherenceData: barDataItem[] = weekDates.map(dayInfo => {
-        const adherencePercentage = calculateAdherenceForDay(logsData || [], dayInfo.date) // Filter 'taken' logs
-        const validValue = adherencePercentage > 0 ? adherencePercentage : 0
-        const validLabel = dayInfo.dayName
+      const updatedAdherenceData: barDataItem[] = weekDates.map(dayInfo => ({
+        value: calculateAdherenceForDay(logsData || [], dayInfo.date),
+        label: dayInfo.dayName,
+      }))
 
-        return {
-          value: validValue,
-          label: validLabel,
-        }
-      })
-
-      // Log adherence data for debugging
-      console.log("Adherence Data:", updatedAdherenceData)
-
-      // Validate the structure before setting the state
-      if (updatedAdherenceData.every(item => typeof item.value === 'number' && typeof item.label === 'string')) {
-        setAdherenceData(updatedAdherenceData)
-      } else {
-        throw new Error("Invalid adherence data format")
-      }
-
-    } catch (err: any) {
-      console.error("Error fetching logs:", err)
+      // Update state with the new adherence data
+      setAdherenceData(updatedAdherenceData)
+    } catch (error) {
+      console.error("Error fetching logs:", error)
     }
   }
 
   useEffect(() => {
-    fetchLogs()
+    // Fetch data initially
+    fetchAndUpdateAdherenceData()
+
+    // Set up polling to refresh every 5 seconds
+    const interval = setInterval(fetchAndUpdateAdherenceData, 5000)
+
+    // Cleanup on component unmount
+    return () => clearInterval(interval)
   }, [])
 
-  const screenWidth = Dimensions.get('window').width
-
   return (
-    <VStack space='lg'>
+    <VStack space="lg">
       <LinearGradient
         className="w-full rounded-xl p-6"
         colors={["#fb8c00", "#F0B201"]}
         start={[0, 1]}
         end={[1, 0]}
       >
-        <VStack space='lg'>
-          <Text size='xl' className='font-bold text-white'>
+        <VStack space="lg">
+          <Text size="xl" className="font-bold text-white">
             Grafik Kepatuhan Anda
           </Text>
           <BarChart
@@ -126,3 +108,5 @@ export default function MedicationAdherenceChart() {
     </VStack>
   )
 }
+
+export default MedicationAdherenceChart

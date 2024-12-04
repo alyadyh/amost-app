@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'expo-router'
-import { SafeAreaView } from '@/components/ui/safe-area-view'
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
 import { LinearGradient } from '@/components/ui/linear-gradient'
@@ -8,9 +7,9 @@ import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
 import { ChevronRight, Percent } from 'lucide-react-native'
-import SummaryChart from './component/SummaryChart'
+import BarChart from './component/BarChart'
 import { ScrollView } from '@/components/ui/scroll-view'
-import { Medicine, Log } from "@/constants/types"
+import { Log } from "@/constants/types"
 import ShareReport from './component/ShareExport'
 import { fetchUserProfile, fetchLog } from '@/lib/supabase'
 import TabLayout from '../layout'
@@ -18,7 +17,7 @@ import TabLayout from '../layout'
 const ActivityScreen = () => {
   const [userName, setUserName] = useState<string>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
-  const [logs, setLogs] = useState<Log[]>([])
+  // const [logs, setLogs] = useState<Log[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,22 +32,26 @@ const ActivityScreen = () => {
       setLoading(true)
       setError(null)
       try {
+        const todayDate = getTodayDate()
+
         const logData = await fetchLog()
-        const takenLogs: Log[] = []
+        const todayLogs: Log[] = []
+        const todayTakenLogs: Log[] = []
+
         if (logData) {
           for (const log of logData) {
-            if (log.taken === true) {
-              takenLogs.push(log)
+            if (log.log_date === todayDate) {
+              todayLogs.push(log)
+              if (log.taken === true) {
+                todayTakenLogs.push(log)
+              }
             }
           }
         }
 
-        // Set logs state to takenLogs
-        setLogs(takenLogs)
-
         // Calculate adherence rate
-        const totalMedications = logData?.length || 0
-        const takenMedications = takenLogs.length
+        const totalMedications = todayLogs.length
+        const takenMedications = todayTakenLogs.length
 
         const adherencePercentage = totalMedications > 0
           ? Math.round((takenMedications / totalMedications) * 100)
@@ -69,6 +72,14 @@ const ActivityScreen = () => {
     }
 
     fetchProfileAndLogs()
+
+    // Set up polling to refresh every 5 seconds
+    const interval = setInterval(() => {
+      fetchProfileAndLogs()
+    }, 5000) // 5 seconds
+
+    // Cleanup on unmount
+    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -104,7 +115,7 @@ const ActivityScreen = () => {
             </Link>
           </VStack>
 
-          <SummaryChart />
+          <BarChart />
 
           <ShareReport userName={userName} />
         </VStack>
