@@ -147,6 +147,7 @@ export const fetchMedicines = async () => {
       .from('medicines')
       .select('*')
       .eq('user_id', session?.user.id)
+      .eq('deleted', false)
     if (error) {
       throw new Error(error.message)
     }
@@ -189,12 +190,13 @@ export const updateMedicine = async (medicineId: string, medicineData: any) => {
 }
 
 export const deleteMedicine = async (medicineId: string, onSuccess?: () => void) => {
-  const { error } = await supabase.from('medicines').delete().eq('id', medicineId)
-  if (error) {
-    console.error('Error deleting medicine:', error.message)
-    throw error
+  try {
+    const { error } = await supabase.from('medicines').update({ deleted: true }).eq('id', medicineId)
+    return true
+  } catch (error) {
+    console.error('Error deleting medicine:', error)
+    return false
   }
-  onSuccess && onSuccess()
 }
 
 export const uploadImage = async (selectedImageUri: string, storagePath: string) => {

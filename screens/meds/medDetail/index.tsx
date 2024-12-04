@@ -38,18 +38,21 @@ export const MedDetail = () => {
 
   // Function to delete the medicine in Supabase
   const handleDelete = async () => {
-    try {
-      await deleteMedicine(med.id, () => {
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="success">
-              <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>
-            </Toast>
-          ),
-        })
-      })
-    } catch (error) {
+    const isDeleted = await deleteMedicine(med.id);
+
+    if (isDeleted) {
+      toast.show({
+        placement: "top left",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="success">
+            <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>
+          </Toast>
+        ),
+      });
+
+      setShowAlertDialog(false);
+      router.back();
+    } else {
       toast.show({
         placement: "top left",
         render: ({ id }) => (
@@ -57,7 +60,7 @@ export const MedDetail = () => {
             <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
           </Toast>
         ),
-      })
+      });
     }
   }
 
