@@ -31,8 +31,8 @@ export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: st
                       source={{ uri: med.med_photos }}
                       className="w-64 h-64"
                       alt={`${med.med_name} photo`}
-                      onLoadStart={() => setIsLoaded(true)} // Start spinner
-                      onLoad={() => setIsLoaded(false)} // Stop spinner
+                      onLoadStart={() => setIsLoaded(true)}
+                      onLoad={() => setIsLoaded(false)}
                     />
                   </>
               ) : (

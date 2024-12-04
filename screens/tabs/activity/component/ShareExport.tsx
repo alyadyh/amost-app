@@ -12,7 +12,6 @@ import { Log } from "@/constants/types"
 import { getUserSession, fetchMonthLogs } from '@/lib/supabase'
 import { Image } from "react-native"
 import * as FileSystem from 'expo-file-system'
-import { Spinner } from "@/components/ui/spinner"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const ShareReport = ({ userName }: { userName: string }) => {

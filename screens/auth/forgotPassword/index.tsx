@@ -27,7 +27,7 @@ const ForgotPasswordScreen = () => {
 
   const toast = useToast()
   const router = useRouter()
-const { resetPasswordForEmail } = useAuth()
+  const { resetPasswordForEmail } = useAuth()
 
   const onSubmit = async (data: ForgotPasswordFormType) => {
     try {

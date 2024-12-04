@@ -17,6 +17,7 @@ import MedLayout from "../layout"
 import { fetchUserProfile, fetchLog, fetchMedicines } from '@/lib/supabase'
 import ShareReport from "./components/ShareExport"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RefreshControl } from "@/components/ui/refresh-control"
 
 interface GroupedLogs {
   [key: string]: Log[]
@@ -87,26 +88,35 @@ const LogMedScreen = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [selectedLog, setSelectedLog] = useState<Log | null>(null) // New state
   const [isLoaded, setIsLoaded] = useState<boolean>(false)
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
+
+  const fetchData = async () => {
+    try {
+      const userProfile = await fetchUserProfile('user_id')
+      setUserName(userProfile?.full_name || 'No Name')
+
+      const fetchedMedicines = await fetchMedicines()
+      if (fetchedMedicines) {
+        setMedicines(fetchedMedicines)
+      }
+
+      const fetchedLog = await fetchLog()
+      setLogs(fetchedLog ?? [])
+    } catch (error) {
+      console.error("Error fetching data:", error)
+    } finally {
+      setIsLoaded(true)
+    }
+  }
+
+   // Function to handle pull-to-refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchData()
+    setIsRefreshing(false)
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userProfile = await fetchUserProfile('user_id') // Replace 'user_id' with the actual user ID
-        setUserName(userProfile?.full_name || 'No Name')
-
-        const fetchedMedicines = await fetchMedicines()
-        if (fetchedMedicines) {
-          setMedicines(fetchedMedicines)
-        }
-
-        const fetchedLog = await fetchLog()
-        setLogs(fetchedLog ?? [])
-      } catch (error) {
-        console.error("Error fetching data:", error)
-      } finally {
-        setIsLoaded(true)
-      }
-    }
     fetchData()
   }, [])
 
@@ -170,7 +180,16 @@ const LogMedScreen = () => {
           <Text className="text-amost-secondary-dark_2">Belum ada riwayat log obat</Text>
         </VStack>
       ) : (
-        <ScrollView className="mb-12">
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#00A378"
+              colors={['#00A378']}
+            />
+          }
+        >
           {sortedLogs.map(([date, logs]: [string, Log[]]) => (
             <VStack key={date} space="md" className="mb-6">
               <Text size="lg" bold className="text-amost-secondary-dark_1">

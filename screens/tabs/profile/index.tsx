@@ -17,15 +17,18 @@ import { getCurrentUser, fetchUserProfile, useAuth } from "@/lib/supabase"
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
 import TabLayout from "../layout"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
+import { ScrollView } from "@/components/ui/scroll-view"
+import { RefreshControl } from "@/components/ui/refresh-control"
 
 const ProfileScreen = () => {
   const [showModal, setShowModal] = useState(false)
   const [user, setUser] = useState({ name: "", email: "", avatar: "" })
   const [isNotificationEnabled, setNotificationEnabled] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  const fetchProfile = async () => {
+    try {
       const currentUser = await getCurrentUser()
 
       if (currentUser?.id) {
@@ -40,9 +43,21 @@ const ProfileScreen = () => {
           })
         }
       }
+    } catch (error) {
+      console.error("Error fetching profile:", error)
+    } finally {
       setIsLoaded(true)
     }
+  }
 
+  // Pull-to-refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchProfile()
+    setIsRefreshing(false)
+  }
+
+  useEffect(() => {
     fetchProfile()
   }, [])
 
@@ -55,96 +70,108 @@ const ProfileScreen = () => {
     <>
       <VStack className="flex-1">
         <Heading size="2xl" className="text-amost-secondary-dark_1 font-black mb-8">Profil</Heading>
-        <VStack className="h-full w-full pb-8" space="2xl">
-          <Box className="md:mt-14 mt-6 w-full md:px-10 md:pt-6 pb-4">
-            <VStack space="lg" className="items-center">
-                <Avatar size="xl" className="bg-amost-primary">
-                  <Skeleton variant="circular" isLoaded={isLoaded}>
-                    <AvatarFallbackText className="text-white">
-                      {user.name}
-                    </AvatarFallbackText>
-                    <AvatarImage
-                      source={{ uri: user.avatar }}
+
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#00A378"
+              colors={['#00A378']}
+            />
+          }
+        >
+          <VStack className="h-full w-full pb-8" space="2xl">
+            <Box className="md:mt-14 mt-6 w-full md:px-10 md:pt-6 pb-4">
+              <VStack space="lg" className="items-center">
+                  <Avatar size="xl" className="bg-amost-primary">
+                    <Skeleton variant="circular" isLoaded={isLoaded}>
+                      <AvatarFallbackText className="text-white">
+                        {user.name}
+                      </AvatarFallbackText>
+                      <AvatarImage
+                        source={{ uri: user.avatar }}
+                      />
+                    </Skeleton>
+                  </Avatar>
+                <VStack className="gap-1 w-full items-center">
+                  <SkeletonText className="h-6 w-32" isLoaded={isLoaded}>
+                    <Text size="2xl" bold className="text-dark">{user.name}</Text>
+                  </SkeletonText>
+                  <SkeletonText className="h-6 w-32" isLoaded={isLoaded}>
+                    <Text className="font-normal text-sm text-amost-secondary-dark_1">{user.email}</Text>
+                  </SkeletonText>
+                </VStack>
+                <Button size="sm" variant="outline" onPress={() => setShowModal(true)} className="rounded-full border border-border-300">
+                  <ButtonText className="font-normal text-amost-secondary-dark_1">Edit Profil</ButtonText>
+                </Button>
+              </VStack>
+            </Box>
+
+            <VStack space="2xl">
+              <Skeleton variant="rounded" className="w-full h-16" isLoaded={isLoaded}>
+                {/* Render Account Cards manually */}
+                <VStack className="py-2 px-4 border rounded-xl border-border-300 justify-between items-center">
+                  {/* Notifikasi Row with Switch */}
+                  <HStack space="2xl" className="justify-between items-center w-full py-0.5 px-2">
+                    <HStack className="items-center" space="md">
+                      <Icon as={Bell} className="stroke-amost-secondary-dark_2" />
+                      <Text size="lg" className="text-lg text-amost-secondary-dark_1">Notifikasi</Text>
+                    </HStack>
+                    <Switch
+                      trackColor={{ false: '#6E6E6E', true: '#00A378' }}
+                      thumbColor={'#EFEFEF'}
+                      ios_backgroundColor={'#6E6E6E'}
+                      onValueChange={() => setNotificationEnabled(!isNotificationEnabled)}
+                      value={isNotificationEnabled}
                     />
-                  </Skeleton>
-                </Avatar>
-              <VStack className="gap-1 w-full items-center">
-                <SkeletonText className="h-6 w-32" isLoaded={isLoaded}>
-                  <Text size="2xl" bold className="text-dark">{user.name}</Text>
-                </SkeletonText>
-                <SkeletonText className="h-6 w-32" isLoaded={isLoaded}>
-                  <Text className="font-normal text-sm text-amost-secondary-dark_1">{user.email}</Text>
-                </SkeletonText>
-              </VStack>
-              <Button size="sm" variant="outline" onPress={() => setShowModal(true)} className="rounded-full border border-border-300">
-                <ButtonText className="font-normal text-amost-secondary-dark_1">Edit Profil</ButtonText>
-              </Button>
+                  </HStack>
+
+                  <Divider className="my-1" />
+
+                  {/* Password Row */}
+                  <Pressable onPress={() => router.push('/createPassword')}>
+                    <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
+                      <HStack className="items-center" space="md">
+                        <Icon as={LockIcon} className="stroke-amost-secondary-dark_2" />
+                        <Text size="lg" className="text-lg text-amost-secondary-dark_1">Ubah Password</Text>
+                      </HStack>
+                      <Icon as={ChevronRightIcon} className="stroke-amost-secondary-dark_2" />
+                    </HStack>
+                  </Pressable>
+
+                  <Divider className="my-1" />
+
+                  {/* Privasi Row */}
+                  <Pressable onPress={() => router.push('/privacyPolicy')}>
+                    <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
+                      <HStack className="items-center" space="md">
+                        <Icon as={ShieldAlert} className="stroke-amost-secondary-dark_2" />
+                        <Text size="lg" className="text-lg text-amost-secondary-dark_1">Kebijakan Privasi</Text>
+                      </HStack>
+                      <Icon as={ChevronRightIcon} className="stroke-amost-secondary-dark_2" />
+                    </HStack>
+                  </Pressable>
+
+                  <Divider className="my-1" />
+
+                  {/* Help Center Row */}
+                  <Pressable onPress={() => router.push('/helpCenter')}>
+                    <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
+                      <HStack className="items-center" space="md">
+                        <Icon as={Globe} className="stroke-amost-secondary-dark_2" />
+                        <Text size="lg" className="text-lg text-amost-secondary-dark_1">Pusat Bantuan</Text>
+                      </HStack>
+                      <Icon as={ChevronRightIcon} className="stroke-amost-secondary-dark_2" />
+                    </HStack>
+                  </Pressable>
+                </VStack>
+              </Skeleton>
+
+              <LogOutCard isLoaded={isLoaded} />
             </VStack>
-          </Box>
-
-          <VStack space="2xl">
-            <Skeleton variant="rounded" className="w-full h-16" isLoaded={isLoaded}>
-              {/* Render Account Cards manually */}
-              <VStack className="py-2 px-4 border rounded-xl border-border-300 justify-between items-center">
-                {/* Notifikasi Row with Switch */}
-                <HStack space="2xl" className="justify-between items-center w-full py-0.5 px-2">
-                  <HStack className="items-center" space="md">
-                    <Icon as={Bell} className="stroke-amost-secondary-dark_2" />
-                    <Text size="lg" className="text-lg text-amost-secondary-dark_1">Notifikasi</Text>
-                  </HStack>
-                  <Switch
-                    trackColor={{ false: '#6E6E6E', true: '#00A378' }}
-                    thumbColor={'#EFEFEF'}
-                    ios_backgroundColor={'#6E6E6E'}
-                    onValueChange={() => setNotificationEnabled(!isNotificationEnabled)}
-                    value={isNotificationEnabled}
-                  />
-                </HStack>
-
-                <Divider className="my-1" />
-
-                {/* Password Row */}
-                <Pressable onPress={() => router.push('/createPassword')}>
-                  <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
-                    <HStack className="items-center" space="md">
-                      <Icon as={LockIcon} className="stroke-amost-secondary-dark_2" />
-                      <Text size="lg" className="text-lg text-amost-secondary-dark_1">Ubah Password</Text>
-                    </HStack>
-                    <Icon as={ChevronRightIcon} className="stroke-amost-secondary-dark_2" />
-                  </HStack>
-                </Pressable>
-
-                <Divider className="my-1" />
-
-                {/* Privasi Row */}
-                <Pressable onPress={() => router.push('/privacyPolicy')}>
-                  <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
-                    <HStack className="items-center" space="md">
-                      <Icon as={ShieldAlert} className="stroke-amost-secondary-dark_2" />
-                      <Text size="lg" className="text-lg text-amost-secondary-dark_1">Kebijakan Privasi</Text>
-                    </HStack>
-                    <Icon as={ChevronRightIcon} className="stroke-amost-secondary-dark_2" />
-                  </HStack>
-                </Pressable>
-
-                <Divider className="my-1" />
-
-                {/* Help Center Row */}
-                <Pressable onPress={() => router.push('/helpCenter')}>
-                  <HStack space="2xl" className="justify-between items-center w-full py-3 px-2">
-                    <HStack className="items-center" space="md">
-                      <Icon as={Globe} className="stroke-amost-secondary-dark_2" />
-                      <Text size="lg" className="text-lg text-amost-secondary-dark_1">Pusat Bantuan</Text>
-                    </HStack>
-                    <Icon as={ChevronRightIcon} className="stroke-amost-secondary-dark_2" />
-                  </HStack>
-                </Pressable>
-              </VStack>
-            </Skeleton>
-
-            <LogOutCard isLoaded={isLoaded} />
           </VStack>
-        </VStack>
+        </ScrollView>
       </VStack>
 
       {/* Modal for editing profile */}

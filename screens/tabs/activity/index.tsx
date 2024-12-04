@@ -14,12 +14,15 @@ import ShareReport from './component/ShareExport'
 import { fetchUserProfile, fetchLog } from '@/lib/supabase'
 import TabLayout from '../layout'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Toast, ToastTitle, useToast } from '@/components/ui/toast'
+import { RefreshControl } from '@/components/ui/refresh-control'
 
 const ActivityScreen = () => {
   const [userName, setUserName] = useState<string>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
   const [isLoaded, setIsLoaded] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
+  const toast = useToast()
 
   // Function to get today's date in 'YYYY-MM-DD' format using local time
   const getTodayDate = () => {
@@ -27,49 +30,61 @@ const ActivityScreen = () => {
     return today.toLocaleDateString('en-CA') // 'en-CA' returns the format 'YYYY-MM-DD'
   }
 
-  useEffect(() => {
-    const fetchProfileAndLogs = async () => {
-      setError(null)
-      try {
-        const todayDate = getTodayDate()
+  const fetchProfileAndLogs = async () => {
+    try {
+      const todayDate = getTodayDate()
 
-        const logData = await fetchLog()
-        const todayLogs: Log[] = []
-        const todayTakenLogs: Log[] = []
+      const logData = await fetchLog()
+      const todayLogs: Log[] = []
+      const todayTakenLogs: Log[] = []
 
-        if (logData) {
-          for (const log of logData) {
-            if (log.log_date === todayDate) {
-              todayLogs.push(log)
-              if (log.taken === true) {
-                todayTakenLogs.push(log)
-              }
+      if (logData) {
+        for (const log of logData) {
+          if (log.log_date === todayDate) {
+            todayLogs.push(log)
+            if (log.taken === true) {
+              todayTakenLogs.push(log)
             }
           }
         }
-
-        // Calculate adherence rate
-        const totalMedications = todayLogs.length
-        const takenMedications = todayTakenLogs.length
-
-        const adherencePercentage = totalMedications > 0
-          ? Math.round((takenMedications / totalMedications) * 100)
-          : 0
-
-        setAdherenceRate(adherencePercentage)
-
-        // Fetch user profile
-        const profileData = await fetchUserProfile('user_id')
-
-        setUserName(profileData?.full_name || 'No Name')
-      } catch (err: any) {
-        console.error("Error:", err)
-        setError(err.message || "Terjadi kesalahan.")
-      } finally {
-        setIsLoaded(true)
       }
-    }
 
+      // Calculate adherence rate
+      const totalMedications = todayLogs.length
+      const takenMedications = todayTakenLogs.length
+
+      const adherencePercentage = totalMedications > 0
+        ? Math.round((takenMedications / totalMedications) * 100)
+        : 0
+
+      setAdherenceRate(adherencePercentage)
+
+      // Fetch user profile
+      const profileData = await fetchUserProfile('user_id')
+      setUserName(profileData?.full_name || 'No Name')
+    } catch (err) {
+      console.error("Error during password reset:", err)
+      toast.show({
+        placement: "top",
+        render: ({ id }) => (
+          <Toast nativeID={id} variant="solid" action="error">
+            <ToastTitle>Terjadi kesalahan saat mengirim link reset password.</ToastTitle>
+          </Toast>
+        ),
+      })
+    } finally {
+      setIsLoaded(true)
+    }
+  }
+
+  // Function to handle pull-to-refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchProfileAndLogs()
+    setIsRefreshing(false)
+  }
+
+  useEffect(() => {
     fetchProfileAndLogs()
 
     // Set up polling to refresh every 5 seconds
@@ -85,7 +100,16 @@ const ActivityScreen = () => {
     <VStack space="xl" className='flex-1'>
       <Heading size='2xl' className="font-black text-amost-secondary-dark_1">Aktivitas</Heading>
 
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#00A378"
+            colors={['#00A378']}
+          />
+        }
+      >
         <VStack space='2xl' className='mb-4'>
           <VStack>
             <Skeleton variant="rounded" className="w-full h-28" isLoaded={isLoaded}>
