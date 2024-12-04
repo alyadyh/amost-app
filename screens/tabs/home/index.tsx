@@ -106,14 +106,13 @@ const HomeScreen = () => {
       .filter((med: Medicine) => {
         const createdDate = new Date(med.created_at || Date.now())
         const currentDayDate = new Date(`${days[dayId]?.fullDate}T00:00:00Z`)
-        // console.log("currentDayDate test: ", currentDayDate)
 
         const createdDateString = createdDate.toLocaleDateString('en-CA') // Format: YYYY-MM-DD
         const currentDayDateString = currentDayDate.toLocaleDateString('en-CA')
 
         // Calculate the time difference in days between created_at and the current day
         const timeDifference = Math.floor(
-          (currentDayDate.setHours(0,0,0,0) - createdDate.setHours(0,0,0,0)) / (1000 * 3600 * 24)
+          (currentDayDate.setHours(0, 0, 0, 0) - createdDate.setHours(0, 0, 0, 0)) / (1000 * 3600 * 24)
         )
 
         console.log("currentDayDate: ", currentDayDateString)
@@ -183,7 +182,6 @@ const HomeScreen = () => {
   // useEffect: Set week dates and fetch medicines on component load, update time every minute
   useEffect(() => {
     getWeekDates() // Calculate and set week dates when the component loads
-    // fetchMedicines() // Fetch medicines for the user
     fetchMedicines()
       .then((medicines: any) => setMeds(medicines || []))
       .catch((error: any) => console.error('Error fetching medicines:', error))
@@ -195,63 +193,6 @@ const HomeScreen = () => {
 
     return () => clearInterval(timer) // Clean up the interval on unmount
   }, [])
-
-  // Function to initialize med_logs
-  const initializeMedLogsForDay = async (dayDate: string) => {
-    const user = await getCurrentUser()
-    if (!user) {
-      console.log('No authenticated user found.')
-      return
-    }
-
-    // Fetch existing logs for the day
-    const existingLogs = await fetchLog()
-    const existingLogSet = new Set(existingLogs?.map((log: { medicine_id: any; reminder_time: any }) => `${log.medicine_id}-${log.reminder_time}`))
-
-    // Fetch medicines for the day
-    const medsForDay = getMedsForDay(getCurrentDayIndex())
-
-    // Prepare log entries only for medicines without existing logs
-    const logEntries = medsForDay.flatMap(med =>
-      med.reminder_times
-        .filter(time => !existingLogSet.has(`${med.id}-${time.replace('.', ':')}`))
-        .map(time => ({
-          user_id: user.id,
-          medicine_id: med.id,
-          med_name: med.med_name,
-          log_date: dayDate,
-          reminder_time: time.replace('.', ':'),
-          taken: null,
-        }))
-    )
-
-    if (logEntries.length === 0) {
-      console.log('All med_logs already initialized for today.')
-      return
-    }
-
-    if (logEntries.length > 0) {
-      try {
-        // call updateLog for each entry
-        for (const logEntry of logEntries) {
-          await updateLog(logEntry)
-        }
-      } catch (error) {
-        console.error("Error initializing logs:", error)
-      }
-    }
-  }
-
-  useEffect(() => {
-    const initializeLogs = async () => {
-      const currentDayDate = days.find(d => d.id === getCurrentDayIndex())?.fullDate
-      if (currentDayDate) {
-        await initializeMedLogsForDay(currentDayDate)
-      }
-    }
-
-    initializeLogs()
-  }, [days, currentDay]) // Runs when 'days' or 'currentDay' changes
 
   const medsForDay = getMedsForDay(getCurrentDayIndex()) // Get medicines for the current day
   const groupedMeds = groupMedsByReminderTime(medsForDay) // Group medicines by reminder times
