@@ -10,6 +10,7 @@ import { startOfWeek, addDays } from 'date-fns'
 
 const MedicationAdherenceChart = () => {
   const [adherenceData, setAdherenceData] = useState<barDataItem[]>([])
+  const [isLoaded, setIsLoaded] = useState(false)
   const screenWidth = Dimensions.get('window').width
 
   // Helper function to get the date in 'YYYY-MM-DD' format using local time
@@ -36,6 +37,7 @@ const MedicationAdherenceChart = () => {
   // Fetch logs and update adherence data
   const fetchAndUpdateAdherenceData = async () => {
     try {
+      setIsLoaded(false)
       const session = await getUserSession()
       if (!session) throw new Error("User is not logged in")
 
@@ -60,6 +62,8 @@ const MedicationAdherenceChart = () => {
       setAdherenceData(updatedAdherenceData)
     } catch (error) {
       console.error("Error fetching logs:", error)
+    } finally {
+      setIsLoaded(true)
     }
   }
 

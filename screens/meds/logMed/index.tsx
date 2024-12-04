@@ -16,6 +16,7 @@ import { id } from 'date-fns/locale'
 import MedLayout from "../layout"
 import { fetchUserProfile, fetchLog, fetchMedicines } from '@/lib/supabase'
 import ShareReport from "./components/ShareExport"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface GroupedLogs {
   [key: string]: Log[]
@@ -84,22 +85,27 @@ const LogMedScreen = () => {
   const [selectedReminderTime, setSelectedReminderTime] = useState<string>()
   const [logs, setLogs] = useState<Log[]>([])
   const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [loading, setLoading] = useState(false)
   const [selectedLog, setSelectedLog] = useState<Log | null>(null) // New state
+  const [isLoaded, setIsLoaded] = useState<boolean>(false)
 
   useEffect(() => {
     const fetchData = async () => {
-      const userProfile = await fetchUserProfile('user_id') // Replace 'user_id' with the actual user ID
-      setUserName(userProfile?.full_name || 'No Name')
+      try {
+        const userProfile = await fetchUserProfile('user_id') // Replace 'user_id' with the actual user ID
+        setUserName(userProfile?.full_name || 'No Name')
 
-      const fetchedMedicines = await fetchMedicines()
-      if (fetchedMedicines) {
-        setMedicines(fetchedMedicines)
+        const fetchedMedicines = await fetchMedicines()
+        if (fetchedMedicines) {
+          setMedicines(fetchedMedicines)
+        }
+
+        const fetchedLog = await fetchLog()
+        setLogs(fetchedLog ?? [])
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setIsLoaded(true)
       }
-
-      const fetchedLog = await fetchLog()
-      console.log('fetchedLog: ', fetchedLog)
-      setLogs(fetchedLog ?? [])
     }
     fetchData()
   }, [])
@@ -147,7 +153,19 @@ const LogMedScreen = () => {
         <ShareReport userName={userName} />
       </HStack>
 
-      {logs.length === 0 ? (
+      {!isLoaded ? (
+        // Skeleton loader for the medicine list
+        <VStack space="md">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              variant="rounded"
+              className="h-20 w-full"
+              isLoaded={false}
+            />
+          ))}
+        </VStack>
+      ) : logs.length === 0 ? (
         <VStack className="flex-1 justify-center items-center">
           <Text className="text-amost-secondary-dark_2">Belum ada riwayat log obat</Text>
         </VStack>

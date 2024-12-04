@@ -17,16 +17,24 @@ import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input'
 import TabLayout from '../layout'
 import { fetchMedicines } from '@/lib/supabase'
 import { View } from '@/components/ui/view'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const MedScreen = () => {
   const [meds, setMeds] = useState<Medicine[]>([])
   const [searchTerm, setSearchTerm] = useState<string>('')
+  const [isLoaded, setIsLoaded] = useState(false)
 
   // Fetch user-specific medicines from Supabase
   useEffect(() => {
     fetchMedicines()
-      .then((data) => setMeds(data || []))
-      .catch((error) => console.error('Error fetching medicines:', error))
+      .then((data) => {
+        setMeds(data || [])
+        setIsLoaded(true)
+      })
+      .catch((error) => {
+        console.error('Error fetching medicines:', error)
+        setIsLoaded(true)
+      })
   }, [])
 
   // Filter the meds based on the search term
@@ -86,7 +94,19 @@ const MedScreen = () => {
             />
         </Input>
 
-        {filteredMeds.length === 0 ? (
+        {!isLoaded ? (
+          // Skeleton loader for the medicine list
+          <VStack space="md">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rounded"
+                className="h-20 w-full"
+                isLoaded={false}
+              />
+            ))}
+          </VStack>
+        ) : filteredMeds.length === 0 ? (
           <View className="items-center justify-center h-80">
             <Text className="text-amost-secondary-dark_2">Belum ada obat yang terdaftar</Text>
           </View>

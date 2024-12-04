@@ -17,9 +17,13 @@ import { Fab, FabIcon } from '@/components/ui/fab'
 import { router } from 'expo-router'
 import { LayoutRectangle } from 'react-native'
 import TabLayout from '../layout'
-import { getCurrentUser, fetchMedicines, fetchLog, updateLog } from '@/lib/supabase'
+import { fetchMedicines } from '@/lib/supabase'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const HomeScreen = () => {
+  // State to track loading status
+  const [isLoaded, setIsLoaded] = useState(false)
+
   // Define a type for grouping medicines by reminder times
   type GroupedMedsType = { [key: string]: Medicine[] }
 
@@ -183,8 +187,14 @@ const HomeScreen = () => {
   useEffect(() => {
     getWeekDates() // Calculate and set week dates when the component loads
     fetchMedicines()
-      .then((medicines: any) => setMeds(medicines || []))
-      .catch((error: any) => console.error('Error fetching medicines:', error))
+      .then((medicines: any) => {
+        setMeds(medicines || [])
+        setIsLoaded(true)
+      })
+      .catch((error) => {
+        console.error('Error fetching medicines:', error)
+        setIsLoaded(true)
+      })
 
     // Set an interval to update the current time every minute
     const timer = setInterval(() => {
@@ -220,7 +230,16 @@ const HomeScreen = () => {
         <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Hari ini</Heading>
 
         <HStack className='justify-between'>
-          {days.map(day => (
+          {!isLoaded
+            ? Array.from({ length: days.length }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  variant="rounded"
+                  className="w-10 h-12 rounded-lg mx-1"
+                  isLoaded={false}
+                />
+              ))
+            : days.map(day => (
             <Pressable key={day.id} onPress={() => handleDayClick(day.id)}>
               <LinearGradient
                 className="items-center px-2.5 py-2 rounded-lg"
@@ -241,7 +260,12 @@ const HomeScreen = () => {
 
         <ScrollView ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }}>
           <VStack space='sm' className='flex-1 mb-4'>
-            {meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
+            {!isLoaded ? (
+            // Render skeleton loaders when isLoaded is false
+            Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} variant="rounded" className="w-full h-20 mb-4" isLoaded={false} />
+            ))
+          ) : meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
               <View className='items-center justify-center h-full'>
                 <Text className="text-amost-secondary-dark_2">Belum ada jadwal minum obat</Text>
               </View>

@@ -3,27 +3,24 @@ import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
 import { format, subMonths, parseISO } from 'date-fns'
 import { Pressable } from "@/components/ui/pressable"
-import { HStack } from "@/components/ui/hstack"
-import { VStack } from "@/components/ui/vstack"
-import { Text } from "@/components/ui/text"
 import { Icon } from "@/components/ui/icon"
 import { Share2 } from "lucide-react-native"
-import { Medicine, Log } from "@/constants/types"
+import { Log } from "@/constants/types"
 import { getUserSession, fetchMonthLogs } from '@/lib/supabase'
-import { ActivityIndicator, Image } from "react-native"
+import { Image } from "react-native"
 import * as FileSystem from 'expo-file-system'
+import { Spinner } from "@/components/ui/spinner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const ShareReport = ({ userName }: { userName: string }) => {
   const [logs, setLogs] = useState<Log[]>([])
-  const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
+  const [isLoaded, setIsLoaded] = useState<boolean>(false)
 
   const currentMonth = format(new Date(), 'MMMM yyyy') // Get current month
   const oneMonthAgo = subMonths(new Date(), 1) // Calculate one month ago
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
       try {
         const session = await getUserSession()
         if (!session) throw new Error("User is not logged in")
@@ -38,7 +35,7 @@ const ShareReport = ({ userName }: { userName: string }) => {
       } catch (error) {
         console.error("Error fetching logs:", error)
       } finally {
-        setLoading(false)
+        setIsLoaded(true)
       }
     }
 
@@ -113,10 +110,6 @@ const ShareReport = ({ userName }: { userName: string }) => {
     `
     }
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />
-  }
-
   const handlePrintAndShare = async () => {
     const htmlContent = generateHTML()
     try {
@@ -148,7 +141,9 @@ const ShareReport = ({ userName }: { userName: string }) => {
 
   return (
     <Pressable onPress={handlePrintAndShare}>
-      <Icon as={Share2} size='2xl' className='stroke-amost-secondary-dark_1' />
+      <Skeleton variant="circular" className="w-12 h-12" isLoaded={isLoaded}>
+        <Icon as={Share2} size='2xl' className='stroke-amost-secondary-dark_1' />
+      </Skeleton>
     </Pressable>
   )
 }

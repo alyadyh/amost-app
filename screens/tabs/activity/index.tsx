@@ -13,12 +13,12 @@ import { Log } from "@/constants/types"
 import ShareReport from './component/ShareExport'
 import { fetchUserProfile, fetchLog } from '@/lib/supabase'
 import TabLayout from '../layout'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const ActivityScreen = () => {
   const [userName, setUserName] = useState<string>('')
   const [adherenceRate, setAdherenceRate] = useState<number>(0)
-  // const [logs, setLogs] = useState<Log[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
+  const [isLoaded, setIsLoaded] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
   // Function to get today's date in 'YYYY-MM-DD' format using local time
@@ -29,7 +29,6 @@ const ActivityScreen = () => {
 
   useEffect(() => {
     const fetchProfileAndLogs = async () => {
-      setLoading(true)
       setError(null)
       try {
         const todayDate = getTodayDate()
@@ -67,7 +66,7 @@ const ActivityScreen = () => {
         console.error("Error:", err)
         setError(err.message || "Terjadi kesalahan.")
       } finally {
-        setLoading(false)
+        setIsLoaded(true)
       }
     }
 
@@ -89,30 +88,35 @@ const ActivityScreen = () => {
       <ScrollView>
         <VStack space='2xl' className='mb-4'>
           <VStack>
-            <LinearGradient
-              className="w-full px-6 py-8 flex-row justify-between items-center rounded-t-xl"
-              colors={["#00A378", "#34B986"]}
-              start={[0, 1]}
-              end={[1, 0]}
-             >
-              <VStack space='lg'>
-                <Text className="font-medium text-white">
-                  Angka kepatuhan hari ini
-                </Text>
-                <HStack space='sm' className='items-center'>
-                  <Text size='5xl' className="font-bold text-white ml-2">
-                    {adherenceRate || '0'}
+            <Skeleton variant="rounded" className="w-full h-28" isLoaded={isLoaded}>
+              <LinearGradient
+                className="w-full px-6 py-8 flex-row justify-between items-center rounded-t-xl"
+                colors={["#00A378", "#34B986"]}
+                start={[0, 1]}
+                end={[1, 0]}
+              >
+                <VStack space='lg'>
+                  <Text className="font-medium text-white">
+                    Angka kepatuhan hari ini
                   </Text>
-                  <Icon as={Percent} size='2xl' className='stroke-white' />
+                  <HStack space='sm' className='items-center'>
+                    <Text size='5xl' className="font-bold text-white ml-2">
+                      {adherenceRate || '0'}
+                    </Text>
+                    <Icon as={Percent} size='2xl' className='stroke-white' />
+                  </HStack>
+                </VStack>
+              </LinearGradient>
+            </Skeleton>
+
+            <Skeleton variant="rounded" className="w-full h-12" isLoaded={isLoaded}>
+              <Link href="/logMed" className='bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-xl'>
+                <HStack space='xs' className='justify-center items-center'>
+                  <Text className='text-amost-primary'>Lihat semua log</Text>
+                  <Icon as={ChevronRight} className='stroke-amost-primary'/>
                 </HStack>
-              </VStack>
-            </LinearGradient>
-            <Link href="/logMed" className='bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-xl'>
-              <HStack space='xs' className='justify-center items-center'>
-                <Text className='text-amost-primary'>Lihat semua log</Text>
-                <Icon as={ChevronRight} className='stroke-amost-primary'/>
-              </HStack>
-            </Link>
+              </Link>
+            </Skeleton>
           </VStack>
 
           <BarChart />

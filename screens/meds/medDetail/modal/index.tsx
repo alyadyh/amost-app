@@ -3,9 +3,10 @@ import { Modal, Pressable, View, ActivityIndicator } from 'react-native'
 import { Text } from "@/components/ui/text"
 import { Image } from "@/components/ui/image"
 import { VStack } from '@/components/ui/vstack'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: string | null, setShowModal: (modalName: string | null) => void, med: any }) => {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   return (
   <Modal
@@ -23,15 +24,15 @@ export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: st
               <Text className="text-black font-bold">Foto</Text>
               {med.med_photos ? (
                 <>
-                    {isLoading && (
-                      <ActivityIndicator size="large" color="#000" className="self-center" />
+                    {isLoaded && (
+                      <Skeleton variant="rounded" className="w-64 h-64" />
                     )}
                     <Image
                       source={{ uri: med.med_photos }}
                       className="w-64 h-64"
                       alt={`${med.med_name} photo`}
-                      onLoadStart={() => setIsLoading(true)} // Start spinner
-                      onLoad={() => setIsLoading(false)} // Stop spinner
+                      onLoadStart={() => setIsLoaded(true)} // Start spinner
+                      onLoad={() => setIsLoaded(false)} // Stop spinner
                     />
                   </>
               ) : (

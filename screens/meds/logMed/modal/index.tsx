@@ -12,6 +12,7 @@ import { Box } from '@/components/ui/box'
 import { fetchLog, updateLog, updateMedicine } from '@/lib/supabase'
 import { TimePickerComponent } from '../components/TimePicker'
 import { format } from 'date-fns'
+import { Skeleton, SkeletonText } from '@/components/ui/skeleton'
 
 interface LogMedModalProps {
   visible: boolean
@@ -31,20 +32,35 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
   onLog
 }) => {
   const [log, setLog] = useState<Log | null>(null)
-  const [loading, setLoading] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isModalReady, setIsModalReady] = useState(false)
 
   useEffect(() => {
     const fetchLogData = async () => {
-      const fetchedLog = await fetchLog()
-      console.log('Fetched logs:', fetchedLog);
+      try {
+        const fetchedLog = await fetchLog()
+        console.log('Fetched logs:', fetchedLog)
 
-      // Find the log where medicine_id matches
-      const matchingLog = fetchedLog?.find(log => log.medicine_id === medicine.id && log.reminder_time === reminderTime && log.log_date === logDate)
-      console.log('Matching log:', matchingLog)
-      setLog(matchingLog || null)
+        // Find the log where medicine_id matches
+        const matchingLog = fetchedLog?.find(
+          log => log.medicine_id === medicine.id && log.reminder_time === reminderTime && log.log_date === logDate
+        )
+        console.log('Matching log:', matchingLog)
+        setLog(matchingLog || null)
+      } catch (error) {
+        console.error("Error fetching log:", error)
+      } finally {
+        setIsLoaded(true)
+        setTimeout(() => setIsModalReady(true), 10)
+      }
     }
-    if (visible) fetchLogData()
+
+    if (visible) {
+      setIsModalReady(false)
+      fetchLogData()
+    }
+
   }, [visible, logDate, reminderTime, medicine.id])
 
   const handleLogUpdate = async (taken: boolean, selectedDateTime?: Date) => {
@@ -81,20 +97,24 @@ export const LogMedModal: React.FC<LogMedModalProps> = ({
   }
 
   return (
-    <Modal isOpen={visible} onClose={onClose}>
+    <Modal isOpen={visible && isModalReady} onClose={onClose}>
       <ModalBackdrop />
       <ModalContent className="bg-white rounded-xl p-6 items-center">
         <ModalHeader>
-          <Text size='md' bold className='text-amost-secondary-dark_1 text-center mb-2'>
-            {log && log.taken
-              ? getMedicineText(medicine.med_form, medicine.med_name, true, log.log_date, log.log_time)
-              : getMedicineText(medicine.med_form, medicine.med_name, false)
-            }
-          </Text>
+          <SkeletonText className="h-6 w-64" isLoaded={isLoaded}>
+            <Text size='md' bold className='text-amost-secondary-dark_1 text-center mb-2'>
+              {log && log.taken
+                ? getMedicineText(medicine.med_form, medicine.med_name, true, log.log_date, log.log_time)
+                : getMedicineText(medicine.med_form, medicine.med_name, false)
+              }
+            </Text>
+          </SkeletonText>
         </ModalHeader>
 
         <ModalBody>
-          {log && log.taken ? (
+          {!isLoaded ? (
+            <Skeleton variant="rounded" className="w-full h-20" />
+          ) : log && log.taken ? (
             <VStack space='lg'>
               <Button
                 size="sm"
