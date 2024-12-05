@@ -44,19 +44,19 @@ export const useAuth = () => {
       email,
       password,
       options: {
-        data: { full_name: fullname },
-        emailRedirectTo: "amost://home",
+        data: { full_name: fullname, email: email },
+        emailRedirectTo: "amost://signIn",
       },
     });
   };
 
   const resetPasswordForEmail = async (email: string) => {
-    const redirectTo = "amost://profile";
+    const redirectTo = "amost://createPassword";
     return await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   };
 
-  const updatePassword = async (password: string) => {
-    return await supabase.auth.updateUser({ password });
+  const updatePassword = async (newPassword: string) => {
+    return await supabase.auth.updateUser({ password: newPassword });
   };
 
   const signOut = async () => {
@@ -171,8 +171,12 @@ export const fetchUserProfile = async (id: string) => {
   return null;
 };
 
-export const updateUserProfile = async (newName: string, newAvatar: string) => {
+export const updateUserProfile = async (
+  newName: string,
+  newAvatar: string,
+) => {
   const session = await getUserSession();
+  console.log("session", session);
   if (session?.user) {
     const { error } = await supabase
       .from("profiles")

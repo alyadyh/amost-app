@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
 import { VStack } from "@/components/ui/vstack"
 import { Button, ButtonText } from "@/components/ui/button"
@@ -18,6 +18,7 @@ import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorTe
 import { CheckIcon } from "@/components/ui/icon"
 import { useAuth } from "@/lib/supabase"
 import { z } from "zod"
+import { Spinner } from "@/components/ui/spinner"
 
 type SignUpFormType = z.infer<typeof signUpSchema>
 
@@ -30,6 +31,8 @@ const SignUpScreen = () => {
   } = useForm<SignUpFormType>({
     resolver: zodResolver(signUpSchema),
   })
+
+  const [isLoading, setIsLoading] = useState(false)
 
   const toast = useToast()
   const router = useRouter()
@@ -48,11 +51,33 @@ const SignUpScreen = () => {
       return
     }
 
+    setIsLoading(true)
+
     try {
       const { error } = await signUp(data.email, data.password, data.fullname)
 
       if (error) {
+        if (error.status === 400) {
+          console.error("Validation error:", error.message);
+        } else if (error.status === 500) {
+          console.error("Server error:", error.message);
+        } else {
+          console.error("Unknown error:", error);
+        }
+      }
+
+      if (error) {
         console.log("Sign up gagal", error.message)
+        console.log("Full error details:", error)
+        toast.show({
+          placement: "top",
+          render: ({ id }) => (
+            <Toast nativeID={id} variant="solid" action="error">
+              <ToastTitle>Terjadi kesalahan saat mendaftar. Silakan coba lagi.</ToastTitle>
+            </Toast>
+          ),
+        })
+        setIsLoading(false)
         return
       }
 
@@ -78,6 +103,8 @@ const SignUpScreen = () => {
           </Toast>
         ),
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -154,8 +181,13 @@ const SignUpScreen = () => {
               className="bg-amost-primary rounded-full w-full"
               size="xl"
               onPress={handleSubmit(onSubmit)}
+              disabled={isLoading} // Disable button while loading
             >
-              <ButtonText className="font-medium text-white">Daftar</ButtonText>
+              {isLoading ? (
+                <Spinner size="small" color="white" />
+              ) : (
+                <ButtonText className="font-medium text-white">Daftar</ButtonText>
+              )}
             </Button>
             <AuthFooter
               question="Sudah punya akun?"

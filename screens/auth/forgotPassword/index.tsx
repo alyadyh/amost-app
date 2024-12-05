@@ -12,6 +12,7 @@ import AuthHeader from "@/components/auth/AuthHeader"
 import { Toast, ToastTitle } from "@/components/ui/toast"
 import { checkIfEmailExists, useAuth } from "@/lib/supabase"
 import { z } from "zod"
+import PasswordInput from "@/components/auth/PasswordInput"
 
 type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>
 
@@ -30,6 +31,18 @@ const ForgotPasswordScreen = () => {
   const { resetPasswordForEmail } = useAuth()
 
   const onSubmit = async (data: ForgotPasswordFormType) => {
+    // if (data.password !== data.confirmpassword) {
+    //   toast.show({
+    //     placement: "top",
+    //     render: ({ id }) => (
+    //       <Toast nativeID={id} variant="solid" action="error">
+    //         <ToastTitle>Password tidak cocok</ToastTitle>
+    //       </Toast>
+    //     ),
+    //   })
+    //   return
+    // }
+
     try {
       // Check if email exists
       const emailExists = await checkIfEmailExists(data.email)
@@ -90,7 +103,7 @@ const ForgotPasswordScreen = () => {
         <VStack className="md:items-center" space="md">
           <AuthHeader
             title="Lupa Password?"
-            subtitle="Masukkan email yang terkait dengan akun Anda."
+            subtitle="Masukkan email beserta password baru."
           />
           <FormInput
             name="email"
@@ -99,6 +112,20 @@ const ForgotPasswordScreen = () => {
             placeholder="email@address.com"
             errors={errors}
           />
+          {/* <PasswordInput
+            name="password"
+            control={control}
+            label="Password"
+            placeholder="******"
+            errors={errors}
+          />
+          <PasswordInput
+            name="confirmpassword"
+            control={control}
+            label="Konfirmasi Password"
+            placeholder="******"
+            errors={errors}
+          /> */}
         </VStack>
 
         <Button
@@ -106,7 +133,7 @@ const ForgotPasswordScreen = () => {
           size="xl"
           onPress={handleSubmit(onSubmit)}
         >
-          <ButtonText className="font-medium text-white">Kirim Link</ButtonText>
+          <ButtonText className="font-medium text-white">Reset Password</ButtonText>
         </Button>
       </VStack>
     </AuthLayout>

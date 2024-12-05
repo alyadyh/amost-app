@@ -16,6 +16,7 @@ import { Toast, ToastTitle } from "@/components/ui/toast"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/supabase"
 import { z } from "zod"
+import { Spinner } from "@/components/ui/spinner"
 
 type LoginFormType = z.infer<typeof loginSchema>
 
@@ -29,6 +30,8 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
     resolver: zodResolver(loginSchema),
   })
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const toast = useToast()
   const router = useRouter()
   const { signIn } = useAuth()
@@ -39,6 +42,8 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
   })
 
   const onSubmit = async (data: LoginFormType) => {
+    setIsLoading(true)
+
     try {
       const { error } = await signIn(data.email, data.password)
 
@@ -90,6 +95,8 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
           </Toast>
         ),
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -130,13 +137,13 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
               placeholder="******"
               errors={errors}
             />
-            <VStack className="w-full items-end">
+            {/* <VStack className="w-full items-end">
               <Pressable onPress={() => router.push("/forgotPassword")}>
                 <Text className="font-medium text-sm text-amost-secondary-dark_2">
                   Lupa Password?
                 </Text>
               </Pressable>
-            </VStack>
+            </VStack> */}
           </VStack>
         </VStack>
         <VStack space="md" className="items-center">
@@ -144,8 +151,13 @@ const SignInScreen = ({ isEmailConfirmed }: { isEmailConfirmed: boolean }) => {
             className="bg-amost-primary rounded-full w-full"
             size="xl"
             onPress={handleSubmit(onSubmit)}
+            disabled={isLoading} // Disable button while loading
           >
-            <ButtonText className="font-medium text-white">Masuk</ButtonText>
+            {isLoading ? (
+              <Spinner size="small" color="white" />
+            ) : (
+              <ButtonText className="font-medium text-white">Masuk</ButtonText>
+            )}
           </Button>
           <AuthFooter
             question="Belum punya akun?"

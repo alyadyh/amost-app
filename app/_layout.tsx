@@ -158,16 +158,6 @@ function useDeepLinking() {
         if (access_token && refresh_token) {
           // Await the session update to get the resolved sessionData
           const sessionData = await updateSession(access_token, refresh_token)
-
-          if (sessionData?.session) {
-            if (path === "profile") {
-              showToast(toast, "Ubah passwordmu sekarang!")
-              router.replace("/(tabs)")
-            } else if (path === "home") {
-              showToast(toast, "Selamat datang di AMOST!")
-              router.replace("/(tabs)")
-            }
-          }
         }
       }
     }

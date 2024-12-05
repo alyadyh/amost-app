@@ -14,14 +14,20 @@ export const signUpSchema = z.object({
     .regex(/.*[A-Z].*/, "Minimal harus terdiri dari satu huruf besar")
     .regex(/.*[a-z].*/, "Minimal harus terdiri dari satu huruf kecil")
     .regex(/.*\d.*/, "Minimal harus terdiri dari satu angka")
-    .regex(/.*[`~<>?,./!@#$%^&*()\-_=+"|'{}[\]:\\].*/, "Minimal harus terdiri dari satu karakter simbol"),
+    .regex(
+      /.*[`~<>?,./!@#$%^&*()\-_=+"|'{}[\]:\\].*/,
+      "Minimal harus terdiri dari satu karakter simbol",
+    ),
   confirmpassword: z
     .string()
     .min(6, "Minimal harus terdiri dari 6 karakter")
     .regex(/.*[A-Z].*/, "Minimal harus terdiri dari satu huruf besar")
     .regex(/.*[a-z].*/, "Minimal harus terdiri dari satu huruf kecil")
     .regex(/.*\d.*/, "Minimal harus terdiri dari satu angka")
-    .regex(/.*[`~<>?,./!@#$%^&*()\-_=+"|'{}[\]:\\].*/, "Minimal harus terdiri dari satu karakter simbol"),
+    .regex(
+      /.*[`~<>?,./!@#$%^&*()\-_=+"|'{}[\]:\\].*/,
+      "Minimal harus terdiri dari satu karakter simbol",
+    ),
   privacyagreement: z.boolean().refine((val) => val === true, {
     message: "Anda harus menyetujui Kebijakan Privasi dan Syarat Ketentuan",
   }),

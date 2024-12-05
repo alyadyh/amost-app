@@ -16,6 +16,7 @@ import { Controller, useForm } from "react-hook-form"
 import { uploadImage, updateUserProfile, getCurrentUser } from "@/lib/supabase"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { Spinner } from "@/components/ui/spinner"
 
 const userSchema = z.object({
   name: z.string().min(1, "Nama harus diisi").max(50, "Nama harus kurang dari 50 karakter")
@@ -86,7 +87,7 @@ export const ModalComponent = ({
 
       if (!currentUser) return
 
-      let uploadedAvatarUrl = avatarUrl
+      let uploadedAvatarUrl = avatarUrl || ""
       let updateData: { full_name?: string, avatar_url?: string } = {}
 
       // If the user has selected a new avatar, upload it and update the avatar field
@@ -104,10 +105,8 @@ export const ModalComponent = ({
       }
 
       // If either the avatar or full name has changed, update the user's profile
-      if (Object.keys(updateData).length > 0) {
-        await updateUserProfile(updateData.full_name ?? name, uploadedAvatarUrl)
-        onUpdateProfile(updateData.full_name ?? name, uploadedAvatarUrl)
-      }
+      await updateUserProfile(updateData.full_name ?? name, uploadedAvatarUrl)
+      onUpdateProfile(updateData.full_name ?? name, uploadedAvatarUrl)
 
       setShowModal(false)
       reset()
@@ -134,7 +133,7 @@ export const ModalComponent = ({
         <Center className="w-full">
           <Avatar size="xl" className="bg-amost-primary">
             <AvatarFallbackText className="text-white">{name}</AvatarFallbackText>
-            <AvatarImage source={{ uri: avatarUrl || "" }} />
+            {avatarUrl && <AvatarImage source={{ uri: avatarUrl || "" }} />}
             <AvatarBadge size="2xl" className="items-center justify-center bg-amost-secondary-dark_1">
               <Pressable onPress={selectAvatar}>
                 <Icon as={Pencil} size="xs" className="stroke-white" />
@@ -172,7 +171,11 @@ export const ModalComponent = ({
             </FormControl>
 
             <Button onPress={handleSubmit(onSubmit)} className="rounded-full">
-              <ButtonText className="text-white">Simpan</ButtonText>
+              {uploading ? (
+                <Spinner size="small" color="white" />
+              ) : (
+                <ButtonText className="text-white">Simpan</ButtonText>
+              )}
             </Button>
           </VStack>
         </ModalBody>
