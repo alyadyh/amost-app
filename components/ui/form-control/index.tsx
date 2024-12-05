@@ -58,9 +58,9 @@ const formControlStyle = tva({
   base: 'flex flex-col',
   variants: {
     size: {
-      sm: '',
-      md: '',
-      lg: '',
+      sm: 'mt-1',
+      md: 'mt-1',
+      lg: 'mt-1',
     },
   },
 });
@@ -128,7 +128,7 @@ const formControlHelperStyle = tva({
 });
 
 const formControlHelperTextStyle = tva({
-  base: 'text-typography-500',
+  base: 'text-amost-secondary-dark_1',
   variants: {
     isTruncated: {
       true: 'web:truncate',

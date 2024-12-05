@@ -11,6 +11,7 @@ import {
 } from '@gluestack-ui/nativewind-utils/withStyleContext';
 import { withStyleContextAndStates } from '@gluestack-ui/nativewind-utils/withStyleContextAndStates';
 import type { VariantProps } from '@gluestack-ui/nativewind-utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const useToast = createToastHook(Motion.View, AnimatePresence);
 const SCOPE = 'TOAST';
@@ -162,11 +163,15 @@ export const Toast = React.forwardRef<
   React.ElementRef<typeof UIToast>,
   IToastProps
 >(({ className, variant = 'solid', action = 'muted', ...props }, ref) => {
+  const insets = useSafeAreaInsets();
   return (
     <UIToast
       ref={ref}
       className={toastStyle({ variant, action, class: className })}
       context={{ variant, action }}
+      style={{
+        marginTop: insets.top + 8, // Add safe area inset to avoid status bar
+      }}
       {...props}
     />
   );

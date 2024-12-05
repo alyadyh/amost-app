@@ -21,6 +21,24 @@ module.exports = {
     },
     extend: {
       colors: {
+        amost: {
+          primary: '#00A378',
+          secondary: {
+            green_1: '#34B986',
+            green_2: '#77E697',
+            green_3: '#0C6A51',
+            orange_1: '#e26a00',
+            orange_2: '#fb8c00',
+            orange_3: '#F0B201',
+            light_1: '#F4FBF9',
+            blue_1: '#00A2ED',
+            blue_2: '#0076BE',
+            dark_1: '#454545',
+            dark_2: '#6E6E6E',
+            gray_1: '#EFEFEF',
+            gray_2: '#D4D4D4',
+          }
+        },
         primary: {
           0: "var(--color-primary-0)",
           50: "var(--color-primary-50)",

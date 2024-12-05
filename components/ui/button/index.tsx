@@ -36,21 +36,29 @@ type IPrimitiveIcon = React.ComponentPropsWithoutRef<typeof Svg> & {
   size?: number | string;
   stroke?: string;
   as?: React.ElementType;
+  className?: string;
+  classNameColor?: string;
 };
-const PrimitiveIcon = React.forwardRef(
+
+const PrimitiveIcon = React.forwardRef<
+  React.ElementRef<typeof Svg>,
+  IPrimitiveIcon
+>(
   (
     {
       height,
       width,
       fill,
       color,
+      classNameColor,
       size,
-      stroke = 'currentColor',
+      stroke,
       as: AsComp,
       ...props
-    }: IPrimitiveIcon,
-    ref: React.Ref<Svg>
+    },
+    ref
   ) => {
+    color = color ?? classNameColor;
     const sizeProps = useMemo(() => {
       if (size) return { size };
       if (height && width) return { height, width };
@@ -59,29 +67,21 @@ const PrimitiveIcon = React.forwardRef(
       return {};
     }, [size, height, width]);
 
-    const colorProps =
-      stroke === 'currentColor' && color !== undefined ? color : stroke;
+    let colorProps = {};
+    if (fill) {
+      colorProps = { ...colorProps, fill: fill };
+    }
+    if (stroke !== 'currentColor') {
+      colorProps = { ...colorProps, stroke: stroke };
+    } else if (stroke === 'currentColor' && color !== undefined) {
+      colorProps = { ...colorProps, stroke: color };
+    }
 
     if (AsComp) {
-      return (
-        <AsComp
-          ref={ref}
-          fill={fill}
-          {...props}
-          {...sizeProps}
-          stroke={colorProps}
-        />
-      );
+      return <AsComp ref={ref} {...props} {...sizeProps} {...colorProps} />;
     }
     return (
-      <Svg
-        ref={ref}
-        height={height}
-        width={width}
-        fill={fill}
-        stroke={colorProps}
-        {...props}
-      />
+      <Svg ref={ref} height={height} width={width} {...colorProps} {...props} />
     );
   }
 );
@@ -105,27 +105,27 @@ cssInterop(UIButton.Group, { className: 'style' });
 cssInterop(UIButton.Spinner, {
   className: { target: 'style', nativeStyleToProp: { color: true } },
 });
-
+//@ts-ignore
 cssInterop(PrimitiveIcon, {
   className: {
     target: 'style',
     nativeStyleToProp: {
       height: true,
       width: true,
-      // @ts-ignore
+      //@ts-ignore
       fill: true,
-      color: true,
+      color: 'classNameColor',
       stroke: true,
     },
   },
 });
 
 const buttonStyle = tva({
-  base: 'group/button rounded bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40',
+  base: 'group/button rounded bg-primary-500 flex items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40',
   variants: {
     action: {
       primary:
-        'bg-primary-500 data-[hover=true]:bg-primary-600 data-[active=true]:bg-primary-700 border-primary-300 data-[hover=true]:border-primary-400 data-[active=true]:border-primary-500 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-amost-primary data-[hover=true]:bg-primary-600 data-[active=true]:bg-primary-700 border-primary-300 data-[hover=true]:border-primary-400 data-[active=true]:border-primary-500 data-[focus-visible=true]:web:ring-indicator-info',
       secondary:
         'bg-secondary-500 border-secondary-300 data-[hover=true]:bg-secondary-600 data-[hover=true]:border-secondary-400 data-[active=true]:bg-secondary-700 data-[active=true]:border-secondary-500 data-[focus-visible=true]:web:ring-indicator-info',
       positive:
@@ -147,7 +147,7 @@ const buttonStyle = tva({
       sm: 'px-4 h-9',
       md: 'px-5 h-10',
       lg: 'px-6 h-11',
-      xl: 'px-7 h-12',
+      xl: 'px-8 h-14',
     },
   },
   compoundVariants: [

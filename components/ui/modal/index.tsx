@@ -146,7 +146,7 @@ const ModalBackdrop = React.forwardRef<
         stiffness: 250,
         opacity: {
           type: 'timing',
-          duration: 250,
+          duration: 150,
         },
       }}
       {...props}
@@ -183,7 +183,7 @@ const ModalContent = React.forwardRef<
         stiffness: 250,
         opacity: {
           type: 'timing',
-          duration: 250,
+          duration: 150,
         },
       }}
       {...props}
