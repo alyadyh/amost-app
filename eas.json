@@ -7,9 +7,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "environment": {
-        "GOOGLE_SERVICES_JSON": "@AMOST/GOOGLE_SERVICES_JSON"
-      }
+      "environment": "development"
     },
     "preview": {
       "distribution": "internal",
@@ -17,15 +15,11 @@
       "android": {
         "buildType": "apk"
       },
-      "environment": {
-        "GOOGLE_SERVICES_JSON": "@AMOST/GOOGLE_SERVICES_JSON"
-      }
+      "environment": "preview"
     },
     "production": {
       "channel": "production",
-      "environment": {
-        "GOOGLE_SERVICES_JSON": "@AMOST/GOOGLE_SERVICES_JSON"
-      }
+      "environment": "production"
     }
   },
   "submit": {
