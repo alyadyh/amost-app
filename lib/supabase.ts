@@ -45,13 +45,13 @@ export const useAuth = () => {
       password,
       options: {
         data: { full_name: fullname },
-        emailRedirectTo: "amost://confirm-email",
+        emailRedirectTo: "amost://home",
       },
     });
   };
 
   const resetPasswordForEmail = async (email: string) => {
-    const redirectTo = "amost://reset-pass";
+    const redirectTo = "amost://profile";
     return await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   };
 
