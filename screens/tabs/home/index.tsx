@@ -248,95 +248,97 @@ const HomeScreen = () => {
             />
           }
         >
-          <HStack className='justify-between'>
-            {!isLoaded
-              ? Array.from({ length: days.length }).map((_, index) => (
-                  <Skeleton
-                    key={index}
-                    variant="rounded"
-                    className="w-10 h-12 rounded-lg mx-1"
-                    isLoaded={false}
-                  />
+          <VStack space='xl'>
+            <HStack className='justify-between'>
+              {!isLoaded
+                ? Array.from({ length: days.length }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      variant="rounded"
+                      className="w-10 h-12 rounded-lg"
+                      isLoaded={false}
+                    />
+                  ))
+                : days.map(day => (
+                <Pressable key={day.id} onPress={() => handleDayClick(day.id)}>
+                  <LinearGradient
+                    className="items-center px-2.5 py-2 rounded-lg"
+                    colors={getCurrentDayIndex() === day.id ? ["#00A378", "#34B986"] : ['#FFFF', '#EFEFEF']}
+                    start={[0, 1]}
+                    end={[1, 0]}
+                  >
+                    <Text size='xs' bold className={`${getCurrentDayIndex() === day.id ? 'text-white' : 'text-amost-secondary-dark_2'}`}>
+                      {day.name}
+                    </Text>
+                    <Text bold className={`${getCurrentDayIndex() === day.id ? 'text-white' : 'text-black'}`}>
+                      {day.date}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+              ))}
+            </HStack>
+
+            <ScrollView
+              ref={scrollViewRef}
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
+              <VStack space='sm' className='flex-1 mb-4'>
+                {!isLoaded ? (
+                // Render skeleton loaders when isLoaded is false
+                Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton key={index} variant="rounded" className="w-full h-20 mb-4" isLoaded={false} />
                 ))
-              : days.map(day => (
-              <Pressable key={day.id} onPress={() => handleDayClick(day.id)}>
-                <LinearGradient
-                  className="items-center px-2.5 py-2 rounded-lg"
-                  colors={getCurrentDayIndex() === day.id ? ["#00A378", "#34B986"] : ['#FFFF', '#EFEFEF']}
-                  start={[0, 1]}
-                  end={[1, 0]}
-                >
-                  <Text size='xs' bold className={`${getCurrentDayIndex() === day.id ? 'text-white' : 'text-amost-secondary-dark_2'}`}>
-                    {day.name}
-                  </Text>
-                  <Text bold className={`${getCurrentDayIndex() === day.id ? 'text-white' : 'text-black'}`}>
-                    {day.date}
-                  </Text>
-                </LinearGradient>
-              </Pressable>
-            ))}
-          </HStack>
+              ) : meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
+                  <View className='items-center justify-center h-full'>
+                    <Text className="text-amost-secondary-dark_2">Belum ada jadwal minum obat</Text>
+                  </View>
+                ) : (
+                  Object.keys(groupedMeds).map((time) => (
+                    <VStack space='sm' key={time} onLayout={(event) => handleLayout(event, time)}>
+                      {/* Display reminder time */}
+                      <HStack space='sm' className='items-center'>
+                        <Text size='xs' className='font-medium max-w-10 text-amost-secondary-dark_1'>{time}</Text>
+                        <Divider className="bg-amost-secondary-dark_2" />
+                      </HStack>
 
-          <ScrollView
-            ref={scrollViewRef}
-            contentContainerStyle={{ flexGrow: 1 }}
-          >
-            <VStack space='sm' className='flex-1 mb-4'>
-              {!isLoaded ? (
-              // Render skeleton loaders when isLoaded is false
-              Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} variant="rounded" className="w-full h-20 mb-4" isLoaded={false} />
-              ))
-            ) : meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
-                <View className='items-center justify-center h-full'>
-                  <Text className="text-amost-secondary-dark_2">Belum ada jadwal minum obat</Text>
-                </View>
-              ) : (
-                Object.keys(groupedMeds).map((time) => (
-                  <VStack space='sm' key={time} onLayout={(event) => handleLayout(event, time)}>
-                    {/* Display reminder time */}
-                    <HStack space='sm' className='items-center'>
-                      <Text size='xs' className='font-medium max-w-10 text-amost-secondary-dark_1'>{time}</Text>
-                      <Divider className="bg-amost-secondary-dark_2" />
-                    </HStack>
+                      {/* Display all medicines with the same reminder time */}
+                      {groupedMeds[time].map((med) => {
+                        const active = isActive(time, currentTime)
+                        const medImage = active
+                          ? medFormActive[med.med_form as MedForm]
+                          : medFormInactive[med.med_form as MedForm]
+                        const gradientColors = active
+                          ? ['#00A378', '#34B986']
+                          : ['#EFEFEF', '#f7f7f7']
+                        const textClass = active ? 'text-white' : 'text-amost-secondary-dark_2'
+                        const strokeClass = active ? 'stroke-white' : 'stroke-amost-secondary-dark_2'
 
-                    {/* Display all medicines with the same reminder time */}
-                    {groupedMeds[time].map((med) => {
-                      const active = isActive(time, currentTime)
-                      const medImage = active
-                        ? medFormActive[med.med_form as MedForm]
-                        : medFormInactive[med.med_form as MedForm]
-                      const gradientColors = active
-                        ? ['#00A378', '#34B986']
-                        : ['#EFEFEF', '#f7f7f7']
-                      const textClass = active ? 'text-white' : 'text-amost-secondary-dark_2'
-                      const strokeClass = active ? 'stroke-white' : 'stroke-amost-secondary-dark_2'
+                        // Truncate medicine name if it exceeds 10 characters
+                        const truncatedMedName = med.med_name.length > 11 ? `${med.med_name.slice(0, 11)}..` : med.med_name
 
-                      // Truncate medicine name if it exceeds 10 characters
-                      const truncatedMedName = med.med_name.length > 11 ? `${med.med_name.slice(0, 11)}..` : med.med_name
-
-                      return (
-                        <Pressable key={`${time}-${med.id}`} onPress={() => handleOpenModal(med, time)}>
-                          <LinearGradient className='rounded-xl ml-12 p-4' colors={gradientColors} start={[0, 1]} end={[1, 0]}>
-                            <HStack key={med.id} className={`justify-between items-center`}>
-                              <HStack space='md' className='items-start'>
-                                <Image source={medImage} size='sm' alt={`${med.med_name} image`} />
-                                <VStack space='xs'>
-                                  <Text size='xl' bold className={`${textClass}`}>{truncatedMedName}</Text>
-                                  <Text size='sm' className={`font-semibold ${textClass}`}>{med.dosage}</Text>
-                                </VStack>
+                        return (
+                          <Pressable key={`${time}-${med.id}`} onPress={() => handleOpenModal(med, time)}>
+                            <LinearGradient className='rounded-xl ml-12 p-4' colors={gradientColors} start={[0, 1]} end={[1, 0]}>
+                              <HStack key={med.id} className={`justify-between items-center`}>
+                                <HStack space='md' className='items-start'>
+                                  <Image source={medImage} size='sm' alt={`${med.med_name} image`} />
+                                  <VStack space='xs'>
+                                    <Text size='xl' bold className={`${textClass}`}>{truncatedMedName}</Text>
+                                    <Text size='sm' className={`font-semibold ${textClass}`}>{med.dosage}</Text>
+                                  </VStack>
+                                </HStack>
+                                <Icon as={Ellipsis} size='xl' className={`${strokeClass}`} />
                               </HStack>
-                              <Icon as={Ellipsis} size='xl' className={`${strokeClass}`} />
-                            </HStack>
-                          </LinearGradient>
-                        </Pressable>
-                      )
-                    })}
-                  </VStack>
-                ))
-              )}
-            </VStack>
-          </ScrollView>
+                            </LinearGradient>
+                          </Pressable>
+                        )
+                      })}
+                    </VStack>
+                  ))
+                )}
+              </VStack>
+            </ScrollView>
+          </VStack>
         </ScrollView>
 
         {/* Modal for logging medicine intake */}
