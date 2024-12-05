@@ -13,7 +13,7 @@ import { Heading } from "@/components/ui/heading"
 import { Pressable } from "@/components/ui/pressable"
 import { router } from "expo-router"
 import { Switch } from "@/components/ui/switch"
-import { getCurrentUser, fetchUserProfile, useAuth } from "@/lib/supabase"
+import { getCurrentUser, fetchUserProfile, useAuth, notifPreferenceToSupabase } from "@/lib/supabase"
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
 import TabLayout from "../layout"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
@@ -41,6 +41,7 @@ const ProfileScreen = () => {
             email: currentUser.email || "",
             avatar: profileData.avatar_url || "",
           })
+          setNotificationEnabled(profileData.notif_is_enabled)
         }
       }
     } catch (error) {
@@ -65,6 +66,19 @@ const ProfileScreen = () => {
   const handleUpdateProfile = (newName: string, newAvatar: string) => {
     setUser((prevUser) => ({ ...prevUser, name: newName, avatar: newAvatar }))
   }
+
+  // Handle notification switch toggle
+  const handleNotificationToggle = async () => {
+    const currentUser = await getCurrentUser()
+
+    if (currentUser?.id) {
+      const newNotificationState = !isNotificationEnabled;
+      setNotificationEnabled(newNotificationState);
+      if (currentUser.id) {
+        await notifPreferenceToSupabase(currentUser.id, newNotificationState);
+      }
+    }
+  };
 
   return (
     <>
@@ -122,7 +136,7 @@ const ProfileScreen = () => {
                       trackColor={{ false: '#6E6E6E', true: '#00A378' }}
                       thumbColor={'#EFEFEF'}
                       ios_backgroundColor={'#6E6E6E'}
-                      onValueChange={() => setNotificationEnabled(!isNotificationEnabled)}
+                      onValueChange={handleNotificationToggle}
                       value={isNotificationEnabled}
                     />
                   </HStack>
