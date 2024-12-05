@@ -1,0 +1,69 @@
+export default () => ({
+  expo: {
+    name: 'AMOST',
+    slug: 'amost-app',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/images/icons.png',
+    scheme: 'amost',
+    userInterfaceStyle: 'automatic',
+    splash: {
+      image: './assets/images/splashs.png',
+      resizeMode: 'contain',
+      backgroundColor: '#00A378'
+    },
+    assetBundlePatterns: ['**/*'],
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: 'com.alyadyh.amost'
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: './assets/images/adaptive-icon.png',
+        backgroundColor: '#ffffff'
+      },
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
+      package: 'com.alyadyh.amost'
+    },
+    web: {
+      bundler: 'metro',
+      output: 'static',
+      favicon: './assets/images/favicon.png'
+    },
+    plugins: [
+      'expo-router',
+      [
+        'expo-font',
+        {
+          fonts: ['assets/fonts/Poppins-Regular.ttf']
+        }
+      ],
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Allow AMOST to access your photos',
+          cameraPermission: 'Allow AMOST to access your camera'
+        }
+      ]
+    ],
+    experiments: {
+      typedRoutes: true
+    },
+    extra: {
+      router: {
+        origin: false
+      },
+      eas: {
+        projectId: '83c23e03-bdf2-455a-95aa-e8f372833822'
+      },
+      SUPABASE_URL: 'https://snyctjesxxylnzvygnrn.supabase.co',
+      SUPABASE_ANON_KEY:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueWN0amVzeHh5bG56dnlnbnJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcyNDYyMDksImV4cCI6MjA0MjgyMjIwOX0.L38eKK0OtK_qMIdePJHYkJMJ5LcQ9X8HHgJ2mfBsfIw'
+    },
+    runtimeVersion: {
+      policy: 'appVersion'
+    },
+    updates: {},
+    owner: 'alyadyh'
+  }
+})

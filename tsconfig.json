@@ -8,5 +8,12 @@
       "@/assets/*": ["../../packages/shared/assets/*", "./assets/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "components/svg/CapsuleSvg.tsx"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "components/svg/CapsuleSvg.tsx",
+    "app.config.js"
+  ]
 }
