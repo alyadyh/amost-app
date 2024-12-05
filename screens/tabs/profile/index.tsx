@@ -28,6 +28,7 @@ const ProfileScreen = () => {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const fetchProfile = async () => {
+    setIsLoaded(false)
     try {
       const currentUser = await getCurrentUser()
 

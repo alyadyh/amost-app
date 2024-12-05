@@ -31,6 +31,7 @@ const ActivityScreen = () => {
   }
 
   const fetchProfileAndLogs = async () => {
+    setIsLoaded(false)
     try {
       const todayDate = getTodayDate()
 

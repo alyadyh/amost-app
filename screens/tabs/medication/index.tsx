@@ -26,24 +26,34 @@ const MedScreen = () => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Fetch user-specific medicines from Supabase
+  const fetchData = async () => {
+    setIsLoaded(false)
+    try {
+      const data = await fetchMedicines()
+      setMeds(data || [])
+    } catch (error) {
+      console.error('Error fetching medicines:', error)
+    } finally {
+      setIsLoaded(true)
+    }
+  }
+
+  // Initial fetch on component mount
   useEffect(() => {
-    fetchMedicines()
-      .then((data) => {
-        setMeds(data || [])
-        setIsLoaded(true)
-      })
-      .catch((error) => {
-        console.error('Error fetching medicines:', error)
-        setIsLoaded(true)
-      })
+    fetchData()
   }, [])
 
   // Pull-to-refresh handler
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    await fetchMedicines()
-    setIsRefreshing(false)
+    try {
+      const data = await fetchMedicines()
+      setMeds(data || [])
+    } catch (error) {
+      console.error('Error refreshing medicines:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   // Filter the meds based on the search term
