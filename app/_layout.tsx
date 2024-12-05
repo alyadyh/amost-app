@@ -47,21 +47,6 @@ export default function RootLayout() {
     if (loaded) SplashScreen.hideAsync()
   }, [loaded])
 
-  useEffect(() => {
-    // Initialize push notifications
-    const initializePushNotifications = async () => {
-      const token = await registerForPushNotificationsAsync()
-      if (token) {
-        const user = await getCurrentUser()
-        if (user) {
-          await savePushTokenToSupabase(user.id, token)
-        }
-      }
-    }
-
-    initializePushNotifications()
-  }, [])
-
   if (!loaded) {
     return null
   }
@@ -114,9 +99,13 @@ function useSessionManagement(): Session | null {
     initializeSession()
 
     const { onAuthStateChange } = useAuth()
-    const authListener = onAuthStateChange((event, session) => {
+    const authListener = onAuthStateChange(async (event, session) => {
       setSession(session)
-      if (!session) router.replace("/signIn")
+      if (session) {
+        await initializePushNotifications()
+      } else {
+        router.replace("/signIn")
+      }
     })
 
     return () => {
@@ -125,6 +114,24 @@ function useSessionManagement(): Session | null {
   }, [router])
 
   return session
+}
+
+/**
+ * Function: initializePushNotifications
+ * Initializes push notifications and saves the token to Supabase.
+ */
+async function initializePushNotifications() {
+  try {
+    const token = await registerForPushNotificationsAsync()
+    if (token) {
+      const user = await getCurrentUser()
+      if (user) {
+        await savePushTokenToSupabase(user.id, token)
+      }
+    }
+  } catch (error) {
+    console.error("Error initializing push notifications:", error)
+  }
 }
 
 /**
