@@ -289,7 +289,7 @@ const HomeScreen = () => {
                   <Skeleton key={index} variant="rounded" className="w-full h-20 mb-4" isLoaded={false} />
                 ))
               ) : meds.length === 0 || Object.keys(groupedMeds).length === 0 ? (
-                  <View className='items-center justify-center h-full'>
+                  <View className='flex-1 items-center justify-center h-80'>
                     <Text className="text-amost-secondary-dark_2">Belum ada jadwal minum obat</Text>
                   </View>
                 ) : (

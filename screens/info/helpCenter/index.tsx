@@ -29,9 +29,9 @@ export const HelpCenter = () => {
         "Untuk membuat pengingat obat, buka halaman Obatku, klik 'Tambah Obat', isi detail obat, dan simpan.",
     },
     {
-      question: "Apa yang harus saya lakukan jika saya lupa kata sandi?",
+      question: "Apa yang harus saya lakukan jika saya lupa password?",
       answer:
-        "Anda dapat menggunakan fitur 'Lupa Kata Sandi' di halaman masuk untuk mereset kata sandi Anda. Kami akan mengirimkan tautan ke email Anda.",
+        "Anda dapat menggunakan fitur 'Lupa Password' di halaman masuk untuk mereset password Anda. Kami akan mengirimkan tautan ke email Anda.",
     },
     {
       question: "Bagaimana cara mengubah profil saya?",

@@ -52,7 +52,7 @@ const MedScreen = () => {
   : meds
 
   return (
-    <VStack space="3xl" className='flex-1'>
+    <VStack space="xl" className='flex-1'>
       <Heading size='2xl' className="text-amost-secondary-dark_1 font-black">Obatku</Heading>
 
         <ScrollView
@@ -65,7 +65,7 @@ const MedScreen = () => {
             />
           }
         >
-        <VStack space='xl'className='mt'>
+        <VStack space='4xl'>
           <LinearGradient
             className="w-full px-6 py-8 flex-row justify-between items-center rounded-xl"
             colors={["#00A378", "#34B986"]}
