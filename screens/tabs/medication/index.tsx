@@ -65,9 +65,9 @@ const MedScreen = () => {
             />
           }
         >
-        <VStack>
+        <VStack space='xl'className='mt'>
           <LinearGradient
-            className="w-full px-6 py-8 mt-6 flex-row justify-between items-center rounded-xl"
+            className="w-full px-6 py-8 flex-row justify-between items-center rounded-xl"
             colors={["#00A378", "#34B986"]}
             start={[0, 1]}
             end={[1, 0]}
@@ -95,75 +95,74 @@ const MedScreen = () => {
               </HStack>
             </Button>
           </LinearGradient>
-        </VStack>
+          <VStack space='md' className='flex-1'>
+            <HStack space='lg' className='flex-row items-center'>
+              <Text size='2xl' className="text-amost-secondary-dark_1 font-black">Daftar Obatku</Text>
+            </HStack>
 
-        <VStack space='md' className='flex-1'>
-          <HStack space='lg' className='flex-row items-center'>
-            <Text size='2xl' className="text-amost-secondary-dark_1 font-black">Daftar Obatku</Text>
-          </HStack>
-
-          <Input size='sm' className='px-3 rounded-full'>
-            <InputSlot>
-              <InputIcon as={SearchIcon} />
-            </InputSlot>
-            <InputField
-              placeholder="Cari obatku..."
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              />
-          </Input>
-
-          {!isLoaded ? (
-            // Skeleton loader for the medicine list
-            <VStack space="md">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  variant="rounded"
-                  className="h-20 w-full"
-                  isLoaded={false}
+            <Input size='sm' className='px-3 rounded-full'>
+              <InputSlot>
+                <InputIcon as={SearchIcon} />
+              </InputSlot>
+              <InputField
+                placeholder="Cari obatku..."
+                value={searchTerm}
+                onChangeText={setSearchTerm}
                 />
-              ))}
-            </VStack>
-          ) : filteredMeds.length === 0 ? (
-            <View className="items-center justify-center h-80">
-              <Text className="text-amost-secondary-dark_2">Belum ada obat yang terdaftar</Text>
-            </View>
-          ) : (
-            <ScrollView>
-              <VStack space='md'>
-                {filteredMeds.map(med => (
-                  <Link href={{ pathname: '/medDetail', params: { med: JSON.stringify(med) } }} asChild key={med.id}>
-                    <Pressable>
-                      <LinearGradient
-                        className='rounded-xl'
-                        colors={["#fb8c00", "#F0B201"]}
-                        start={[0, 1]}
-                        end={[1, 0]}
-                      >
-                        <HStack className='justify-between p-4 items-center'>
-                          <VStack>
-                            <Text size='xl' bold className='font-medium text-white mb-1'>{med.med_name}</Text>
-                            <HStack>
-                              <Text size='sm' className='font-semibold text-white'>{med.dosage}</Text>
-                              <Divider
-                                orientation="vertical"
-                                className='border-white mx-2.5'
-                              />
-                              <Text size='sm' className='font-semibold text-white'>
-                                {med.frequency}
-                              </Text>
-                            </HStack>
-                          </VStack>
-                          <Icon as={ChevronRightIcon} className='stroke-white' />
-                        </HStack>
-                      </LinearGradient>
-                    </Pressable>
-                  </Link>
+            </Input>
+
+            {!isLoaded ? (
+              // Skeleton loader for the medicine list
+              <VStack space="md">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    variant="rounded"
+                    className="h-20 w-full"
+                    isLoaded={false}
+                  />
                 ))}
               </VStack>
-            </ScrollView>
-          )}
+            ) : filteredMeds.length === 0 ? (
+              <View className="items-center justify-center h-80">
+                <Text className="text-amost-secondary-dark_2">Belum ada obat yang terdaftar</Text>
+              </View>
+            ) : (
+              <ScrollView>
+                <VStack space='md'>
+                  {filteredMeds.map(med => (
+                    <Link href={{ pathname: '/medDetail', params: { med: JSON.stringify(med) } }} asChild key={med.id}>
+                      <Pressable>
+                        <LinearGradient
+                          className='rounded-xl'
+                          colors={["#fb8c00", "#F0B201"]}
+                          start={[0, 1]}
+                          end={[1, 0]}
+                        >
+                          <HStack className='justify-between p-4 items-center'>
+                            <VStack>
+                              <Text size='xl' bold className='font-medium text-white mb-1'>{med.med_name}</Text>
+                              <HStack>
+                                <Text size='sm' className='font-semibold text-white'>{med.dosage}</Text>
+                                <Divider
+                                  orientation="vertical"
+                                  className='border-white mx-2.5'
+                                />
+                                <Text size='sm' className='font-semibold text-white'>
+                                  {med.frequency}
+                                </Text>
+                              </HStack>
+                            </VStack>
+                            <Icon as={ChevronRightIcon} className='stroke-white' />
+                          </HStack>
+                        </LinearGradient>
+                      </Pressable>
+                    </Link>
+                  ))}
+                </VStack>
+              </ScrollView>
+            )}
+          </VStack>
         </VStack>
       </ScrollView>
     </VStack>
