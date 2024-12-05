@@ -94,6 +94,7 @@ function useSessionManagement(): Session | null {
       const currentSession = await getUserSession()
       setSession(currentSession)
       if (!currentSession) router.replace("/signIn")
+      else await initializePushNotifications()
     }
 
     initializeSession()
