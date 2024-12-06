@@ -121,12 +121,18 @@ const HomeScreen = () => {
           (currentDayDate.setHours(0, 0, 0, 0) - createdDate.setHours(0, 0, 0, 0)) / (1000 * 3600 * 24)
         )
 
+        const remainingDurations = med.duration - timeDifference
+        console.log("remainingDurations: ", remainingDurations)
+
         console.log("currentDayDate: ", currentDayDateString)
         console.log("createdDate: ", createdDateString)
         console.log("Time difference: ", timeDifference)
 
         // Ensure medicine is displayed starting from the created_at date and according to frequency interval
-        return timeDifference === 0 || (timeDifference > 0 && timeDifference % med.frequency_interval_days === 0)
+        return (
+          remainingDurations > 0 && // Ensure there are remaining durations
+          (timeDifference === 0 || (timeDifference > 0 && timeDifference % med.frequency_interval_days === 0))
+        )
       })
       .sort((a: Medicine, b: Medicine) => a.reminder_times[0].localeCompare(b.reminder_times[0])) // Sort by reminder times
   }
@@ -185,18 +191,36 @@ const HomeScreen = () => {
     setCurrentDay(dayId + 1) // Set the clicked day as the current day
   }
 
+  // Fetch medicines and update the state
+  const fetchData = async () => {
+    setIsLoaded(false)
+    try {
+      const medicines = await fetchMedicines()
+      setMeds(medicines || [])
+    } catch (error) {
+      console.error('Error fetching medicines:', error)
+    } finally {
+      setIsLoaded(true)
+    }
+  }
+
+  // Pull-to-refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      const medicines = await fetchMedicines()
+      setMeds(medicines || [])
+    } catch (error) {
+      console.error('Error refreshing medicines:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   // useEffect: Set week dates and fetch medicines on component load, update time every minute
   useEffect(() => {
-    getWeekDates() // Calculate and set week dates when the component loads
-    fetchMedicines()
-      .then((medicines: any) => {
-        setMeds(medicines || [])
-        setIsLoaded(true)
-      })
-      .catch((error) => {
-        console.error('Error fetching medicines:', error)
-        setIsLoaded(true)
-      })
+    getWeekDates()
+    fetchData()
 
     // Set an interval to update the current time every minute
     const timer = setInterval(() => {
@@ -214,13 +238,6 @@ const HomeScreen = () => {
     if (isActive(time, currentTime)) {
       setActiveMedLayout(event.nativeEvent.layout) // Store the layout of the active medicine
     }
-  }
-
-  // Function: For pull-to-refresh
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await fetchMedicines()
-    setIsRefreshing(false)
   }
 
   // useEffect: Scroll to the active medicine if it's out of view

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from "@/components/ui/safe-area-view"
 import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
@@ -11,34 +11,53 @@ import { Button, ButtonText } from '@/components/ui/button'
 import { ArrowLeftIcon, Pencil, ChevronRightIcon, CalendarRange, Clock, PencilLine } from 'lucide-react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { ModalComponent } from "./modal"
-import { MedForm, medFormActive } from '@/constants/types'
+import { MedForm, medFormActive, Medicine } from '@/constants/types'
 import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
 import { Heading } from '@/components/ui/heading'
-import { deleteMedicine } from '@/lib/supabase'
+import { deleteMedicine, fetchMedicineById } from '@/lib/supabase'
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
+import { RefreshControl } from '@/components/ui/refresh-control'
 
 export const MedDetail = () => {
+  const [med, setMed] = useState<Medicine>()
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [showModal, setShowModal] = useState<string | null>(null)
-  const { med: medString } = useLocalSearchParams()
-  const med = medString ? JSON.parse(medString as string) : null
-
-  if (!med) return <Text>Error: No medication details available.</Text>
-
-  console.log('Medication:', med)
-  console.log('Med photo:', med.med_photos)
-
-  const medImage = medFormActive[med.med_form as MedForm]
 
   const toggleModal = (modalName: string | null) => setShowModal(modalName)
 
-  const [showAlertDialog, setShowAlertDialog] = React.useState(false)
-  const handleClose = () => setShowAlertDialog(false)
+  const [showAlertDialog, setShowAlertDialog] = useState(false)
 
+  const { medId } = useLocalSearchParams()
+  // console.log('Med ID:', medId)
   const toast = useToast()
+
+  if (!medId) return <Text>Error: No medication details available.</Text>
+
+  const fetchMedDetail = async () => {
+    try {
+      if (medId) {
+        const data = await fetchMedicineById(medId as string)
+        setMed(data)
+      }
+    } catch (error) {
+      console.error('Error fetching medicine details:', error)
+    }
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await fetchMedDetail()
+    } catch (error) {
+      console.error('Error refreshing medicine details:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   // Function to delete the medicine in Supabase
   const handleDelete = async () => {
-    const isDeleted = await deleteMedicine(med.id);
+    const isDeleted = await deleteMedicine(medId as string);
 
     if (isDeleted) {
       toast.show({
@@ -64,6 +83,13 @@ export const MedDetail = () => {
     }
   }
 
+  useEffect(() => {
+    fetchMedDetail()
+  }, [])
+
+  const handleClose = () => setShowAlertDialog(false)
+  const medImage = med?.med_form ? medFormActive[med.med_form as MedForm] : null
+
   return (
     <SafeAreaView className="w-full h-full bg-amost-primary">
       <VStack space="lg" className="p-6 flex-1">
@@ -76,14 +102,23 @@ export const MedDetail = () => {
             <Icon as={PencilLine} className="stroke-white" size="2xl" />
           </Pressable>
         </HStack>
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#00A378"
+              colors={['#00A378']}
+            />
+          }
+        >
           <VStack space='2xl'>
             {/* PNG Image */}
-            <Image source={medImage} size='lg' alt={`${med.med_name} image`} className='self-center' />
+            {med && <Image source={medImage} size='lg' alt={`${med.med_name} image`} className='self-center' />}
 
             {/* Medication Title */}
             <Text size='3xl' bold className="text-white text-center">
-                {med.med_name}
+                {med && med.med_name}
             </Text>
 
             {/* Frequency and Duration */}
@@ -92,14 +127,14 @@ export const MedDetail = () => {
                 <Text bold className="text-amost-secondary-dark_2">Frekuensi</Text>
                 <HStack space='sm' className='items-center'>
                   <Icon as={Clock} size='xl' className='stroke-amost-primary' />
-                  <Text className="font-semibold text-black">{med.frequency}</Text>
+                  <Text className="font-semibold text-black">{med?.frequency}</Text>
                 </HStack>
               </VStack>
               <VStack space='sm' className="flex-1 bg-white rounded-lg p-4">
                 <Text bold className="text-amost-secondary-dark_2">Durasi</Text>
                 <HStack space='sm' className='items-center'>
                   <Icon as={CalendarRange} size='xl' className='stroke-amost-primary' />
-                  <Text className="font-semibold text-black">{med.duration} hari</Text>
+                  <Text className="font-semibold text-black">{med?.duration} hari</Text>
                 </HStack>
               </VStack>
             </HStack>
@@ -108,7 +143,7 @@ export const MedDetail = () => {
             <VStack space='sm'>
               <Text size='lg' className="text-white font-semibold">Jadwal</Text>
               <VStack>
-                {med.reminder_times.map((time: any, index: any) => (
+                {med?.reminder_times.map((time: any, index: any) => (
                   <HStack
                     key={index}
                     className={`bg-white rounded-lg p-4 justify-between items-center ${index === med.reminder_times.length - 1 && index > 0 ? 'mb-0' : 'mb-2'}`}
@@ -127,15 +162,15 @@ export const MedDetail = () => {
               <Text size='lg' className="text-white font-semibold">Info Obat</Text>
               <HStack className="bg-white rounded-lg p-4 justify-between">
                 <Text bold className="text-amost-secondary-dark_2">Dosis</Text>
-                <Text bold className="text-black">{med.dosage}</Text>
+                <Text bold className="text-black">{med?.dosage}</Text>
               </HStack>
               <HStack className="bg-white items-center rounded-lg p-4 justify-between">
                 <Text bold className="text-amost-secondary-dark_2">Bentuk Obat</Text>
-                <Image size='xs' source={medImage} alt="Medication form" />
+                {med && <Image size='xs' source={medImage} alt="Medication form" />}
               </HStack>
               <HStack className="bg-white rounded-lg p-4 justify-between">
                 <Text bold className="text-amost-secondary-dark_2">Jumlah stok obat</Text>
-                <Text bold className="text-black">{med.stock_quantity}</Text>
+                <Text bold className="text-black">{med?.stock_quantity}</Text>
               </HStack>
             </VStack>
 

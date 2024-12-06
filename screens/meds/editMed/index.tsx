@@ -20,6 +20,7 @@ import { uploadImage, updateMedicine } from "@/lib/supabase"
 import { editMedSchema } from "@/schemas/medSchemas"
 import MedLayout from "../layout"
 import { z } from "zod"
+import { Spinner } from "@/components/ui/spinner"
 
 type EditMedSchemaType = z.infer<typeof editMedSchema>
 
@@ -43,6 +44,7 @@ const EditMedScreen = () => {
     },
   })
 
+  const [isLoading, setIsLoading] = useState(false)
   const [isDetailVisible, setDetailVisible] = useState(false)
   const [timesPerDay, setTimesPerDay] = useState(med?.frequency_times_per_day || 0)
   const toast = useToast()
@@ -75,6 +77,8 @@ const EditMedScreen = () => {
   }
 
   const onSubmit = async (data: EditMedSchemaType) => {
+    setIsLoading(true)
+
     let uploadedImagePath = med?.med_photos
     const selectedImageUri = getValues("med_photos")
 
@@ -85,6 +89,7 @@ const EditMedScreen = () => {
         console.log("Uploaded Image Path:", uploadedImagePath)
       } catch (error) {
         console.error("Error uploading image:", error)
+        setIsLoading(false)
       }
     }
 
@@ -119,6 +124,8 @@ const EditMedScreen = () => {
           ),
         })
       }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -178,7 +185,7 @@ const EditMedScreen = () => {
           <ToggleDetailsButton isDetailVisible={isDetailVisible} setDetailVisible={setDetailVisible} />
           {isDetailVisible && <DetailFields control={control} setValue={setValue} />}
         </VStack>
-        <SubmitButton onSubmit={handleSubmit(onSubmit, onError)} />
+        <SubmitButton onSubmit={handleSubmit(onSubmit, onError)} isLoading={isLoading} />
       </ScrollView>
     </VStack>
   )
@@ -207,7 +214,7 @@ const ToggleDetailsButton = ({ isDetailVisible, setDetailVisible }: any) => (
   </Button>
 )
 
-const SubmitButton = ({ onSubmit }: any) => (
+const SubmitButton = ({ onSubmit, isLoading }: any) => (
   <Button
     className="bg-amost-primary rounded-full w-full mt-12"
     size="xl"
@@ -216,7 +223,11 @@ const SubmitButton = ({ onSubmit }: any) => (
       onSubmit()
     }}
   >
-    <ButtonText className="font-medium text-white">Perbarui</ButtonText>
+    {isLoading ? (
+      <Spinner size="small" color="white" />
+    ) : (
+      <ButtonText className="font-medium text-white">Simpan</ButtonText>
+    )}
   </Button>
 )
 

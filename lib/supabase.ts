@@ -209,6 +209,24 @@ export const fetchMedicines = async () => {
   }
 };
 
+export const fetchMedicineById = async (medId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("medicines")
+      .select("*")
+      .eq("id", medId)
+      .eq("deleted", false)
+      .single();
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  } catch (error) {
+    console.error("Error fetching medicines:", error);
+    return null;
+  }
+};
+
 export const insertMedicine = async (medicineData: any, userId: string) => {
   try {
     const { error } = await supabase.from("medicines").insert({
@@ -312,12 +330,15 @@ export const updateLog = async (logData: {
   taken: boolean | null;
   log_time?: string | null;
 }) => {
-  const { data, error } = await supabase.from("logs").upsert(logData);
-  // const { data, error } = await supabase.from('logs').upsert(logData, {
-  //   onConflict: 'user_id,medicine_id,reminder_time'
-  // })
+  const { data, error } = await supabase
+    .from("logs")
+    .update(logData)
+    .eq("user_id", logData.user_id)
+    .eq("medicine_id", logData.medicine_id)
+    .eq("log_date", logData.log_date)
+    .eq("reminder_time", logData.reminder_time);
   if (error) {
-    console.error("Error upserting log:", error.message);
+    console.error("Error updating log:", error.message);
     throw error;
   }
   return data;
