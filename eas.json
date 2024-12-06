@@ -6,8 +6,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development",
-      "environment": "development"
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
@@ -15,11 +14,19 @@
       "android": {
         "buildType": "apk"
       },
-      "environment": "preview"
+      "cli": {
+        "appVersionSource": "local"
+      },
+      "env": {
+        "EXPO_ACCESS_TOKEN": "$EXPO_ACCESS_TOKEN",
+        "GOOGLE_SERVICES_JSON": "$GOOGLE_SERVICES_JSON",
+        "SUPABASE_ANON_KEY": "$SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY": "$SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_URL": "$SUPABASE_URL"
+      }
     },
     "production": {
-      "channel": "production",
-      "environment": "production"
+      "channel": "production"
     }
   },
   "submit": {
