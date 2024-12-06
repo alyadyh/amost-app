@@ -121,12 +121,18 @@ const HomeScreen = () => {
           (currentDayDate.setHours(0, 0, 0, 0) - createdDate.setHours(0, 0, 0, 0)) / (1000 * 3600 * 24)
         )
 
+        const remainingDurations = med.duration - timeDifference
+        console.log("remainingDurations: ", remainingDurations)
+
         console.log("currentDayDate: ", currentDayDateString)
         console.log("createdDate: ", createdDateString)
         console.log("Time difference: ", timeDifference)
 
         // Ensure medicine is displayed starting from the created_at date and according to frequency interval
-        return timeDifference === 0 || (timeDifference > 0 && timeDifference % med.frequency_interval_days === 0)
+        return (
+          remainingDurations > 0 && // Ensure there are remaining durations
+          (timeDifference === 0 || (timeDifference > 0 && timeDifference % med.frequency_interval_days === 0))
+        )
       })
       .sort((a: Medicine, b: Medicine) => a.reminder_times[0].localeCompare(b.reminder_times[0])) // Sort by reminder times
   }
