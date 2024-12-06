@@ -141,7 +141,7 @@ const MedScreen = () => {
               <ScrollView>
                 <VStack space='md'>
                   {filteredMeds.map(med => (
-                    <Link href={{ pathname: '/medDetail', params: { med: JSON.stringify(med) } }} asChild key={med.id}>
+                    <Link href={{ pathname: '/medDetail', params: { medId: med.id } }} asChild key={med.id}>
                       <Pressable>
                         <LinearGradient
                           className='rounded-xl'

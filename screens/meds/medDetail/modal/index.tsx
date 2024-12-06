@@ -4,10 +4,9 @@ import { Text } from "@/components/ui/text"
 import { Image } from "@/components/ui/image"
 import { VStack } from '@/components/ui/vstack'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Box } from '@/components/ui/box'
 
 export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: string | null, setShowModal: (modalName: string | null) => void, med: any }) => {
-  const [isLoaded, setIsLoaded] = useState(false)
-
   return (
   <Modal
     visible={showModal !== null}
@@ -17,28 +16,24 @@ export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: st
   >
     <Pressable onPress={() => setShowModal(null)} className="flex-1 justify-center items-center bg-black/50">
       <Pressable>
-        <View className="bg-white p-6 rounded-xl items-center w-80 relative">
+        <View className="bg-white p-6 rounded-xl items-center w-80">
           {/* Modal Content Based on showModal */}
           {showModal === 'foto' && (
-            <VStack space='lg' className="items-center">
+            <Box className="items-center">
               <Text className="text-black font-bold">Foto</Text>
               {med.med_photos ? (
-                <>
-                    {isLoaded && (
-                      <Skeleton variant="rounded" className="w-64 h-64" />
-                    )}
-                    <Image
-                      source={{ uri: med.med_photos }}
-                      className="w-64 h-64"
-                      alt={`${med.med_name} photo`}
-                      onLoadStart={() => setIsLoaded(true)}
-                      onLoad={() => setIsLoaded(false)}
-                    />
-                  </>
+                <View>
+                  <Skeleton variant="rounded" className="w-64 h-64" />
+                  <Image
+                    source={{ uri: med.med_photos }}
+                    className="absolute inset-0 w-64 h-64"
+                    alt={`${med.med_name} photo`}
+                   />
+                </View>
               ) : (
                 <Text className="text-black">Tidak ada foto obat</Text> // Fallback message
               )}
-            </VStack>
+            </Box>
           )}
           {showModal === 'instruksi' && (
             <VStack space='lg' className="items-center">

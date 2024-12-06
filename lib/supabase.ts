@@ -209,6 +209,24 @@ export const fetchMedicines = async () => {
   }
 };
 
+export const fetchMedicineById = async (medId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("medicines")
+      .select("*")
+      .eq("id", medId)
+      .eq("deleted", false)
+      .single();
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  } catch (error) {
+    console.error("Error fetching medicines:", error);
+    return null;
+  }
+};
+
 export const insertMedicine = async (medicineData: any, userId: string) => {
   try {
     const { error } = await supabase.from("medicines").insert({
