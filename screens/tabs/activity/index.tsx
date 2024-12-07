@@ -113,7 +113,7 @@ const ActivityScreen = () => {
       >
         <VStack space='2xl' className='mb-4'>
           <VStack>
-            <Skeleton variant="rounded" className="w-full h-28" isLoaded={isLoaded}>
+            <Skeleton variant="rounded" className="w-full h-64" isLoaded={isLoaded}>
               <LinearGradient
                 className="w-full px-6 py-8 flex-row justify-between items-center rounded-t-xl"
                 colors={["#00A378", "#34B986"]}
@@ -132,9 +132,6 @@ const ActivityScreen = () => {
                   </HStack>
                 </VStack>
               </LinearGradient>
-            </Skeleton>
-
-            <Skeleton variant="rounded" className="w-full h-12" isLoaded={isLoaded}>
               <Link href="/logMed" className='bg-amost-secondary-light_1 border border-amost-primary p-6 rounded-b-xl'>
                 <HStack space='xs' className='justify-center items-center'>
                   <Text className='text-amost-primary'>Lihat semua log</Text>
