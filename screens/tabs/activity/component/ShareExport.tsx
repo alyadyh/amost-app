@@ -65,7 +65,7 @@ const ShareReport = ({ userName }: { userName: string }) => {
     // Render a single row with the message if there are no logs
     logTableRows = `
       <tr>
-        <td colspan="3" style="padding: 16px; text-align: center; font-size: 14px; color: #666;">
+        <td colspan="3" style="padding: 16px; text-align: center; font-size: 12px; color: #666;">
           Belum ada riwayat minum obat dalam satu bulan terakhir
         </td>
       </tr>`
@@ -84,8 +84,8 @@ const ShareReport = ({ userName }: { userName: string }) => {
       logs.slice(1).forEach((log) => {
         logTableRows += `
           <tr>
-            <td style="padding: 8px 12px">${log.med_name}</td>
-            <td style="padding: 8px 12px; width: 20%; text-align: center">${log.time}</td>
+            <td style="padding: 8px 12px; font-size: 12px">${log.med_name}</td>
+            <td style="padding: 8px 12px; width: 20%; text-align: center; font-size: 12px">${log.time}</td>
           </tr>`
       })
     })
