@@ -98,14 +98,6 @@ const ActivityScreen = () => {
 
   useEffect(() => {
     fetchProfileAndLogs()
-
-    // Set up polling to refresh every 5 seconds
-    const interval = setInterval(() => {
-      fetchProfileAndLogs()
-    }, 5000) // 5 seconds
-
-    // Cleanup on unmount
-    return () => clearInterval(interval)
   }, [])
 
   return (
