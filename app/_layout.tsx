@@ -1,28 +1,36 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome"
+// Core dependencies
+import { memo, useEffect, useState } from "react"
+import * as Linking from "expo-linking"
+import * as Notifications from "expo-notifications"
+
+// Expo-specific dependencies
 import { useFonts } from "expo-font"
 import { Stack, useRouter } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
-import { useEffect, useState } from "react"
+
+// UI Components and Styling
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
-import "../global.css"
 import { SafeAreaView } from "@/components/ui/safe-area-view"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { useAuth, getUserSession, getCurrentUser, savePushTokenToSupabase } from "@/lib/supabase"
-import { Session } from "@supabase/supabase-js"
-import * as Linking from "expo-linking"
-import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
-import { setSession as updateSession } from "@/lib/supabase"
 import { StatusBar } from "@/components/ui/status-bar"
-import * as Notifications from "expo-notifications"
+import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import "../global.css"
+
+// Supabase and Authentication
+import { useAuth, getUserSession, getCurrentUser, savePushTokenToSupabase, setSession as updateSession } from "@/lib/supabase"
+import { Session } from "@supabase/supabase-js"
+
+// Utility functions
 import { registerForPushNotificationsAsync } from "@/lib/getToken"
+
 
 export {
   ErrorBoundary,
 } from "expo-router"
 
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-}
+// export const unstable_settings = {
+//   initialRouteName: "(tabs)",
+// }
 
 SplashScreen.preventAutoHideAsync()
 
@@ -32,11 +40,10 @@ SplashScreen.preventAutoHideAsync()
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     Poppins: require("../assets/fonts/Poppins-Regular.ttf"),
-    ...FontAwesome.font,
   })
 
   const session = useSessionManagement()
-  useDeepLinking()
+  // useDeepLinking()
   useNotificationHandler()
 
   useEffect(() => {
@@ -57,7 +64,7 @@ export default function RootLayout() {
 /**
  * RootLayoutNav Component
  */
-function RootLayoutNav({ session }: { session: Session | null }) {
+const RootLayoutNav = memo(({ session }: { session: Session | null }) => {
   const insets = useSafeAreaInsets()
 
   return (
@@ -67,11 +74,11 @@ function RootLayoutNav({ session }: { session: Session | null }) {
         <Stack screenOptions={{ headerShown: false, animation: "none" }}>
           <Stack.Screen name="index" />
           {session ? (
-            <>
+            <ProtectedRoute>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(meds)" />
               <Stack.Screen name="(info)" />
-            </>
+            </ProtectedRoute>
           ) : (
             <Stack.Screen name="(auth)" />
           )}
@@ -79,6 +86,23 @@ function RootLayoutNav({ session }: { session: Session | null }) {
       </SafeAreaView>
     </GluestackUIProvider>
   )
+})
+
+/**
+ * ProtectedRoute
+ * Manages session status and redirect unauthorized users away from restricted routes.
+ */
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const session = useSessionManagement()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!session) {
+      router.replace("/signIn")
+    }
+  }, [session, router])
+
+  return session ? <>{children}</> : null
 }
 
 /**
@@ -93,7 +117,9 @@ function useSessionManagement(): Session | null {
     const initializeSession = async () => {
       const currentSession = await getUserSession()
       setSession(currentSession)
-      if (!currentSession) router.replace("/signIn")
+      if (!currentSession) {
+        router.replace("/signIn")
+      }
       else await initializePushNotifications()
     }
 
@@ -136,42 +162,6 @@ async function initializePushNotifications() {
 }
 
 /**
- * Custom Hook: useDeepLinking
- * Handles deep linking for email confirmation and password reset.
- */
-function useDeepLinking() {
-  const router = useRouter()
-  const toast = useToast()
-
-  useEffect(() => {
-    const handleDeepLink = async (event: { url: string }) => {
-      const { url } = event
-      const { path, queryParams } = Linking.parse(url)
-
-      if (queryParams) {
-        const access_token = Array.isArray(queryParams.access_token)
-          ? queryParams.access_token[0]
-          : queryParams.access_token
-        const refresh_token = Array.isArray(queryParams.refresh_token)
-          ? queryParams.refresh_token[0]
-          : queryParams.refresh_token
-
-        if (access_token && refresh_token) {
-          // Await the session update to get the resolved sessionData
-          const sessionData = await updateSession(access_token, refresh_token)
-        }
-      }
-    }
-
-    const subscription = Linking.addEventListener("url", handleDeepLink)
-
-    return () => {
-      subscription.remove()
-    }
-  }, [router, toast])
-}
-
-/**
  * Custom Hook: useNotificationHandler
  */
 function useNotificationHandler() {
@@ -195,15 +185,37 @@ function useNotificationHandler() {
 }
 
 /**
- * Utility Function: showToast
+ * Custom Hook: useDeepLinking
+ * Handles deep linking for email confirmation and password reset.
  */
-function showToast(toast: any, message: string) {
-  toast.show({
-    placement: "top left",
-    render: ({ id }: { id: string }) => (
-      <Toast nativeID={id} variant="solid" action="success">
-        <ToastTitle>{message}</ToastTitle>
-      </Toast>
-    ),
-  })
-}
+// function useDeepLinking() {
+//   const router = useRouter()
+//   const toast = useToast()
+
+//   useEffect(() => {
+//     const handleDeepLink = async (event: { url: string }) => {
+//       const { url } = event
+//       const { path, queryParams } = Linking.parse(url)
+
+//       if (queryParams) {
+//         const access_token = Array.isArray(queryParams.access_token)
+//           ? queryParams.access_token[0]
+//           : queryParams.access_token
+//         const refresh_token = Array.isArray(queryParams.refresh_token)
+//           ? queryParams.refresh_token[0]
+//           : queryParams.refresh_token
+
+//         if (access_token && refresh_token) {
+//           // Await the session update to get the resolved sessionData
+//           const sessionData = await updateSession(access_token, refresh_token)
+//         }
+//       }
+//     }
+
+//     const subscription = Linking.addEventListener("url", handleDeepLink)
+
+//     return () => {
+//       subscription.remove()
+//     }
+//   }, [router, toast])
+// }

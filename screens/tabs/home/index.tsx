@@ -1,10 +1,13 @@
+// Core dependencies
 import React, { useState, useEffect, useRef } from 'react'
-import { Medicine, MedForm, medFormActive, Log, medFormInactive } from '@/constants/types'
+import { router } from 'expo-router'
+import { LayoutRectangle } from 'react-native'
+
+// Components
 import { ScrollView } from '@/components/ui/scroll-view'
 import { Heading } from '@/components/ui/heading'
 import { Text } from '@/components/ui/text'
 import { Pressable } from '@/components/ui/pressable'
-import { Ellipsis } from 'lucide-react-native'
 import { HStack } from '@/components/ui/hstack'
 import { VStack } from '@/components/ui/vstack'
 import { Divider } from '@/components/ui/divider'
@@ -14,12 +17,20 @@ import { AddIcon, Icon } from '@/components/ui/icon'
 import { LinearGradient } from '@/components/ui/linear-gradient'
 import { View } from '@/components/ui/view'
 import { Fab, FabIcon } from '@/components/ui/fab'
-import { router } from 'expo-router'
-import { LayoutRectangle } from 'react-native'
-import TabLayout from '../layout'
-import { fetchMedicines } from '@/lib/supabase'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RefreshControl } from '@/components/ui/refresh-control'
+
+// Icons
+import { Ellipsis } from 'lucide-react-native'
+
+// Constants
+import { Medicine, MedForm, medFormActive, Log, medFormInactive } from '@/constants/types'
+
+// Utils and Libs
+import { fetchMedicines } from '@/lib/supabase'
+
+// Layout
+import TabLayout from '../layout'
 
 const HomeScreen = () => {
   // State to track loading status

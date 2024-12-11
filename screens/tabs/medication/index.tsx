@@ -1,24 +1,33 @@
+// Core dependencies
 import React, { useEffect, useState } from 'react'
+import { Link, router } from 'expo-router'
+
+// Components
 import { SafeAreaView } from '@/components/ui/safe-area-view'
 import { ScrollView } from '@/components/ui/scroll-view'
-import { Medicine } from '@/constants/types'
-import { dummyMeds } from '@/data/dummy'
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button'
 import { AddIcon, ChevronRightIcon, Icon, SearchIcon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { Pressable } from '@/components/ui/pressable'
-import { Link, router } from 'expo-router'
 import { Heading } from '@/components/ui/heading'
 import { LinearGradient } from '@/components/ui/linear-gradient'
 import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
 import { Divider } from '@/components/ui/divider'
 import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input'
-import TabLayout from '../layout'
-import { fetchMedicines } from '@/lib/supabase'
 import { View } from '@/components/ui/view'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RefreshControl } from '@/components/ui/refresh-control'
+
+// Constants
+import { Medicine } from '@/constants/types'
+import { dummyMeds } from '@/data/dummy'
+
+// Utils and Libs
+import { fetchMedicines } from '@/lib/supabase'
+
+// Layout
+import TabLayout from '../layout'
 
 const MedScreen = () => {
   const [meds, setMeds] = useState<Medicine[]>([])

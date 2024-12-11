@@ -1,24 +1,43 @@
-import React, { useState } from "react"
-import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
-import { VStack } from "@/components/ui/vstack"
-import { Button, ButtonText } from "@/components/ui/button"
-import { Alert } from "react-native"
-import { AlertCircleIcon, Icon } from "@/components/ui/icon"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { signUpSchema } from "@/schemas/authSchemas"
-import { AuthLayout } from "../layout"
-import useRouter from "@unitools/router"
-import FormInput from "@/components/auth/FormInput"
-import PasswordInput from "@/components/auth/PasswordInput"
-import AuthHeader from "@/components/auth/AuthHeader"
-import AuthFooter from "@/components/auth/AuthFooter"
-import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from "@/components/ui/checkbox"
-import { FormControl, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control"
-import { CheckIcon } from "@/components/ui/icon"
-import { useAuth } from "@/lib/supabase"
-import { z } from "zod"
-import { Spinner } from "@/components/ui/spinner"
+// Core dependencies
+import React, { useState, useEffect } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+// Components
+import { Toast, ToastTitle, useToast } from '@/components/ui/toast'
+import { VStack } from '@/components/ui/vstack'
+import { Button, ButtonText } from '@/components/ui/button'
+import { Icon, AlertCircleIcon, CheckIcon } from '@/components/ui/icon'
+import {
+  Checkbox,
+  CheckboxIcon,
+  CheckboxIndicator,
+  CheckboxLabel,
+} from '@/components/ui/checkbox'
+import {
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+} from '@/components/ui/form-control'
+import { Spinner } from '@/components/ui/spinner'
+import FormInput from '@/components/auth/FormInput'
+import PasswordInput from '@/components/auth/PasswordInput'
+import AuthHeader from '@/components/auth/AuthHeader'
+import AuthFooter from '@/components/auth/AuthFooter'
+
+// Schemas
+import { signUpSchema } from '@/schemas/authSchemas'
+
+// Utils and Libs
+import { useAuth } from '@/lib/supabase'
+import useRouter from '@unitools/router'
+
+// Layout
+import { AuthLayout } from '../layout'
+import { useCustomToast } from '@/components/useCustomToast'
+
 
 type SignUpFormType = z.infer<typeof signUpSchema>
 
@@ -34,23 +53,22 @@ const SignUpScreen = () => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const toast = useToast()
+  const showToast = useCustomToast()
   const router = useRouter()
   const { signUp } = useAuth()
 
+  // Handle case where required data is missing
+  useEffect(() => {
+    if (!control) {
+      showToast("Terjadi kesalahan saat memuat form. Silakan coba lagi.", "error")
+    }
+  }, [control])
+
   const onSubmit = async (data: SignUpFormType) => {
     if (data.password !== data.confirmpassword) {
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle>Password tidak cocok</ToastTitle>
-          </Toast>
-        ),
-      })
+      showToast("Password tidak cocok. Silakan periksa kembali.", "error")
       return
     }
-
     setIsLoading(true)
 
     try {
@@ -58,51 +76,27 @@ const SignUpScreen = () => {
 
       if (error) {
         if (error.status === 400) {
-          console.error("Validation error:", error.message);
+          console.error("Validation error:", error.message)
         } else if (error.status === 500) {
-          console.error("Server error:", error.message);
+          console.error("Server error:", error.message)
         } else {
-          console.error("Unknown error:", error);
+          console.error("Unknown error:", error)
         }
       }
 
       if (error) {
-        console.log("Sign up gagal", error.message)
-        console.log("Full error details:", error)
-        toast.show({
-          placement: "top",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle>Terjadi kesalahan saat mendaftar. Silakan coba lagi.</ToastTitle>
-            </Toast>
-          ),
-        })
+        console.error("Sign-up error:", error.message)
+        showToast("Terjadi kesalahan saat mendaftar. Silakan coba lagi.", "error")
         setIsLoading(false)
         return
       }
 
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle>Silakan periksa email Anda untuk verifikasi.</ToastTitle>
-          </Toast>
-        ),
-      })
-
+      showToast("Silakan periksa email Anda untuk verifikasi.", "success")
       reset()
       router.push("/signIn")
     } catch (err) {
       console.error("Error during sign-up:", err)
-      toast.show({
-        placement: "top",
-
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle className="text-white">Terjadi kesalahan saat mendaftar. Silakan coba lagi.</ToastTitle>
-          </Toast>
-        ),
-      })
+      showToast("Terjadi kesalahan saat mendaftar. Silakan coba lagi.", "error")
     } finally {
       setIsLoading(false)
     }

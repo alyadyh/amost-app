@@ -1,24 +1,33 @@
-import React, { useEffect, useState } from "react"
-import { VStack } from "@/components/ui/vstack"
-import { HStack } from "@/components/ui/hstack"
-import { Box } from "@/components/ui/box"
-import { Text } from "@/components/ui/text"
-import { Button, ButtonText } from "@/components/ui/button"
-import { Avatar, AvatarFallbackText, AvatarImage } from "@/components/ui/avatar"
-import { Divider } from "@/components/ui/divider"
-import { Icon, LockIcon } from "@/components/ui/icon"
-import { ModalComponent } from "./modal"
-import { LogOut, ChevronRightIcon, ShieldAlert, Globe, Bell } from "lucide-react-native"
-import { Heading } from "@/components/ui/heading"
-import { Pressable } from "@/components/ui/pressable"
-import { router } from "expo-router"
-import { Switch } from "@/components/ui/switch"
-import { getCurrentUser, fetchUserProfile, useAuth, notifPreferenceToSupabase } from "@/lib/supabase"
-import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from "@/components/ui/alert-dialog"
-import TabLayout from "../layout"
-import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
-import { ScrollView } from "@/components/ui/scroll-view"
-import { RefreshControl } from "@/components/ui/refresh-control"
+// Core dependencies
+import React, { useEffect, useState } from 'react'
+import { router } from 'expo-router'
+
+// Components
+import { Heading } from '@/components/ui/heading'
+import { VStack } from '@/components/ui/vstack'
+import { HStack } from '@/components/ui/hstack'
+import { Box } from '@/components/ui/box'
+import { Text } from '@/components/ui/text'
+import { Button, ButtonText } from '@/components/ui/button'
+import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar'
+import { Divider } from '@/components/ui/divider'
+import { Icon, LockIcon } from '@/components/ui/icon'
+import { ModalComponent } from './modal'
+import { Pressable } from '@/components/ui/pressable'
+import { Switch } from '@/components/ui/switch'
+import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
+import { Skeleton, SkeletonText } from '@/components/ui/skeleton'
+import { ScrollView } from '@/components/ui/scroll-view'
+import { RefreshControl } from '@/components/ui/refresh-control'
+
+// Icons
+import { LogOut, ChevronRightIcon, ShieldAlert, Globe, Bell } from 'lucide-react-native'
+
+// Utils and Libs
+import { getCurrentUser, fetchUserProfile, useAuth, notifPreferenceToSupabase } from '@/lib/supabase'
+
+// Layout
+import TabLayout from '../layout'
 
 const ProfileScreen = () => {
   const [showModal, setShowModal] = useState(false)
@@ -73,13 +82,13 @@ const ProfileScreen = () => {
     const currentUser = await getCurrentUser()
 
     if (currentUser?.id) {
-      const newNotificationState = !isNotificationEnabled;
-      setNotificationEnabled(newNotificationState);
+      const newNotificationState = !isNotificationEnabled
+      setNotificationEnabled(newNotificationState)
       if (currentUser.id) {
-        await notifPreferenceToSupabase(currentUser.id, newNotificationState);
+        await notifPreferenceToSupabase(currentUser.id, newNotificationState)
       }
     }
-  };
+  }
 
   return (
     <>

@@ -1,26 +1,37 @@
+// Core dependencies
 import React, { useEffect, useState } from "react"
 import { router } from "expo-router"
+import { useForm, Controller, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+
+// Components
 import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
 import { HStack } from "@/components/ui/hstack"
 import { Text } from "@/components/ui/text"
-import { Button, ButtonText, ButtonIcon } from "@/components/ui/button"
 import { Heading } from "@/components/ui/heading"
-import { useForm, Controller, useWatch } from "react-hook-form"
-import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
 import { Pressable } from "@/components/ui/pressable"
+import { Spinner } from "@/components/ui/spinner"
 import { FormField } from "./components/FormField"
 import { SelectField } from "./components/SelectField"
 import { TextareaField } from "./components/TextareaField"
-import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/components/ui/icon"
+import { useCustomToast } from "@/components/useCustomToast"
 import { TimePickerField } from "./components/TimePickerField"
-import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
-import { zodResolver } from "@hookform/resolvers/zod"
+import { Button, ButtonText, ButtonIcon } from "@/components/ui/button"
+import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/components/ui/icon"
+
+// Constants
+import { medFormOptions, dosageOptions, frequencyOptions } from "@/constants/options"
+
+// Utils and Libs
 import { uploadImage, getUserSession, insertMedicine } from "@/lib/supabase"
+
+// Schemas
 import { addMedSchema } from "@/schemas/medSchemas"
+
+// Layout
 import MedLayout from "../layout"
-import { z } from "zod"
-import { Spinner } from "@/components/ui/spinner"
 
 type AddMedSchemaType = z.infer<typeof addMedSchema>
 
@@ -43,7 +54,7 @@ const AddMedScreen = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isDetailVisible, setDetailVisible] = useState(false)
   const [timesPerDay, setTimesPerDay] = useState(0)
-  const toast = useToast()
+  const showToast = useCustomToast()
 
   // Watch the frequency field
   const selectedFrequency = watch("frequency")
@@ -87,6 +98,7 @@ const AddMedScreen = () => {
         console.log("Uploaded Image Path:", uploadedImagePath)
       } catch (error) {
         console.error("Error uploading image:", error)
+        showToast("Gagal mengunggah gambar. Periksa koneksi internet Anda dan coba lagi.", "error")
         setIsLoading(false)
       }
     }
@@ -110,27 +122,13 @@ const AddMedScreen = () => {
       const insertSuccess = await insertMedicine(formattedData, session.user.id)
 
       if (insertSuccess) {
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle className="text-white">Obat berhasil ditambahkan!</ToastTitle>
-          </Toast>,
-        })
+        showToast("Obat berhasil ditambahkan!", "success")
+        router.push("/medication")
+        reset()
       }
-      router.push("/medication")
-      reset()
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error inserting medicine:", error.message)
-        toast.show({
-          placement: "top left",
-          render: ({ id }: { id: string }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle className="text-white">Gagal menambahkan obat!</ToastTitle>
-            </Toast>
-          ),
-        })
-      }
+      console.error("Error inserting medicine:", error)
+      showToast("Gagal menambahkan obat. Pastikan semua data telah diisi dengan benar.", "error")
     } finally {
       setIsLoading(false)
     }
@@ -138,6 +136,7 @@ const AddMedScreen = () => {
 
   const onError = (errors: any) => {
     console.log("Form validation errors:", errors)
+    showToast("Terdapat kesalahan pada formulir. Periksa kembali data yang diisi.", "error")
   }
 
   return (

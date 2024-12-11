@@ -1,18 +1,27 @@
-import React from "react"
-import { useToast } from "@/components/ui/toast"
-import { VStack } from "@/components/ui/vstack"
-import { Button, ButtonText } from "@/components/ui/button"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { forgotPasswordSchema } from "@/schemas/authSchemas"
-import { AuthLayout } from "../layout"
-import useRouter from "@unitools/router"
-import FormInput from "@/components/auth/FormInput"
-import AuthHeader from "@/components/auth/AuthHeader"
-import { Toast, ToastTitle } from "@/components/ui/toast"
-import { checkIfEmailExists, useAuth } from "@/lib/supabase"
-import { z } from "zod"
-import PasswordInput from "@/components/auth/PasswordInput"
+// Core dependencies
+import React from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+// Components
+import { Toast, ToastTitle, useToast } from '@/components/ui/toast'
+import { VStack } from '@/components/ui/vstack'
+import { Button, ButtonText } from '@/components/ui/button'
+import FormInput from '@/components/auth/FormInput'
+import AuthHeader from '@/components/auth/AuthHeader'
+
+// Schemas
+import { forgotPasswordSchema } from '@/schemas/authSchemas'
+
+// Utils and Libs
+import { checkIfEmailExists, useAuth } from '@/lib/supabase'
+import useRouter from '@unitools/router'
+
+// Layout
+import { AuthLayout } from '../layout'
+
+import { useCustomToast } from "@/components/useCustomToast"
 
 type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>
 
@@ -26,7 +35,7 @@ const ForgotPasswordScreen = () => {
     resolver: zodResolver(forgotPasswordSchema),
   })
 
-  const toast = useToast()
+  const showToast = useCustomToast()
   const router = useRouter()
   const { resetPasswordForEmail } = useAuth()
 
@@ -48,14 +57,7 @@ const ForgotPasswordScreen = () => {
       const emailExists = await checkIfEmailExists(data.email)
 
       if (!emailExists) {
-        toast.show({
-          placement: "top",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle>Email tidak ditemukan</ToastTitle>
-            </Toast>
-          ),
-        })
+        showToast("Email tidak ditemukan. Silakan cek kembali.", "error")
         return
       }
 
@@ -63,37 +65,17 @@ const ForgotPasswordScreen = () => {
       const { error } = await resetPasswordForEmail(data.email)
 
       if (error) {
-        toast.show({
-          placement: "top",
-          render: ({ id }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle>{error.message}</ToastTitle>
-            </Toast>
-          ),
-        })
+        console.error("Reset password error:", error.message)
+        showToast("Gagal mengirim link reset password. Silakan coba lagi.", "error")
         return
       }
 
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle>Link telah terkirim ke email anda</ToastTitle>
-          </Toast>
-        ),
-      })
-
+      // Show success toast
+      showToast("Link reset password telah dikirim ke email Anda.", "success")
       reset()
     } catch (err) {
       console.error("Error during password reset:", err)
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle>Terjadi kesalahan saat mengirim link reset password.</ToastTitle>
-          </Toast>
-        ),
-      })
+      showToast("Terjadi kesalahan saat mengirim link reset password.", "error")
     }
   }
 

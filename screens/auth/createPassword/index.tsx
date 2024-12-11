@@ -1,21 +1,32 @@
-import React, { useState } from "react"
-import { Toast, ToastTitle, useToast } from "@/components/ui/toast"
-import { VStack } from "@/components/ui/vstack"
-import { Button, ButtonText } from "@/components/ui/button"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { createPasswordSchema } from "@/schemas/authSchemas"
-import { AuthLayout } from "../layout"
-import useRouter from "@unitools/router"
-import PasswordInput from "@/components/auth/PasswordInput"
-import { z } from "zod"
-import { useAuth } from "@/lib/supabase"
-import { Text } from "@/components/ui/text"
-import { HStack } from "@/components/ui/hstack"
-import { Pressable } from "@/components/ui/pressable"
-import { Heading } from "@/components/ui/heading"
-import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
-import { Spinner } from "@/components/ui/spinner"
+// Core dependencies
+import React, { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+// Components
+import { Toast, ToastTitle, useToast } from '@/components/ui/toast'
+import { VStack } from '@/components/ui/vstack'
+import { Button, ButtonText } from '@/components/ui/button'
+import { Text } from '@/components/ui/text'
+import { HStack } from '@/components/ui/hstack'
+import { Pressable } from '@/components/ui/pressable'
+import { Heading } from '@/components/ui/heading'
+import { ArrowLeftIcon, Icon } from '@/components/ui/icon'
+import { useCustomToast } from "@/components/useCustomToast"
+import { Spinner } from '@/components/ui/spinner'
+import PasswordInput from '@/components/auth/PasswordInput'
+
+// Schemas
+import { createPasswordSchema } from '@/schemas/authSchemas'
+
+// Utils and Libs
+import { useAuth } from '@/lib/supabase'
+import useRouter from '@unitools/router'
+
+// Layout
+import { AuthLayout } from '../layout'
+
 
 
 type CreatePasswordFormType = z.infer<typeof createPasswordSchema>
@@ -30,21 +41,14 @@ const CreatePasswordScreen = () => {
     resolver: zodResolver(createPasswordSchema),
   })
 
-  const toast = useToast()
+  const showToast = useCustomToast()
   const router = useRouter()
   const { updatePassword } = useAuth()
   const [loading, setLoading] = useState(false)
 
   const onSubmit = async (data: CreatePasswordFormType) => {
     if (data.password !== data.confirmpassword) {
-      toast.show({
-        placement: "top left",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle>Password tidak sama</ToastTitle>
-          </Toast>
-        ),
-      })
+      showToast("Password tidak sama. Silakan periksa kembali.", "error")
       return
     }
 
@@ -54,39 +58,17 @@ const CreatePasswordScreen = () => {
 
       if (error) {
         console.error("Update password error:", error)
-        toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle>Gagal mengubah password.</ToastTitle>
-          </Toast>
-        ),
-      })
+        showToast("Gagal mengubah password. Silakan coba lagi.", "error")
         setLoading(false)
         return
       }
 
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle>Berhasil ubah password</ToastTitle>
-          </Toast>
-        ),
-      })
-
+      showToast("Password berhasil diubah!", "success")
       reset()
       router.push("/signIn")
     } catch (err) {
       console.error("Error during password reset:", err)
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle>Terjadi kesalahan saat mengubah password.</ToastTitle>
-          </Toast>
-        ),
-      })
+      showToast("Terjadi kesalahan saat mengubah password. Silakan coba lagi.", "error")
     } finally {
       setLoading(false)
     }

@@ -1,21 +1,32 @@
+// Core dependencies
 import React, { useEffect, useState } from 'react'
 import { Link } from 'expo-router'
+
+// Components
 import { Text } from '@/components/ui/text'
 import { Heading } from '@/components/ui/heading'
 import { LinearGradient } from '@/components/ui/linear-gradient'
 import { VStack } from '@/components/ui/vstack'
 import { HStack } from '@/components/ui/hstack'
 import { Icon } from '@/components/ui/icon'
-import { ChevronRight, Percent } from 'lucide-react-native'
-import BarChart from './component/BarChart'
 import { ScrollView } from '@/components/ui/scroll-view'
-import { Log } from "@/constants/types"
-import ShareReport from './component/ShareExport'
-import { fetchUserProfile, fetchLog } from '@/lib/supabase'
-import TabLayout from '../layout'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Toast, ToastTitle, useToast } from '@/components/ui/toast'
 import { RefreshControl } from '@/components/ui/refresh-control'
+import BarChart from './component/BarChart'
+import ShareReport from './component/ShareExport'
+
+// Icons
+import { ChevronRight, Percent } from 'lucide-react-native'
+
+// Constants
+import { Log } from '@/constants/types'
+
+// Utils and Libs
+import { fetchUserProfile, fetchLog } from '@/lib/supabase'
+
+// Layout
+import TabLayout from '../layout'
 
 const ActivityScreen = () => {
   const [userName, setUserName] = useState<string>('')
