@@ -1,3 +1,5 @@
+"use client";
+
 import { Alert, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";

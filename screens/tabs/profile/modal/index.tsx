@@ -1,6 +1,11 @@
+// Core dependencies
 import React, { useState, useRef, useEffect } from "react"
+import { useForm, Controller } from "react-hook-form"
 import { Keyboard } from "react-native"
 import * as ImagePicker from "expo-image-picker"
+import { z } from "zod"
+
+// Components
 import { Heading } from "@/components/ui/heading"
 import { Center } from "@/components/ui/center"
 import { VStack } from "@/components/ui/vstack"
@@ -9,14 +14,18 @@ import { Button, ButtonText } from "@/components/ui/button"
 import { Icon, CloseIcon } from "@/components/ui/icon"
 import { Avatar, AvatarImage, AvatarBadge, AvatarFallbackText } from "@/components/ui/avatar"
 import { Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalHeader } from "@/components/ui/modal"
-import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control"
-import { Pencil, AlertCircleIcon } from "lucide-react-native"
+import { FormControl, FormControlLabel, FormControlError, FormControlErrorIcon, FormControlErrorText, FormControlLabelText } from "@/components/ui/form-control"
 import { Pressable } from "@/components/ui/pressable"
-import { Controller, useForm } from "react-hook-form"
-import { uploadImage, updateUserProfile, getCurrentUser } from "@/lib/supabase"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { Spinner } from "@/components/ui/spinner"
+
+// Icons
+import { Pencil, AlertCircleIcon } from "lucide-react-native"
+
+// Api
+import { getCurrentUser, useAuth } from "@/api/auth"
+import { updateUserProfile } from "@/api/profile"
+import { uploadImage } from "@/api/storage"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 const userSchema = z.object({
   name: z.string().min(1, "Nama harus diisi").max(50, "Nama harus kurang dari 50 karakter")

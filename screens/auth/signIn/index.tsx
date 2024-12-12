@@ -1,22 +1,33 @@
-import React, { useEffect, useState } from "react"
-import { useToast } from "@/components/ui/toast"
-import { VStack } from "@/components/ui/vstack"
-import { Button, ButtonText } from "@/components/ui/button"
-import { Pressable } from "@/components/ui/pressable"
-import useRouter from "@unitools/router"
-import { AuthLayout } from "../layout"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { loginSchema } from "@/schemas/authSchemas"
-import FormInput from "@/components/auth/FormInput"
-import PasswordInput from "@/components/auth//PasswordInput"
-import AuthHeader from "@/components/auth/AuthHeader"
-import AuthFooter from "@/components/auth/AuthFooter"
-import { Toast, ToastTitle } from "@/components/ui/toast"
-import { Text } from "@/components/ui/text"
-import { useAuth } from "@/lib/supabase"
-import { z } from "zod"
-import { Spinner } from "@/components/ui/spinner"
+// Core dependencies
+import React, { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+// Components
+import { Toast, ToastTitle, useToast } from '@/components/ui/toast'
+import { VStack } from '@/components/ui/vstack'
+import { Button, ButtonText } from '@/components/ui/button'
+import { Pressable } from '@/components/ui/pressable'
+import { Text } from '@/components/ui/text'
+import { Spinner } from '@/components/ui/spinner'
+import FormInput from '@/components/auth/FormInput'
+import PasswordInput from '@/components/auth/PasswordInput'
+import AuthHeader from '@/components/auth/AuthHeader'
+import AuthFooter from '@/components/auth/AuthFooter'
+
+// Schemas
+import { loginSchema } from '@/schemas/authSchemas'
+
+// Utils
+import useRouter from '@unitools/router'
+
+// Api
+import { useAuth } from '@/api/auth'
+
+// Layout
+import { AuthLayout } from '../layout'
+
 
 type LoginFormType = z.infer<typeof loginSchema>
 

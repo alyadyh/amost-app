@@ -1,3 +1,5 @@
+'use client'
+
 import React from "react"
 import { View } from "react-native"
 import { FormControl, FormControlError, FormControlLabel, FormControlLabelText, FormControlErrorText, FormControlErrorIcon } from "@/components/ui/form-control"
@@ -8,15 +10,15 @@ import { AlertCircleIcon } from "@/components/ui/icon"
 import { Image } from "react-native"
 import { pickImage } from "./ImagePicker"
 
-export const FormField = ({ 
-  name, 
-  label, 
-  control, 
-  error, 
-  placeholder, 
-  isImagePicker = false, 
-  setValue, 
-  isNumeric 
+export const FormField = ({
+  name,
+  label,
+  control,
+  error,
+  placeholder,
+  isImagePicker = false,
+  setValue,
+  isNumeric
 }: any) => (
   <FormControl isInvalid={!!error}>
     <FormControlLabel>

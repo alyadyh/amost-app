@@ -1,10 +1,12 @@
-import { VStack } from "@/components/ui/vstack";
-import { SafeAreaView } from "@/components/ui/safe-area-view";
-import { ScrollView } from "@/components/ui/scroll-view";
+"use client"
+
+import { VStack } from "@/components/ui/vstack"
+import { SafeAreaView } from "@/components/ui/safe-area-view"
+import { ScrollView } from "@/components/ui/scroll-view"
 
 type AuthLayoutProps = {
-  children: React.ReactNode;
-};
+  children: React.ReactNode
+}
 
 export const AuthLayout = (props: AuthLayoutProps) => {
   return (
@@ -18,5 +20,5 @@ export const AuthLayout = (props: AuthLayoutProps) => {
         </VStack>
       </ScrollView>
     </SafeAreaView>
-  );
-};
+  )
+}

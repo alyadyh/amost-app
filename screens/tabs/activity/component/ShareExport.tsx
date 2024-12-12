@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useState } from "react"
 import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
@@ -9,10 +11,10 @@ import { Text } from "@/components/ui/text"
 import { Icon } from "@/components/ui/icon"
 import { Share2 } from "lucide-react-native"
 import { Log } from "@/constants/types"
-import { getUserSession, fetchMonthLogs } from '@/lib/supabase'
 import { Image } from "react-native"
 import * as FileSystem from 'expo-file-system'
 import { Skeleton } from "@/components/ui/skeleton"
+import { fetchMonthLogs } from "@/api/log"
 
 const ShareReport = ({ userName }: { userName: string }) => {
   const [logs, setLogs] = useState<Log[]>([])
@@ -23,14 +25,7 @@ const ShareReport = ({ userName }: { userName: string }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const session = await getUserSession()
-        if (!session) throw new Error("User is not logged in")
-
-        console.log("User id:", session.user.id)
-
-        const userId = session.user.id
-
-        const logsData = await fetchMonthLogs(userId, oneMonthAgo)
+        const logsData = await fetchMonthLogs(oneMonthAgo)
 
         setLogs(logsData)
       } catch (error) {

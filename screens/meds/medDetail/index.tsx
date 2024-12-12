@@ -1,37 +1,51 @@
+// Core dependencies
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView } from "@/components/ui/safe-area-view"
-import { ScrollView } from "@/components/ui/scroll-view"
-import { VStack } from "@/components/ui/vstack"
-import { HStack } from "@/components/ui/hstack"
-import { Text } from "@/components/ui/text"
-import { Image } from "@/components/ui/image"
+import { router, useLocalSearchParams } from 'expo-router'
+
+// Components
+import { SafeAreaView } from '@/components/ui/safe-area-view'
+import { ScrollView } from '@/components/ui/scroll-view'
+import { VStack } from '@/components/ui/vstack'
+import { HStack } from '@/components/ui/hstack'
+import { Text } from '@/components/ui/text'
+import { Image } from '@/components/ui/image'
 import { Pressable } from '@/components/ui/pressable'
 import { Icon } from '@/components/ui/icon'
 import { Button, ButtonText } from '@/components/ui/button'
-import { ArrowLeftIcon, Pencil, ChevronRightIcon, CalendarRange, Clock, PencilLine } from 'lucide-react-native'
-import { router, useLocalSearchParams } from 'expo-router'
-import { ModalComponent } from "./modal"
-import { MedForm, medFormActive, Medicine } from '@/constants/types'
-import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
 import { Heading } from '@/components/ui/heading'
-import { deleteMedicine, fetchMedicineById } from '@/lib/supabase'
-import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
 import { RefreshControl } from '@/components/ui/refresh-control'
+import { useCustomToast } from '@/components/useCustomToast'
+import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '@/components/ui/alert-dialog'
+import { ModalComponent } from './modal'
+
+// Icons
+import { ArrowLeftIcon, Pencil, ChevronRightIcon, CalendarRange, Clock, PencilLine } from 'lucide-react-native'
+
+// Constants
+import { MedForm, medFormActive, Medicine } from '@/constants/types'
+
+// Api
+import { fetchMedicineById, deleteMedicine } from '@/api/medicine'
 
 export const MedDetail = () => {
   const [med, setMed] = useState<Medicine>()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showModal, setShowModal] = useState<string | null>(null)
+  const [showAlertDialog, setShowAlertDialog] = useState(false)
+  const showToast = useCustomToast()
 
   const toggleModal = (modalName: string | null) => setShowModal(modalName)
 
-  const [showAlertDialog, setShowAlertDialog] = useState(false)
 
   const { medId } = useLocalSearchParams()
   // console.log('Med ID:', medId)
-  const toast = useToast()
 
-  if (!medId) return <Text>Error: No medication details available.</Text>
+  useEffect(() => {
+  if (!medId) {
+    showToast("Tidak ada detail obat yang tersedia.", "error")
+    router.back()
+  }
+}, [medId])
 
   const fetchMedDetail = async () => {
     try {
@@ -41,6 +55,7 @@ export const MedDetail = () => {
       }
     } catch (error) {
       console.error('Error fetching medicine details:', error)
+      showToast("Gagal memuat detail obat. Silakan coba lagi.", "error")
     }
   }
 
@@ -50,6 +65,7 @@ export const MedDetail = () => {
       await fetchMedDetail()
     } catch (error) {
       console.error('Error refreshing medicine details:', error)
+      showToast("Gagal memperbarui detail obat. Silakan coba lagi.", "error")
     } finally {
       setIsRefreshing(false)
     }
@@ -57,29 +73,19 @@ export const MedDetail = () => {
 
   // Function to delete the medicine in Supabase
   const handleDelete = async () => {
-    const isDeleted = await deleteMedicine(medId as string);
+    try {
+      const isDeleted = await deleteMedicine(medId as string)
 
-    if (isDeleted) {
-      toast.show({
-        placement: "top left",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle className="text-white">Obat berhasil dihapus!</ToastTitle>
-          </Toast>
-        ),
-      });
-
-      setShowAlertDialog(false);
-      router.back();
-    } else {
-      toast.show({
-        placement: "top left",
-        render: ({ id }) => (
-          <Toast nativeID={id} variant="solid" action="error">
-            <ToastTitle className="text-white">Gagal menghapus obat!</ToastTitle>
-          </Toast>
-        ),
-      });
+      if (isDeleted) {
+        showToast("Obat berhasil dihapus!", "success")
+        setShowAlertDialog(false)
+        router.back()
+      } else {
+        showToast("Gagal menghapus obat. Silakan coba lagi.", "error")
+      }
+    } catch (error) {
+      console.error("Error deleting medicine:", error)
+      showToast("Terjadi kesalahan saat menghapus obat. Silakan coba lagi.", "error")
     }
   }
 

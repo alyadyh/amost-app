@@ -1,23 +1,39 @@
+// Core dependencies
 import React, { useEffect, useState } from "react"
 import { router } from "expo-router"
-import { ScrollView } from "@/components/ui/scroll-view"
+
+// Components
+import { Text } from "@/components/ui/text"
 import { VStack } from "@/components/ui/vstack"
 import { HStack } from "@/components/ui/hstack"
-import { Text } from "@/components/ui/text"
-import { Pressable } from "@/components/ui/pressable"
-import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
 import { Heading } from "@/components/ui/heading"
-import { CheckCircle, Circle, PencilLine, Share2, XCircle } from "lucide-react-native"
-import { Button, ButtonIcon } from "@/components/ui/button"
-import { Medicine, Log } from '@/constants/types'
-import { LogMedModal } from "./modal"
-import { format, isToday, isYesterday, parseISO } from 'date-fns'
-import { id } from 'date-fns/locale'
-import MedLayout from "../layout"
-import { fetchUserProfile, fetchLog, fetchMedicines } from '@/lib/supabase'
-import ShareReport from "./components/ShareExport"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Pressable } from "@/components/ui/pressable"
+import { ScrollView } from "@/components/ui/scroll-view"
+import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
+import { Button, ButtonIcon } from "@/components/ui/button"
 import { RefreshControl } from "@/components/ui/refresh-control"
+import { useCustomToast } from "@/components/useCustomToast"
+import ShareReport from "./components/ShareExport"
+import { LogMedModal } from "./modal"
+
+// Icons
+import { CheckCircle, Circle, PencilLine, Share2, XCircle } from "lucide-react-native"
+
+// Constants
+import { Medicine, Log } from "@/constants/types"
+
+// Utils and Libs
+import { format, isToday, isYesterday, parseISO } from "date-fns"
+import { id } from "date-fns/locale"
+
+//Api
+import { fetchLog } from "@/api/log"
+import { fetchMedicines } from "@/api/medicine"
+import { fetchUserProfile } from "@/api/profile"
+
+// Layout
+import MedLayout from "../layout"
 
 interface GroupedLogs {
   [key: string]: Log[]
@@ -46,7 +62,7 @@ const getDisplayDate = (dateString: string): string => {
 
 const LogCard: React.FC<{ log: Log, onEdit: () => void }> = ({ log, onEdit }) => {
   const medName = log.med_name
-  console.log('medName: ', medName)
+  // console.log('medName: ', medName)
   const borderColor = log.taken === true ? 'border-green-500' : log.taken === false ? 'border-red-500' : 'border-gray-400'
   const iconColor = log.taken === true ? 'text-green-500 stroke-green-500' : log.taken === false ? 'text-red-500 stroke-red-500' : 'text-gray-400 stroke-gray-400'
   const IconComponent = log.taken === true ? CheckCircle : log.taken === false ? XCircle : Circle
@@ -89,10 +105,11 @@ const LogMedScreen = () => {
   const [selectedLog, setSelectedLog] = useState<Log | null>(null) // New state
   const [isLoaded, setIsLoaded] = useState<boolean>(false)
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
+  const showToast = useCustomToast()
 
   const fetchData = async () => {
     try {
-      const userProfile = await fetchUserProfile('user_id')
+      const userProfile = await fetchUserProfile()
       setUserName(userProfile?.full_name || 'No Name')
 
       const fetchedMedicines = await fetchMedicines()
@@ -104,6 +121,7 @@ const LogMedScreen = () => {
       setLogs(fetchedLog ?? [])
     } catch (error) {
       console.error("Error fetching data:", error)
+      showToast("Gagal mengambil data. Silakan coba lagi.", "error")
     } finally {
       setIsLoaded(true)
     }
@@ -112,8 +130,13 @@ const LogMedScreen = () => {
    // Function to handle pull-to-refresh
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    await fetchData()
-    setIsRefreshing(false)
+    try {
+      await fetchData()
+    } catch (error) {
+      showToast("Gagal melakukan refresh. Coba lagi.", "error")
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   useEffect(() => {
@@ -131,21 +154,29 @@ const LogMedScreen = () => {
         setShowModal(true)
       } else {
         console.error("Medicine not found in log", log)
+        showToast("Obat tidak ditemukan untuk log ini.", "error")
       }
     } catch (error) {
       console.error("Error opening modal:", error)
+      showToast("Terjadi kesalahan saat membuka log. Coba lagi.", "error")
     }
   }
 
   const handleLogUpdate = (updatedLog: Log) => {
-    setLogs((prevLogs) =>
-      prevLogs.map((log) =>
-        log.id === updatedLog.id
-          ? updatedLog
-          : log
+    try {
+      setLogs((prevLogs) =>
+        prevLogs.map((log) =>
+          log.id === updatedLog.id
+            ? updatedLog
+            : log
+        )
       )
-    )
-    setShowModal(false)
+      setShowModal(false)
+      showToast("Log berhasil diperbarui!", "success")
+    } catch (error) {
+      console.error("Error updating log:", error)
+      showToast("Gagal memperbarui log. Silakan coba lagi.", "error")
+    }
   }
 
   const groupedLogs = groupLogsByDate(logs)

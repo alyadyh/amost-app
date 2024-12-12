@@ -1,8 +1,16 @@
-import React, { useState } from "react";
-import { VStack } from "@/components/ui/vstack";
-import { Box } from "@/components/ui/box";
-import { Text } from "@/components/ui/text";
-import { Heading } from "@/components/ui/heading";
+// Core dependencies
+import React from "react"
+import { router } from "expo-router"
+import { Pressable, ScrollView } from "react-native"
+
+// Components
+import { VStack } from "@/components/ui/vstack"
+import { Box } from "@/components/ui/box"
+import { Text } from "@/components/ui/text"
+import { Heading } from "@/components/ui/heading"
+import { Divider } from "@/components/ui/divider"
+import { HStack } from "@/components/ui/hstack"
+import { Icon, ArrowLeftIcon } from "@/components/ui/icon"
 import {
   Accordion,
   AccordionContent,
@@ -12,14 +20,13 @@ import {
   AccordionItem,
   AccordionTitleText,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Divider } from "@/components/ui/divider";
-import { InfoLayout } from "../layout";
-import { HStack } from "@/components/ui/hstack";
-import { router } from "expo-router";
-import { Pressable, ScrollView } from "react-native";
-import { ArrowLeftIcon, Icon } from "@/components/ui/icon";
-import { ChevronUp, ChevronDown } from "lucide-react-native";
+} from "@/components/ui/accordion"
+
+// Icons
+import { ChevronUp, ChevronDown } from "lucide-react-native"
+
+// Layout
+import { InfoLayout } from "../layout"
 
 export const HelpCenter = () => {
   const faqData = [
@@ -43,7 +50,7 @@ export const HelpCenter = () => {
       answer:
         "Ya, data Anda dilindungi. Namun, kami menyarankan Anda untuk menjaga kerahasiaan akun Anda.",
     },
-  ];
+  ]
 
   return (
     <InfoLayout>
@@ -51,7 +58,7 @@ export const HelpCenter = () => {
         <HStack space="md" className="items-center">
           <Pressable
             onPress={() => {
-              router.back();
+              router.back()
             }}
           >
             <Icon as={ArrowLeftIcon} className="text-amost-secondary-dark_1" size="2xl" />
@@ -105,5 +112,5 @@ export const HelpCenter = () => {
         </ScrollView>
       </VStack>
     </InfoLayout>
-  );
-};
+  )
+}

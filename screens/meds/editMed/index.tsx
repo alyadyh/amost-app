@@ -1,26 +1,38 @@
+// Core dependencies
 import React, { useEffect, useState } from "react"
 import { router, useLocalSearchParams } from "expo-router"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+
+// Components
 import { ScrollView } from "@/components/ui/scroll-view"
 import { VStack } from "@/components/ui/vstack"
 import { HStack } from "@/components/ui/hstack"
 import { Text } from "@/components/ui/text"
-import { Button, ButtonText, ButtonIcon } from "@/components/ui/button"
 import { Heading } from "@/components/ui/heading"
-import { useForm, Controller } from "react-hook-form"
-import { useToast, Toast, ToastTitle } from "@/components/ui/toast"
 import { Pressable } from "@/components/ui/pressable"
+import { Spinner } from "@/components/ui/spinner"
 import { FormField } from "./components/FormField"
 import { SelectField } from "./components/SelectField"
 import { TextareaField } from "./components/TextareaField"
-import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/components/ui/icon"
+import { useCustomToast } from "@/components/useCustomToast"
 import { TimePickerField } from "./components/TimePickerField"
-import { medFormOptions, dosageOptions, frequencyOptions } from '@/constants/options'
-import { zodResolver } from "@hookform/resolvers/zod"
-import { uploadImage, updateMedicine } from "@/lib/supabase"
+import { Button, ButtonText, ButtonIcon } from "@/components/ui/button"
+import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/components/ui/icon"
+
+// Constants
+import { medFormOptions, dosageOptions, frequencyOptions } from "@/constants/options"
+
+// Api
+import { updateMedicine } from "@/api/medicine"
+import { uploadImage } from "@/api/storage"
+
+// Schemas
 import { editMedSchema } from "@/schemas/medSchemas"
+
+// Layout
 import MedLayout from "../layout"
-import { z } from "zod"
-import { Spinner } from "@/components/ui/spinner"
 
 type EditMedSchemaType = z.infer<typeof editMedSchema>
 
@@ -47,7 +59,7 @@ const EditMedScreen = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isDetailVisible, setDetailVisible] = useState(false)
   const [timesPerDay, setTimesPerDay] = useState(med?.frequency_times_per_day || 0)
-  const toast = useToast()
+  const showToast = useCustomToast()
 
   // Watch the frequency field
   const selectedFrequency = watch("frequency")
@@ -89,6 +101,7 @@ const EditMedScreen = () => {
         console.log("Uploaded Image Path:", uploadedImagePath)
       } catch (error) {
         console.error("Error uploading image:", error)
+        showToast("Gagal mengunggah gambar. Periksa koneksi internet Anda dan coba lagi.", "error")
         setIsLoading(false)
       }
     }
@@ -103,27 +116,14 @@ const EditMedScreen = () => {
       const updateSuccess = await updateMedicine(med.id, formattedData)
 
       if (updateSuccess) {
-        toast.show({
-          placement: "top left",
-          render: ({ id }) => <Toast nativeID={id} variant="solid" action="success">
-            <ToastTitle className="text-white">Obat berhasil diperbarui!</ToastTitle>
-          </Toast>,
-        })
+        showToast("Obat berhasil diperbarui!", "success")
+        router.push("/medication")
+        reset()
+      } else {
+        showToast("Gagal memperbarui obat. Silakan coba lagi.", "error")
       }
-      router.push("/medication")
-      reset()
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error updating medicine:", error.message)
-        toast.show({
-          placement: "top left",
-          render: ({ id }: { id: string }) => (
-            <Toast nativeID={id} variant="solid" action="error">
-              <ToastTitle className="text-white">Gagal memperbarui obat!</ToastTitle>
-            </Toast>
-          ),
-        })
-      }
+      showToast("Terjadi kesalahan saat memperbarui obat. Hubungi admin.", "error")
     } finally {
       setIsLoading(false)
     }
