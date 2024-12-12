@@ -14,6 +14,14 @@ export const TimePickerField = ({ name, label, control, value, setValue, onChang
     onChange(selectedTime)  // Notify the parent of the time change
   }
 
+  // Format the value for display, replacing dots with colons if necessary, for android compatibility
+  const formatTime = (time: Date | null): string => {
+    if (!time) return ""
+    return time
+      .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+      .replace(/\./g, ":")
+  }
+
   return (
     <FormControl isInvalid={!!error}>
       <FormControlLabel>
@@ -23,7 +31,7 @@ export const TimePickerField = ({ name, label, control, value, setValue, onChang
         <Input>
           <InputField
             placeholder="00:00"
-            value={value ? value.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) : ""}
+            value={formatTime(value)}
             editable={false} // Prevent manual input
           />
         </Input>
