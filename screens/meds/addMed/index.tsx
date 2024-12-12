@@ -1,7 +1,7 @@
 // Core dependencies
 import React, { useEffect, useState } from "react"
 import { router } from "expo-router"
-import { useForm, Controller, useWatch } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
@@ -25,7 +25,7 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/component
 import { medFormOptions, dosageOptions, frequencyOptions } from "@/constants/options"
 
 // Utils and Libs
-import { uploadImage, getUserSession, insertMedicine } from "@/lib/supabase"
+import { uploadImage, insertMedicine } from "@/lib/supabase"
 
 // Schemas
 import { addMedSchema } from "@/schemas/medSchemas"
@@ -113,13 +113,8 @@ const AddMedScreen = () => {
     console.log("Submitted Data:", formattedData)
 
     try {
-      const session = await getUserSession()
-      if (!session) throw new Error("User is not logged in")
-
-      console.log("User id:", session.user.id)
-
       // Insert the medicine data into Supabase
-      const insertSuccess = await insertMedicine(formattedData, session.user.id)
+      const insertSuccess = await insertMedicine(formattedData)
 
       if (insertSuccess) {
         showToast("Obat berhasil ditambahkan!", "success")

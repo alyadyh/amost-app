@@ -9,7 +9,7 @@ import { Icon } from '@/components/ui/icon'
 import { Pressable } from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { Box } from '@/components/ui/box'
-import { fetchLog, getUserSession, updateLog, updateMedicine } from '@/lib/supabase'
+import { fetchLog, updateLog, updateMedicine } from '@/lib/supabase'
 import { router } from 'expo-router'
 import { Skeleton, SkeletonText } from '@/components/ui/skeleton'
 
@@ -63,15 +63,7 @@ export const LogModal: React.FC<LogModalProps> = ({ visible, onClose, medicine, 
     const log_time = now.toTimeString().split(' ')[0].slice(0, 5) // Get time in 'HH:mm' format
 
     try {
-      const userSession = await getUserSession()
-      const userId = log?.user_id || userSession?.user.id
-
-      if (!userId) {
-        throw new Error('User ID is missing')
-      }
-
       const updatedLog = await updateLog({
-        user_id: userId,
         medicine_id: medicine.id,
         med_name: medicine.med_name,
         log_date,

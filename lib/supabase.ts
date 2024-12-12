@@ -155,49 +155,46 @@ export async function notifPreferenceToSupabase(
 }
 
 export const fetchUserProfile = async (id: string) => {
-  const session = await getUserSession();
-  if (session?.user) {
-    const { data: profileData, error } = await supabase
-      .from("profiles")
-      .select("full_name, avatar_url, notif_is_enabled")
-      .eq("id", session.user.id)
-      .single();
+  const user = await getCurrentUser();
+  const { data: profileData, error } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url, notif_is_enabled")
+    .eq("id", user?.id)
+    .single();
 
-    if (error) {
-      throw new Error(`Error fetching profile: ${error.message}`);
-    }
-    return profileData;
+  if (error) {
+    throw new Error(`Error fetching profile: ${error.message}`);
   }
-  return null;
+
+  return profileData;
 };
 
 export const updateUserProfile = async (
   newName: string,
   newAvatar: string,
 ) => {
-  const session = await getUserSession();
-  console.log("session", session);
-  if (session?.user) {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: newName, avatar_url: newAvatar })
-      .eq("id", session.user.id)
-      .single();
+  const user = await getCurrentUser();
 
-    if (error) {
-      throw new Error(`Error updating profile: ${error.message}`);
-    }
+  const { error } = await supabase
+    .from("profiles")
+    .update({ full_name: newName, avatar_url: newAvatar })
+    .eq("id", user?.id)
+    .single();
+
+  if (error) {
+    throw new Error(`Error updating profile: ${error.message}`);
   }
 };
 
 // Medicine-related functions
 export const fetchMedicines = async () => {
-  const session = await getUserSession();
+  const user = await getCurrentUser();
+
   try {
     const { data, error } = await supabase
       .from("medicines")
       .select("*")
-      .eq("user_id", session?.user.id)
+      .eq("user_id", user?.id)
       .eq("deleted", false);
     if (error) {
       throw new Error(error.message);
@@ -227,15 +224,16 @@ export const fetchMedicineById = async (medId: string) => {
   }
 };
 
-export const insertMedicine = async (medicineData: any, userId: string) => {
+export const insertMedicine = async (medicineData: any) => {
+  const user = await getCurrentUser();
   try {
     const { error } = await supabase.from("medicines").insert({
-      user_id: userId,
+      user_id: user?.id,
       ...medicineData,
     });
 
     if (error) {
-      throw new Error(`Error inserting medicine: ${error.message}`);
+      throw new Error(`Error while inserting medicine: ${error.message}`);
     }
     return true;
   } catch (error) {
@@ -303,12 +301,13 @@ export const uploadImage = async (
 
 // Log-related functions
 export const fetchLog = async () => {
-  const session = await getUserSession();
+  const user = await getCurrentUser();
+
   try {
     const { data, error } = await supabase
       .from("logs")
       .select("*")
-      .eq("user_id", session?.user.id)
+      .eq("user_id", user?.id)
       .order("log_date", { ascending: false });
 
     if (error) {
@@ -322,7 +321,6 @@ export const fetchLog = async () => {
 };
 
 export const updateLog = async (logData: {
-  user_id: string;
   medicine_id: string;
   med_name: string;
   log_date: string;
@@ -330,10 +328,12 @@ export const updateLog = async (logData: {
   taken: boolean | null;
   log_time?: string | null;
 }) => {
+  const user = await getCurrentUser();
+
   const { data, error } = await supabase
     .from("logs")
     .update(logData)
-    .eq("user_id", logData.user_id)
+    .eq("user_id", user?.id)
     .eq("medicine_id", logData.medicine_id)
     .eq("log_date", logData.log_date)
     .eq("reminder_time", logData.reminder_time);
@@ -345,14 +345,15 @@ export const updateLog = async (logData: {
 };
 
 export const fetchMonthLogs = async (
-  userId: string,
   oneMonthAgo: Date,
 ): Promise<Log[]> => {
+  const user = await getCurrentUser();
+
   try {
     const { data: logsData, error: logsError } = await supabase
       .from("logs")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user?.id)
       .eq("taken", true)
       .gte("log_date", oneMonthAgo.toISOString());
 
@@ -373,16 +374,17 @@ export const fetchMonthLogs = async (
 };
 
 export const fetchWeeklyLogs = async (
-  userId: string,
   startOfWeekDate: Date,
   endOfWeekDate: Date,
 ): Promise<Log[]> => {
+  const user = await getCurrentUser();
+
   try {
     // Fetch logs for the user within the current week (Monday to Sunday)
     const { data: logsData, error: logsError } = await supabase
       .from("logs")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user?.id)
       .gte("log_date", format(startOfWeekDate, "yyyy-MM-dd")) // Ensure the date format is consistent
       .lte("log_date", format(endOfWeekDate, "yyyy-MM-dd")); // End date of the week
 

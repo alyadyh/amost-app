@@ -3,7 +3,7 @@ import { BarChart, barDataItem } from "react-native-gifted-charts"
 import { VStack } from '@/components/ui/vstack'
 import { Text } from '@/components/ui/text'
 import { LinearGradient } from '@/components/ui/linear-gradient'
-import { getUserSession, fetchWeeklyLogs } from '@/lib/supabase'
+import { fetchWeeklyLogs } from '@/lib/supabase'
 import { Log } from "@/constants/types"
 import { Dimensions } from "react-native"
 import { startOfWeek, addDays } from 'date-fns'
@@ -38,16 +38,12 @@ const MedicationAdherenceChart = () => {
   const fetchAndUpdateAdherenceData = async () => {
     try {
       setIsLoaded(false)
-      const session = await getUserSession()
-      if (!session) throw new Error("User is not logged in")
-
-      const userId = session.user.id
       const currentDate = new Date()
       const startOfWeekDate = startOfWeek(currentDate, { weekStartsOn: 1 }) // Monday
       const endOfWeekDate = addDays(startOfWeekDate, 6) // Sunday
 
       // Fetch med_logs for the user within the current week
-      const logsData = await fetchWeeklyLogs(userId, startOfWeekDate, endOfWeekDate)
+      const logsData = await fetchWeeklyLogs(startOfWeekDate, endOfWeekDate)
 
       // Get the current week's dates
       const weekDates = getCurrentWeekDates()

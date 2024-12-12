@@ -1,4 +1,5 @@
 // Core dependencies
+import React from "react"
 import { memo, useEffect, useState } from "react"
 import * as Linking from "expo-linking"
 import * as Notifications from "expo-notifications"
