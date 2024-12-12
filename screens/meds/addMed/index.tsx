@@ -106,7 +106,7 @@ const AddMedScreen = () => {
 
     const formattedData = {
       ...data,
-      reminder_times: data.reminder_times.map((time) => time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })),
+      reminder_times: data.reminder_times.map((time) => time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }).replace(/\./g, ":")),
       med_photos: uploadedImagePath || null,
       deleted: false
     }
