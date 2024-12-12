@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import { SafeAreaView } from '@/components/ui/safe-area-view'
 

@@ -1,18 +1,30 @@
-import React, { useEffect, useState } from 'react'
-import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody } from '@/components/ui/modal'
-import { VStack } from '@/components/ui/vstack'
-import { HStack } from '@/components/ui/hstack'
-import { Text } from '@/components/ui/text'
-import { Button, ButtonText } from '@/components/ui/button'
-import { Medicine, Log } from '@/constants/types'
-import { Icon } from '@/components/ui/icon'
-import { Pressable } from 'react-native'
-import { Check, X } from 'lucide-react-native'
-import { Box } from '@/components/ui/box'
-import { fetchLog, updateLog, updateMedicine } from '@/lib/supabase'
-import { TimePickerComponent } from '../components/TimePicker'
-import { format } from 'date-fns'
-import { Skeleton, SkeletonText } from '@/components/ui/skeleton'
+// Core dependencies
+import React, { useEffect, useState } from "react"
+
+// Components
+import { VStack } from "@/components/ui/vstack"
+import { HStack } from "@/components/ui/hstack"
+import { Text } from "@/components/ui/text"
+import { Icon } from "@/components/ui/icon"
+import { Box } from "@/components/ui/box"
+import { Pressable } from "@/components/ui/pressable"
+import { Button, ButtonText } from "@/components/ui/button"
+import { TimePickerComponent } from "../components/TimePicker"
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
+import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody } from "@/components/ui/modal"
+
+// Icons
+import { Check, X } from "lucide-react-native"
+
+// Constants
+import { Medicine, Log } from "@/constants/types"
+
+// Utils and Libs
+import { format } from "date-fns"
+
+// API
+import { fetchLog, updateLog } from "@/api/log"
+import { updateMedicine } from "@/api/medicine"
 
 interface LogMedModalProps {
   visible: boolean

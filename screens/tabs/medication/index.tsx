@@ -23,8 +23,8 @@ import { RefreshControl } from '@/components/ui/refresh-control'
 import { Medicine } from '@/constants/types'
 import { dummyMeds } from '@/data/dummy'
 
-// Utils and Libs
-import { fetchMedicines } from '@/lib/supabase'
+// Api
+import { fetchMedicines } from '@/api/medicine'
 
 // Layout
 import TabLayout from '../layout'

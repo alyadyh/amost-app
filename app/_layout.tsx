@@ -18,8 +18,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 import "../global.css"
 
 // Supabase and Authentication
-import { useAuth, getUserSession, getCurrentUser, savePushTokenToSupabase, setSession as updateSession } from "@/lib/supabase"
 import { Session } from "@supabase/supabase-js"
+import { getUserSession, useAuth, getCurrentUser } from "@/api/auth"
+import { savePushTokenToSupabase } from "@/api/notif"
 
 // Utility functions
 import { registerForPushNotificationsAsync } from "@/lib/getToken"

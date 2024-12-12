@@ -1,14 +1,19 @@
+// Core dependencies
 import React from "react"
+import { router } from "expo-router"
+
+// Components
 import { VStack } from "@/components/ui/vstack"
 import { Box } from "@/components/ui/box"
 import { Text } from "@/components/ui/text"
 import { Heading } from "@/components/ui/heading"
-import { InfoLayout } from "../layout"
-import { router } from "expo-router"
-import { Pressable } from "@/components/ui/pressable"
-import { ArrowLeftIcon, Icon } from "@/components/ui/icon"
 import { HStack } from "@/components/ui/hstack"
+import { Pressable } from "@/components/ui/pressable"
 import { ScrollView } from "@/components/ui/scroll-view"
+import { Icon, ArrowLeftIcon } from "@/components/ui/icon"
+
+// Layout
+import { InfoLayout } from "../layout"
 
 export const PrivacyPolicy = () => {
   return (

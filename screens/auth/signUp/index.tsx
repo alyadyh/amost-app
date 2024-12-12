@@ -26,17 +26,19 @@ import FormInput from '@/components/auth/FormInput'
 import PasswordInput from '@/components/auth/PasswordInput'
 import AuthHeader from '@/components/auth/AuthHeader'
 import AuthFooter from '@/components/auth/AuthFooter'
+import { useCustomToast } from '@/components/useCustomToast'
 
 // Schemas
 import { signUpSchema } from '@/schemas/authSchemas'
 
-// Utils and Libs
-import { useAuth } from '@/lib/supabase'
+// Utils
 import useRouter from '@unitools/router'
+
+// Api
+import { useAuth } from '@/api/auth'
 
 // Layout
 import { AuthLayout } from '../layout'
-import { useCustomToast } from '@/components/useCustomToast'
 
 
 type SignUpFormType = z.infer<typeof signUpSchema>

@@ -22,8 +22,9 @@ import { ChevronRight, Percent } from 'lucide-react-native'
 // Constants
 import { Log } from '@/constants/types'
 
-// Utils and Libs
-import { fetchUserProfile, fetchLog } from '@/lib/supabase'
+// Api
+import { fetchLog } from '@/api/log'
+import { fetchUserProfile } from '@/api/profile'
 
 // Layout
 import TabLayout from '../layout'
@@ -72,7 +73,7 @@ const ActivityScreen = () => {
       setAdherenceRate(adherencePercentage)
 
       // Fetch user profile
-      const profileData = await fetchUserProfile('user_id')
+      const profileData = await fetchUserProfile()
       setUserName(profileData?.full_name || 'No Name')
     } catch (err) {
       console.error("Error during password reset:", err)

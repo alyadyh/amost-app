@@ -10,18 +10,17 @@ import { VStack } from '@/components/ui/vstack'
 import { Button, ButtonText } from '@/components/ui/button'
 import FormInput from '@/components/auth/FormInput'
 import AuthHeader from '@/components/auth/AuthHeader'
+import { useCustomToast } from "@/components/useCustomToast"
 
 // Schemas
 import { forgotPasswordSchema } from '@/schemas/authSchemas'
 
-// Utils and Libs
-import { checkIfEmailExists, useAuth } from '@/lib/supabase'
-import useRouter from '@unitools/router'
+// Api
+import { checkIfEmailExists, useAuth } from '@/api/auth'
 
 // Layout
 import { AuthLayout } from '../layout'
 
-import { useCustomToast } from "@/components/useCustomToast"
 
 type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>
 
@@ -36,7 +35,6 @@ const ForgotPasswordScreen = () => {
   })
 
   const showToast = useCustomToast()
-  const router = useRouter()
   const { resetPasswordForEmail } = useAuth()
 
   const onSubmit = async (data: ForgotPasswordFormType) => {

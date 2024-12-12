@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from "react"
 import { Pressable } from "@/components/ui/pressable"
 import { FormControl, FormControlError, FormControlLabel, FormControlLabelText, FormControlErrorText } from "@/components/ui/form-control"
@@ -7,15 +9,15 @@ import { TimePickerComponent } from "./TimePicker"
 // Helper function to ensure value is a Date
 const getValidTime = (value: any) => {
   if (value instanceof Date && !isNaN(value.getTime())) {
-    return value;
+    return value
   } else if (typeof value === "string") {
     // Convert time string (e.g., "11:30") to Date
-    const [hours, minutes] = value.split(":").map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    return date;
+    const [hours, minutes] = value.split(":").map(Number)
+    const date = new Date()
+    date.setHours(hours, minutes, 0, 0)
+    return date
   }
-  return new Date(); // Default to current time if value is invalid
+  return new Date() // Default to current time if value is invalid
 }
 
 export const TimePickerField = ({ name, label, control, value, setValue, onChange, error }: any) => {
@@ -27,7 +29,7 @@ export const TimePickerField = ({ name, label, control, value, setValue, onChang
     onChange(timeString)  // Pass the time string to the parent form
   }
 
-  const validTime = getValidTime(value); // Ensure value is a valid Date or convert it
+  const validTime = getValidTime(value) // Ensure value is a valid Date or convert it
 
   return (
     <FormControl isInvalid={!!error}>

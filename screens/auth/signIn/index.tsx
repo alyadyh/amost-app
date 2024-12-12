@@ -19,9 +19,11 @@ import AuthFooter from '@/components/auth/AuthFooter'
 // Schemas
 import { loginSchema } from '@/schemas/authSchemas'
 
-// Utils and Libs
-import { useAuth } from '@/lib/supabase'
+// Utils
 import useRouter from '@unitools/router'
+
+// Api
+import { useAuth } from '@/api/auth'
 
 // Layout
 import { AuthLayout } from '../layout'

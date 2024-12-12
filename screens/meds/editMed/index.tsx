@@ -24,8 +24,9 @@ import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon, Icon } from "@/component
 // Constants
 import { medFormOptions, dosageOptions, frequencyOptions } from "@/constants/options"
 
-// Utils and Libs
-import { uploadImage, updateMedicine } from "@/lib/supabase"
+// Api
+import { updateMedicine } from "@/api/medicine"
+import { uploadImage } from "@/api/storage"
 
 // Schemas
 import { editMedSchema } from "@/schemas/medSchemas"

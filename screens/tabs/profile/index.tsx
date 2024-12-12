@@ -23,8 +23,10 @@ import { RefreshControl } from '@/components/ui/refresh-control'
 // Icons
 import { LogOut, ChevronRightIcon, ShieldAlert, Globe, Bell } from 'lucide-react-native'
 
-// Utils and Libs
-import { getCurrentUser, fetchUserProfile, useAuth, notifPreferenceToSupabase } from '@/lib/supabase'
+// Api
+import { getCurrentUser, useAuth } from '@/api/auth'
+import { notifPreferenceToSupabase } from '@/api/notif'
+import { fetchUserProfile } from '@/api/profile'
 
 // Layout
 import TabLayout from '../layout'
@@ -42,7 +44,7 @@ const ProfileScreen = () => {
       const currentUser = await getCurrentUser()
 
       if (currentUser?.id) {
-        const profileData = await fetchUserProfile(currentUser.id)
+        const profileData = await fetchUserProfile()
         console.log('Profile data:', profileData)
 
         if (profileData) {

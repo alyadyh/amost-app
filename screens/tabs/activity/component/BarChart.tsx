@@ -1,12 +1,14 @@
+"use client"
+
 import React, { useEffect, useState } from 'react'
 import { BarChart, barDataItem } from "react-native-gifted-charts"
 import { VStack } from '@/components/ui/vstack'
 import { Text } from '@/components/ui/text'
 import { LinearGradient } from '@/components/ui/linear-gradient'
-import { fetchWeeklyLogs } from '@/lib/supabase'
 import { Log } from "@/constants/types"
 import { Dimensions } from "react-native"
 import { startOfWeek, addDays } from 'date-fns'
+import { fetchWeeklyLogs } from '@/api/log'
 
 const MedicationAdherenceChart = () => {
   const [adherenceData, setAdherenceData] = useState<barDataItem[]>([])

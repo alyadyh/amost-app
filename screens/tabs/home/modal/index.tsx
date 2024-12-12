@@ -1,17 +1,27 @@
-import React, { useEffect, useState } from 'react'
-import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody } from '@/components/ui/modal'
-import { VStack } from '@/components/ui/vstack'
-import { HStack } from '@/components/ui/hstack'
-import { Text } from '@/components/ui/text'
-import { Button, ButtonText } from '@/components/ui/button'
-import { Medicine, Log } from '@/constants/types'
-import { Icon } from '@/components/ui/icon'
-import { Pressable } from 'react-native'
-import { Check, X } from 'lucide-react-native'
-import { Box } from '@/components/ui/box'
-import { fetchLog, updateLog, updateMedicine } from '@/lib/supabase'
-import { router } from 'expo-router'
-import { Skeleton, SkeletonText } from '@/components/ui/skeleton'
+// Core dependencies
+import React, { useEffect, useState } from "react"
+import { router } from "expo-router"
+
+// Components
+import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody } from "@/components/ui/modal"
+import { VStack } from "@/components/ui/vstack"
+import { HStack } from "@/components/ui/hstack"
+import { Text } from "@/components/ui/text"
+import { Button, ButtonText } from "@/components/ui/button"
+import { Pressable } from "@/components/ui/pressable"
+import { Box } from "@/components/ui/box"
+import { Icon } from "@/components/ui/icon"
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
+
+// Icons
+import { Check, X } from "lucide-react-native"
+
+// Constants
+import { Medicine, Log } from "@/constants/types"
+
+// Api
+import { fetchLog, updateLog } from "@/api/log"
+import { updateMedicine } from "@/api/medicine"
 
 interface LogModalProps {
   visible: boolean

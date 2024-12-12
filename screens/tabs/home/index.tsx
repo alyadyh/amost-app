@@ -26,8 +26,8 @@ import { Ellipsis } from 'lucide-react-native'
 // Constants
 import { Medicine, MedForm, medFormActive, Log, medFormInactive } from '@/constants/types'
 
-// Utils and Libs
-import { fetchMedicines } from '@/lib/supabase'
+// Api
+import { fetchMedicines } from '@/api/medicine'
 
 // Layout
 import TabLayout from '../layout'

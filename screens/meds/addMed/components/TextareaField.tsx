@@ -1,3 +1,5 @@
+'use client'
+
 import React from "react"
 import { FormControl, FormControlError, FormControlLabel, FormControlLabelText, FormControlErrorText, FormControlErrorIcon } from "@/components/ui/form-control"
 import { Textarea, TextareaInput } from "@/components/ui/textarea"

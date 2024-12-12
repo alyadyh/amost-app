@@ -26,7 +26,11 @@ import { Medicine, Log } from "@/constants/types"
 // Utils and Libs
 import { format, isToday, isYesterday, parseISO } from "date-fns"
 import { id } from "date-fns/locale"
-import { fetchUserProfile, fetchLog, fetchMedicines } from "@/lib/supabase"
+
+//Api
+import { fetchLog } from "@/api/log"
+import { fetchMedicines } from "@/api/medicine"
+import { fetchUserProfile } from "@/api/profile"
 
 // Layout
 import MedLayout from "../layout"
@@ -105,7 +109,7 @@ const LogMedScreen = () => {
 
   const fetchData = async () => {
     try {
-      const userProfile = await fetchUserProfile('user_id')
+      const userProfile = await fetchUserProfile()
       setUserName(userProfile?.full_name || 'No Name')
 
       const fetchedMedicines = await fetchMedicines()

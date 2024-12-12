@@ -1,10 +1,15 @@
-import React, { useState } from 'react'
-import { Modal, Pressable, View, ActivityIndicator } from 'react-native'
+// Core dependencies
+import React from 'react'
+
+// Components
+import { Modal } from 'react-native'
 import { Text } from "@/components/ui/text"
 import { Image } from "@/components/ui/image"
 import { VStack } from '@/components/ui/vstack'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Box } from '@/components/ui/box'
+import { Pressable } from '@/components/ui/pressable'
+import { View } from '@/components/ui/view'
 
 export const ModalComponent = ({ showModal, setShowModal, med }: { showModal: string | null, setShowModal: (modalName: string | null) => void, med: any }) => {
   return (

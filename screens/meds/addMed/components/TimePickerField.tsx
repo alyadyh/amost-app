@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState } from "react"
 import { Pressable } from "@/components/ui/pressable"
 import { FormControl, FormControlError, FormControlLabel, FormControlLabelText, FormControlErrorText } from "@/components/ui/form-control"

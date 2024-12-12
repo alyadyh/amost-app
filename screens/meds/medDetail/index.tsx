@@ -24,8 +24,8 @@ import { ArrowLeftIcon, Pencil, ChevronRightIcon, CalendarRange, Clock, PencilLi
 // Constants
 import { MedForm, medFormActive, Medicine } from '@/constants/types'
 
-// Utils and Libs
-import { deleteMedicine, fetchMedicineById } from '@/lib/supabase'
+// Api
+import { fetchMedicineById, deleteMedicine } from '@/api/medicine'
 
 export const MedDetail = () => {
   const [med, setMed] = useState<Medicine>()
