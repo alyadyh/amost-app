@@ -62,7 +62,7 @@ const getDisplayDate = (dateString: string): string => {
 
 const LogCard: React.FC<{ log: Log, onEdit: () => void }> = ({ log, onEdit }) => {
   const medName = log.med_name
-  console.log('medName: ', medName)
+  // console.log('medName: ', medName)
   const borderColor = log.taken === true ? 'border-green-500' : log.taken === false ? 'border-red-500' : 'border-gray-400'
   const iconColor = log.taken === true ? 'text-green-500 stroke-green-500' : log.taken === false ? 'text-red-500 stroke-red-500' : 'text-gray-400 stroke-gray-400'
   const IconComponent = log.taken === true ? CheckCircle : log.taken === false ? XCircle : Circle

@@ -7,6 +7,7 @@ import { format } from "date-fns";
 
 export const fetchLog = async () => {
   const user = await getCurrentUser();
+  // console.log("user: ", user?.email);
 
   try {
     const { data, error } = await supabase

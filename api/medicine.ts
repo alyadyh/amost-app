@@ -42,20 +42,24 @@ export const fetchMedicineById = async (medId: string) => {
 
 export const insertMedicine = async (medicineData: any) => {
   const user = await getCurrentUser();
-  try {
-    const { error } = await supabase.from("medicines").insert({
-      user_id: user?.id,
-      ...medicineData,
-    });
+  const formattedData = {
+    user_id: user?.id,
+    ...medicineData,
+  };
 
-    if (error) {
-      throw new Error(`Error while inserting medicine: ${error.message}`);
-    }
-    return true;
-  } catch (error) {
-    console.error("Error inserting medicine:", error);
-    return false;
-  }
+  // console.log(
+  //   "Formatted Data being inserted:",
+  //   JSON.stringify(formattedData, null, 2),
+  // ); // Log formatted data
+
+  const { data, error } = await supabase.from("medicines").insert(
+    formattedData,
+  );
+
+  // console.log("Supabase Response Data:", data); // Log response data from Supabase
+  // console.log("Supabase Error (if any):", error); // Log Supabase error
+
+  return { success: !error, error };
 };
 
 export const updateMedicine = async (medicineId: string, medicineData: any) => {

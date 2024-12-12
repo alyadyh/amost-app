@@ -113,21 +113,23 @@ const AddMedScreen = () => {
 
     console.log("Submitted Data:", formattedData)
 
-    try {
-      // Insert the medicine data into Supabase
-      const insertSuccess = await insertMedicine(formattedData)
+    console.log("Formatted Data for submission:", JSON.stringify(formattedData, null, 2)); // Log data before sending
 
-      if (insertSuccess) {
-        showToast("Obat berhasil ditambahkan!", "success")
-        router.push("/medication")
-        reset()
-      }
-    } catch (error) {
-      console.error("Error inserting medicine:", error)
-      showToast("Gagal menambahkan obat. Pastikan semua data telah diisi dengan benar.", "error")
-    } finally {
-      setIsLoading(false)
+    const { success, error } = await insertMedicine(formattedData);
+
+    if (success) {
+      showToast("Obat berhasil ditambahkan!", "success");
+      router.push("/medication");
+      reset();
+    } else {
+      console.error("Error inserting medicine:", error);
+      showToast(
+        `Gagal menambahkan obat. ${error?.message || "Periksa kembali data Anda."}`,
+        "error"
+      );
     }
+
+    setIsLoading(false)
   }
 
   const onError = (errors: any) => {
