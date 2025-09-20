@@ -3,6 +3,8 @@
 **AMOST** stands for **Ayo Minum Obat Secara Teratur** (_Let's Take Medicine Regularly_).  
 It is an Android application that helps individuals take their medicine according to the instructions of medical personnel or even through self-medication practices.
 
+This code was designed to be able to do cross-platform for future development, while it still run in Android only for the time being. 
+
 ---
 
 ## 🚀 Features
